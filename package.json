@@ -1,0 +1,28 @@
+{
+  "name": "cohorts",
+  "version": "0.1.0",
+  "description": "Cohort organizational application for Foundry",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Angular2",
+    "Express",
+    "Node",
+    "Mongodb"
+  ],
+  "author": "Jason Bennett",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.15.2",
+    "cookie-parser": "^1.4.3",
+    "ejs": "^2.5.5",
+    "express": "^4.14.0",
+    "mongoose": "^4.7.4",
+    "path": "^0.12.7",
+    "pug": "^2.0.0-beta6",
+    "winston": "^2.3.0",
+    "winston-elasticsearch": "^0.4.2"
+  }
+}
