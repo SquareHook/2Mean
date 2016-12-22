@@ -10,13 +10,13 @@ const rootDir = path.resolve(__dirname, '../..');
 module.exports = {
     debug: true,
     devServer: {
-        contentBase: path.resolve(rootDir, 'dist'),
+        contentBase: path.resolve(rootDir, 'app-client'),
         port: 3000
     },
     devtool: 'source-map',
     entry: {
-        app: [ path.resolve(rootDir, 'app-client', 'bootstrap') ],
-        vendor: [ path.resolve(rootDir, 'app-client', 'vendor') ]
+        app: [ path.resolve(rootDir, 'app-client', 'main') ],
+        vendor: [ path.resolve(rootDir, 'app-client', 'vendor.browser') ]
     },
     module: {
         loaders: [

@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack --config ./config/webpack/webpack.dev.js"
+    "build": "webpack --config ./config/webpack/webpack.dev.js"
   },
   "keywords": [
     "Angular2",
