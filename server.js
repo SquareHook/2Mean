@@ -1,10 +1,12 @@
 var path = require('path');
+var fs = require('fs');
 
 // Initialize the Application logger.
 var logger = require('./app-server/logger.js');
 logger.info('Application Bootstrapping...');
 
 var express = require('express');
+var router = express.Router();
 var app = express();
 
 var auth = require('./app-server/auth.js');
@@ -26,17 +28,30 @@ app.post('/api/login', auth.login);
  * Setup the client application route.
  */
 
-app.use('/app', (req, res, next) => {
-  console.log('Got root request');
-  return next();
-});
-app.get('/app', express.static(path.join(__dirname, 'app-client')));
+app.use(express.static(path.resolve('app-client')));
 
-app.use('/lib', (req, res, next) => {
-  console.log('Got lib request');
-  return next();
+/**
+ * The route that serves all node_module files.
+ */
+router.get('/lib\*', (req, res, next) => {
+  var url = req.originalUrl.replace('/lib', 'node_modules');
+  var file;
+
+  try {
+    file = path.resolve(url);
+  } catch (e) {
+    logger.warning('Malformed file location', url);
+    return next();
+  }
+
+  return res.sendFile(file);
 });
-app.get('/lib', express.static('node_modules'));
+
+router.get('/systemjs.config.js', (req, res, next) => {
+  return res.sendFile(path.resolve('systemjs.config.js'));
+});
+
+app.use('/', router);
 
 app.listen(3000, () => {
   console.log('Application started and listening on port 3000');
