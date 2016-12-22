@@ -28,7 +28,7 @@ app.post('/api/login', auth.login);
  * Setup the client application route.
  */
 
-app.use(express.static(path.resolve('app-client')));
+app.use(express.static(path.resolve('dist')));
 
 /**
  * The route that serves all node_module files.
