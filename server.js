@@ -30,29 +30,6 @@ app.post('/api/login', auth.login);
 
 app.use(express.static(path.resolve('dist')));
 
-/**
- * The route that serves all node_module files.
- */
-router.get('/lib\*', (req, res, next) => {
-  var url = req.originalUrl.replace('/lib', 'node_modules');
-  var file;
-
-  try {
-    file = path.resolve(url);
-  } catch (e) {
-    logger.warning('Malformed file location', url);
-    return next();
-  }
-
-  return res.sendFile(file);
-});
-
-router.get('/systemjs.config.js', (req, res, next) => {
-  return res.sendFile(path.resolve('systemjs.config.js'));
-});
-
-app.use('/', router);
-
 app.listen(3000, () => {
   console.log('Application started and listening on port 3000');
 });
