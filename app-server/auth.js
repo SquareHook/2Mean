@@ -1,11 +1,21 @@
-function auth() {
-  function login(req, res) {
-    res.status(200).send({message: 'Nothing to see here'});
-  }
+var passport = require('passport');
+var DigestStrategy = require('passport-http').DigestStrategy;
 
-  return {
-    login: login
-  }
-}
+function authenticationModule(logger) {
+  passport.use(new DigestStrategy(
+    (username, done) => {
+      logger.info('Auth request');
+      logger.info(username);
 
-module.exports = new auth();
+      return done(null, {name: 'Bob'}, 'fiddlesticks');
+    },
+    (params, done) => {
+      logger.info('Nounce key request');
+      logger.info(params);
+
+      done(null, true);
+    }
+  ));
+};
+
+module.exports = authenticationModule;
