@@ -9,7 +9,7 @@ var express = require('express');
 var router = express.Router();
 var app = express();
 
-var authModule = require('./app-server/auth.js');
+var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
 
 var passport = require('passport');
@@ -18,10 +18,17 @@ var passport = require('passport');
  * Routes that can be accessed by anyone.
  */
 app.get('/api/test',
-    passport.authenticate('digest', { session: false }),
+    passport.authenticate('digest', {
+      session: false,
+      failureRedirect: '/login'
+    }),
     (req, res) => {
       res.send({status: 'Test'});
     });
+
+app.get('/login', (req, res) => {
+  res.status(200).send({data: 'Endpoint not available'});
+});
 
 /*
  * Routes that can be accessed only by authenticated users.
