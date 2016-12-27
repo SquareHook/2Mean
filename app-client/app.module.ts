@@ -5,8 +5,6 @@ import { HttpModule }     from '@angular/http';
 
 import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 
-import { LoginComponent } from './auth/auth.component.client';
-
 @NgModule({
   imports:      [
     BrowserModule,
@@ -14,8 +12,7 @@ import { LoginComponent } from './auth/auth.component.client';
     HttpModule
   ],
   declarations: [
-    AppComponent,
-    LoginComponent
+    AppComponent
   ],
   bootstrap:    [ AppComponent ]
 })
