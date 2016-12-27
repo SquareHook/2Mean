@@ -5,11 +5,14 @@ import { HttpModule }     from '@angular/http';
 
 import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 
+import { Md5 }            from 'ts-md5/dist/md5';
+
 @NgModule({
   imports:      [
     BrowserModule,
     NgbModule.forRoot(),
-    HttpModule
+    HttpModule,
+    Md5
   ],
   declarations: [
     AppComponent

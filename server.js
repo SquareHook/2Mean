@@ -9,6 +9,12 @@ var express = require('express');
 var router = express.Router();
 var app = express();
 
+var mongoose = require('mongoose');
+mongoose.Promise = require('q').Promise;
+
+// TODO: This needs to be pulled into a separate file with environment set connection strings.
+mongoose.connect('mongodb://localhost/toomean');
+
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
 
@@ -17,16 +23,20 @@ var passport = require('passport');
 /*
  * Routes that can be accessed by anyone.
  */
-app.get('/api/test',
+app.post('/api/test',
     passport.authenticate('digest', {
-      session: false,
-      failureRedirect: '/login'
+      session: false
     }),
     (req, res) => {
       res.send({status: 'Test'});
     });
 
-app.get('/login', (req, res) => {
+app.get('/login',
+    passport.authenticate('digest', {
+      session: false,
+      failureRedirect: '/login'
+    }),
+    (req, res) => {
   res.status(200).send({data: 'Endpoint not available'});
 });
 
