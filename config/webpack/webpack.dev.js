@@ -21,7 +21,8 @@ module.exports = {
     module: {
         loaders: [
             { loader: 'raw', test: /\.(css|html)$/ },
-            { exclude: /node_modules/, loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ }
+            { exclude: /node_modules/, loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ },
+            { test: /\.json$/, loaders: [ 'raw-loader', 'json-loader' ] }
         ],
     },
     output: {
