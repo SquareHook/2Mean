@@ -10,5 +10,5 @@ cat app-client/**/config/menu.json | sed -e '1 s/^/\"menu_items\":/' \
     -e '2,$ s/^\[//' \
     -e '/^$/ d' \
     -e '$ s/,/]/' \
-    -e '1 i{' \
+    -e '1 i {' \
     -e '$ a }'

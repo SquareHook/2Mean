@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
-//import { Menu }		 from '../config/menus.json';
-var items = ['a', 'b', 'c'];
+import './../config/menus.json';
+
 
 @Component({
 	selector:'core-menu',
@@ -9,7 +9,7 @@ var items = ['a', 'b', 'c'];
 })
 
 export class CoreMenuComponent{
-	items = items;
+
 	constructor()
 	{
 
