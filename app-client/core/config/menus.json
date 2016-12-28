@@ -1,0 +1,11 @@
+//this file has all the menuItems that are saved in module-name.component.menu.json files from webpack
+{
+  "menuItems": [
+  {
+    "template": "<strong> Home </strong>",
+    "state": "Home",
+    "position": -1,
+    "roles": "*",
+    "subitems": []
+  }]
+}

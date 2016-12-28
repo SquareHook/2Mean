@@ -20,3 +20,4 @@ import { CoreMenuComponent } from './core/core.component.menu.client';
 })
 
 export class AppModule {}
+
