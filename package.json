@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config ./config/webpack/webpack.dev.js --watch",
     "watch-menus": "watch \"node watch-menus.js app-client/**/config/menu.json > app-client/core/config/menus.json\"",
-    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menu\""
+    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menus\""
   },
   "keywords": [
     "Angular2",
