@@ -6,7 +6,7 @@ import { RouterModule, Routes }     from '@angular/router';
 
 import { AppComponent }             from './app.component';
 import { PageNotFoundComponent }    from './components/not-found.component';
-import { CoreMenuComponent }        from './core/core.component.menu.client';
+
 
 import { AuthModule }               from './auth/auth.module';
 import { CoreModule }               from './core/core.module';
