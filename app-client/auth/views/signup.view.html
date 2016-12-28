@@ -1,0 +1,21 @@
+<div class="conntainer">
+  <h2>Signup</h2>
+  {{ diagnostic }}
+  <form (onSubmit)="signup()">
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" class="form-control" id="username" required
+        [(ngModel)]="model.userName" name="username">
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="text" class="form-control" id="email" required
+        [(ngModel)]="model.email" name="email">
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" class="form-control" id="password" required>
+    </div>
+    <button type="submit" class="btn btn-submit">Submit</button>
+  </form>
+</div>
