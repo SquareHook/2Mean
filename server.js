@@ -9,6 +9,9 @@ var express = require('express');
 var router = express.Router();
 var app = express();
 
+var mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/2Mean');
+
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
 
@@ -20,7 +23,7 @@ var passport = require('passport');
 app.get('/api/test',
     passport.authenticate('digest', {
       session: false,
-      failureRedirect: '/login'
+      failureRedirect: '/auth/signin'
     }),
     (req, res) => {
       res.send({status: 'Test'});

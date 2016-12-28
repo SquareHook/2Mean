@@ -6,7 +6,7 @@ import { Injectable } from '@angular/core';
 /**
  * Get the user class model.
  */
-import { User } from './user.model.client.ts';
+import { User } from './models/user.model.client';
 
 /**
  * Pull in the necessary HTTP objects.
@@ -30,17 +30,22 @@ import 'rxjs/add/operator/map';
  */
 @Injectable()
 export class AuthService {
-  constructor(http: Http) {
-    let requestOpts = new RequestOptions({
-      
-    });
+  constructor(private http: Http) {
+  }
 
-    http.get('/api/test')
-      .map( res => res.json())
-      .subscribe((res:Response) => {
-        console.log('This is the subscribe method');
-        console.log(res);
+  login (userName: string, password: string) {
+    return this.http.post('/api/login', JSON.stringify({ userName: userName, password: password }))
+      .map(function (response: Response) {
+        let user = response.json();
+        if (user) {
+          // store details
+        }
       });
+  }
+
+  create (user: User) {
+    // TODO endpoint does not exist yet
+    return this.http.put('/api/users/', user);
   }
 
   user: User;
