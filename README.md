@@ -1,4 +1,6 @@
 # TooMean
+### Too Mean fo Life
+
 An angular2 MEAN stack. Using webpack
 
 ## Install
@@ -29,3 +31,6 @@ do this before npm start
 brew install gnu-sed --with-default-names
 ```
 
+## Add Menu item:
+inside of app-client/module-name/config create a file called menu.json 
+//TODO: ADD FORMATTING OPTIONS
