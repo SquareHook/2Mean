@@ -6,14 +6,11 @@ import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { CoreModule }     from './core/core.module';
 import { CoreMenuComponent } from './core/core.component.menu.client';
 
-import { Md5 }            from 'ts-md5/dist/md5';
-
 @NgModule({
   imports:      [
     BrowserModule,
     NgbModule.forRoot(),
     HttpModule,
-    Md5,
     CoreModule
   ],
   declarations: [

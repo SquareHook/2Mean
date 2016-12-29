@@ -12,7 +12,7 @@ import { AuthService } from './auth/auth.service.client';
 
 export class AppComponent {
   constructor(auth: AuthService) {
-    console.log('Auth service imported');
+
   }
   name = 'Too Mean';
 }

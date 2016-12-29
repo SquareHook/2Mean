@@ -45,13 +45,17 @@ var UserSchema = new Schema({
   salt: {
     type: String
   },
+  apikey: {
+    value: {
+      type: String
+    },
+    created: {
+      type: Date
+    }
+  },
   profileImageURL: {
     type: String,
     default: 'modules/users/client/img/profile/default.png'
-  },
-  provider: {
-    type: String,
-    required: 'Provider is required'
   },
   providerData: {},
   additionalProvidersData: {},
@@ -69,30 +73,6 @@ var UserSchema = new Schema({
   created: {
     type: Date,
     default: Date.now
-  },
-  activeCohort: {
-    id: {
-      type: Schema.Types.ObjectId
-    },
-    name: {
-      type: String
-    }
-  },
-  tst: {
-    type: String,
-  },
-  organizationIds: [{
-    type: Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-
-  activeOrganization: {
-    id: {
-      type: Schema.Types.ObjectId
-    },
-    name: {
-      type: String
-    }
   },
   /* For reset password */
   resetPasswordToken: {

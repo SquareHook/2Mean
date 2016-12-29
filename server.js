@@ -6,7 +6,8 @@ var logger = require('./app-server/logger.js');
 logger.info('Application Bootstrapping...');
 
 var express = require('express');
-var router = express.Router();
+var bodyParser = require('body-parser');
+var cookieParser = require('cookie-parser');
 var app = express();
 
 var mongoose = require('mongoose');
@@ -18,27 +19,19 @@ mongoose.connect('mongodb://localhost/toomean');
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
 
-var passport = require('passport');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(cookieParser());
 
-/*
- * Routes that can be accessed by anyone.
- */
-app.post('/api/test',
-    passport.authenticate('digest', {
-      session: false
-    }),
+app.get('/api/test',
+    auth.validateAPIKey,
     (req, res) => {
-      res.send({status: 'Test'});
+      res.send({
+        user: req.auth
+      });
     });
 
-app.get('/login',
-    passport.authenticate('digest', {
-      session: false,
-      failureRedirect: '/login'
-    }),
-    (req, res) => {
-  res.status(200).send({data: 'Endpoint not available'});
-});
+app.post('/api/login', auth.login);
 
 /*
  * Routes that can be accessed only by authenticated users.

@@ -4,6 +4,7 @@
 import { Injectable } from '@angular/core';
 
 import { Md5 } from 'ts-md5/dist/md5';
+
 /**
  * Get the user class model.
  */
@@ -59,21 +60,13 @@ export class AuthService {
   }
 
   getProfileInfo() {
-    let header = new Headers({
-      'Authorization': 'Digest username="squarehook:12345"'
-    });
-
     let body = {
       username : 'squarehook',
       password : '12345'
     };
 
-    let requestOpts = new RequestOptions({
-      headers: header
-    });
-
     if (this.isLogged()) {
-      this.http.post('/api/test', body, requestOpts)
+      this.http.post('/api/login', body)
         .map( res => res.json())
         .subscribe((res:Response) => {
           console.log('This is the subscribe method');
@@ -83,10 +76,32 @@ export class AuthService {
     }
   }
 
-  getAuthHeader() {
+  getAuthHeader(protocol: string, path: string) {
     var header;// = new Headers({});
 
-    var HA1 = Md5.hashStr(this.user.userName + ':toomean:' + this.user.password);
+    var HA2 = Md5.hashStr(protocol + ':' + path);
+    var response;
+    var cnonce = this.generateCNonce(8);
+
+    if (!this.HA1) {
+      this.HA1 = <string>Md5.hashStr(this.user.userName + ':toomean:' + this.user.password);
+    }
+
+    response = Md5.hashStr(this.HA1 + ':nounce:nc:' + cnonce + ':auth:' + HA2);
+  }
+
+  generateCNonce(len: number) {
+    // 8 characters long hexadecimal.
+    var buf = []
+      , chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+      , charlen = chars.length;
+
+    for (var i = 0; i < len; ++i) {
+      buf.push(chars[Math.random() * charlen | 0]);
+    }
+
+    return buf.join('');
+
   }
 
   logIn(username: string, password: string) {
