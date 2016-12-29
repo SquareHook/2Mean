@@ -10,3 +10,6 @@ e2e/**/*.js
 e2e/**/*.js.map
 _test-output
 _temp
+
+#generated menus
+app-client/core/config/menus.json
