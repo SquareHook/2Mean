@@ -1,5 +1,5 @@
 [{
-  "template": "<strong> Core Template Menu Item</strong>",
+  "template": "Auth Item Link",
   "state": "#",
   "position": 1,
   "roles": [],
