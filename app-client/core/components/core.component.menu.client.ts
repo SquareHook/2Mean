@@ -21,13 +21,6 @@ export class CoreMenuComponent{
 		this.menu_items.sort((a :any, b :any) =>{
 			return a.position - b.position;
 		});
-
-	
 	}
-
-
-
-		
-
 }	
 
