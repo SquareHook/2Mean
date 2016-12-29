@@ -24,12 +24,6 @@ watch for changes and compile typescript when a change is detected.
 # ang2cohort
 
 
-## Mac users: 
-do this before npm start
-
-```bash
-brew install gnu-sed --with-default-names
-```
 
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
