@@ -28,7 +28,6 @@ watch for changes and compile typescript when a change is detected.
 # ang2cohort
 
 
-
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
 //TODO: ADD FORMATTING OPTIONS
