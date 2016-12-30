@@ -12,7 +12,8 @@ import { CoreModule }            from './core/core.module';
 
 import { AppRoutingModule }      from './app-routing.module';
 
- @NgModule({
+
+@NgModule({
   imports:      [
     BrowserModule,
     NgbModule.forRoot(),

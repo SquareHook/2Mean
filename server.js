@@ -61,6 +61,13 @@ app.post('/api/login', auth.login);
 
 app.use(express.static(path.resolve('dist')));
 
+/**
+ * Sends angular app back for all other requests
+ */
+app.get('*', function (req, res) {
+  res.sendFile(path.join(__dirname, 'dist/index.html'));
+});
+
 http.createServer(app).listen(config.app.port_http, () => {
   console.log('Application started and listening on port' + config.app.port_http);
 });
