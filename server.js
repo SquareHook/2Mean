@@ -1,3 +1,7 @@
+// Load global configuration
+var config = require('./config/config');
+console.log(config);
+
 var path = require('path');
 var fs = require('fs');
 
@@ -13,8 +17,7 @@ var app = express();
 var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
 
-// TODO: This needs to be pulled into a separate file with environment set connection strings.
-mongoose.connect('mongodb://localhost/toomean');
+mongoose.connect(config.mongo.uri);
 
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
@@ -58,10 +61,10 @@ app.post('/api/login', auth.login);
 
 app.use(express.static(path.resolve('dist')));
 
-http.createServer(app).listen(3080, () => {
-  console.log('Application started and listening on port 3080');
+http.createServer(app).listen(config.app.port_http, () => {
+  console.log('Application started and listening on port' + config.app.port_http);
 });
 
-https.createServer(https_options, app).listen(3443, () => {
-  console.log('Application started and listening on port 3443');
+https.createServer(https_options, app).listen(config.app.port_https, () => {
+  console.log('Application started and listening on port' + config.app.port_https);
 });
