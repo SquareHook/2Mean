@@ -47,8 +47,6 @@ export class AuthService {
 
     this.user.userName = 'squarehook';
     this.user.password = '12345';
-
-    console.log(this.getProfileInfo());
   }
 
   isLogged() {
@@ -59,52 +57,7 @@ export class AuthService {
     }
   }
 
-  getProfileInfo() {
-    let body = {
-      username : 'squarehook',
-      password : '12345'
-    };
-
-    if (this.isLogged()) {
-      this.http.post('/api/login', body)
-        .map( res => res.json())
-        .subscribe((res:Response) => {
-          console.log('This is the subscribe method');
-          console.log(res);
-        }
-      );
-    }
-  }
-
-  getAuthHeader(protocol: string, path: string) {
-    var header;// = new Headers({});
-
-    var HA2 = Md5.hashStr(protocol + ':' + path);
-    var response;
-    var cnonce = this.generateCNonce(8);
-
-    if (!this.HA1) {
-      this.HA1 = <string>Md5.hashStr(this.user.userName + ':toomean:' + this.user.password);
-    }
-
-    response = Md5.hashStr(this.HA1 + ':nounce:nc:' + cnonce + ':auth:' + HA2);
-  }
-
-  generateCNonce(len: number) {
-    // 8 characters long hexadecimal.
-    var buf = []
-      , chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
-      , charlen = chars.length;
-
-    for (var i = 0; i < len; ++i) {
-      buf.push(chars[Math.random() * charlen | 0]);
-    }
-
-    return buf.join('');
-
-  }
-
-  logIn(username: string, password: string) {
-
+  login(username: string, password: string) {
+    // TODO: hit /api/login with username and password in post data.
   }
 }
