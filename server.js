@@ -19,10 +19,21 @@ mongoose.connect('mongodb://localhost/toomean');
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
 
+var http = require('http');
+var https = require('https');
+
+var https_options = {
+    key: fs.readFileSync('./config/private/key.pem'),
+    cert: fs.readFileSync('./config/private/cacert.pem')
+};
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+/*
+ * Routes that can be accessed by anyone.
+ */
 app.get('/api/test',
     auth.validateAPIKey,
     (req, res) => {
@@ -47,6 +58,10 @@ app.post('/api/login', auth.login);
 
 app.use(express.static(path.resolve('dist')));
 
-app.listen(3000, () => {
-  console.log('Application started and listening on port 3000');
+http.createServer(app).listen(3080, () => {
+  console.log('Application started and listening on port 3080');
+});
+
+https.createServer(https_options, app).listen(3443, () => {
+  console.log('Application started and listening on port 3443');
 });

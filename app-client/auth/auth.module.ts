@@ -22,6 +22,7 @@ import { SignupComponent }      from './components/signup.component';
     SigninComponent,
     SignupComponent
   ],
+  exports: [SigninComponent, SignupComponent],
   bootstrap: [ AuthComponent ]
 })
 export class AuthModule {};

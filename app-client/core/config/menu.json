@@ -1,8 +1,7 @@
 [{
-  "template": "<strong> Core Template Menu Item</strong>",
+  "template": "Home",
   "state": "#",
   "position": 1,
   "roles": [],
   "subitems": []
-
 }]

@@ -13,3 +13,10 @@ _temp
 
 #generated menus
 app-client/core/config/menus.json
+
+#swap files
+*.swp
+
+#tls cert and other private items
+config/private/
+
