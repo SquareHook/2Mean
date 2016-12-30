@@ -13,3 +13,5 @@ _temp
 
 #generated menus
 app-client/core/config/menus.json
+
+config/private/
