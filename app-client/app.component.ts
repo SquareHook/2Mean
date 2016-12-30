@@ -6,7 +6,7 @@ import { AuthService } from './auth/auth.service.client';
   selector: 'too-mean',
   providers: [ AuthService ],
   styles: [
-    require('./app.style.less').toString()
+    require('./less/app.style.less').toString()
   ],
   templateUrl: 'app.view.html'
 })

@@ -1,6 +1,6 @@
-<div class="conntainer">
-    <h2>Signup</h2>
+<div class="container">
     <form (onSubmit)="signup()">
+        <h2>Sign Up</h2>
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" class="form-control" id="username" required [(ngModel)]="model.userName" name="username">
@@ -13,6 +13,6 @@
             <label for="password">Password</label>
             <input type="password" class="form-control" id="password" required>
         </div>
-        <button type="submit" class="btn btn-submit">Submit</button>
+        <button type="submit" class="btn btn-primary">Submit</button>
     </form>
 </div>

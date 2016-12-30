@@ -1,6 +1,6 @@
 <div class="container">
-    <h2>Signin Form</h2>
     <form (ngSubmit)="login()">
+        <h2>Sign In</h2>
         <div class="form-group">
             <label for="username">Username</label>
             <input type="text" class="form-control" id="username" required [(ngModel)]="model.userName" name="username">
@@ -9,7 +9,7 @@
             <label for="password">Password</label>
             <input type="password" class="form-control" id="password" required>
         </div>
-        <button type="submit" class="btn btn-submit">Submit</button>
-        <a routerLink="/auth/signup" routerLinkActive="active">Signup</a>
+        <button type="submit" class="btn btn-primary">Sign In</button>
+        <button type="button" routerLink="/auth/signup" routerLinkActive="active" class="btn btn-secondary">Signup</button>
     </form>
 </div>
