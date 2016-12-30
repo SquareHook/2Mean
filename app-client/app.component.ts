@@ -13,7 +13,7 @@ import { AuthService } from './auth/auth.service.client';
 
 export class AppComponent {
   constructor(auth: AuthService) {
-
+    auth.login('squarehook', '12345');
   }
   name = 'Too Mean';
 }

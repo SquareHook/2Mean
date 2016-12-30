@@ -59,5 +59,36 @@ export class AuthService {
 
   login(username: string, password: string) {
     // TODO: hit /api/login with username and password in post data.
+    let body = {
+      username: username,
+      password: password
+    };
+
+    console.log('Attempting Login');
+
+    this.http
+      .post('/api/login', body)
+      .map(this.handleLoginResponse)
+      .catch(this.handleError);
+  }
+
+  getUser(): User {
+    return this.user;
+  }
+
+  private handleLoginResponse(res: Response) {
+    console.log(res.json());
+  }
+
+  private handleError(error: Response | any) {
+    console.log('Caught error');
+    if (error instanceof Response) {
+      console.log(error.json());
+      return Observable.throw(error.json());
+    } else {
+      console.log(error);
+      return Observable.throw('Big error');
+    }
+
   }
 }

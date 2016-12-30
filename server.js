@@ -41,6 +41,11 @@ var https_options = {
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+// Impromptu logger.
+app.use((req, res, next) => {
+  logger.info('Endpoint ' + req.path);
+  next();
+});
 
 /*
  * Endpoint Definitions.
@@ -56,6 +61,8 @@ app.get('/api/test',
     });
 
 app.post('/api/login', auth.login);
+
+app.get('/api/user/:userId', auth.validateAPIKey, user.read);
 
 /*
  * Routes that can be accessed only by authenticated users.

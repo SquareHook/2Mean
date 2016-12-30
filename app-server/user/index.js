@@ -1,4 +1,4 @@
-var Users = require('./models/User');
+var Users = require('./models/Users');
 
 var UserController = require('./controllers/user.controller');
 
