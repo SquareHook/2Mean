@@ -1,6 +1,7 @@
 import 'core-js/shim';
 import 'zone.js';
 import 'reflect-metadata';
+import 'ts-md5/dist/md5';
 
 import '@angular/core';
 import '@angular/common';
