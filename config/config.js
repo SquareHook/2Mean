@@ -12,6 +12,7 @@ module.exports = {
         port: process.env.TOOMEAN_ES_PORT || undefined
     },
     app: {
+        host: process.env.host || 'localhost',
         port_http: process.env.port_http || 3080,
         port_https: process.env.port_https || 3443
     }
