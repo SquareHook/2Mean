@@ -7,7 +7,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "webpack --config ./config/webpack/webpack.dev.js --watch",
     "watch-menus": "watch \"node watch-menus.js app-client/**/config/menu.json > app-client/core/config/menus.json\"",
-    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue,red\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menus\""
+    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue,red\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menus\"",
+    "postinstall": "if [ ! -e ./config/private/cacert.pem ]; then npm run gen-cert; else echo \"TLS files already exist\"; fi",
+    "gen-cert": "./init-ssl.sh"
   },
   "keywords": [
     "Angular2",
