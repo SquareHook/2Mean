@@ -1,5 +1,7 @@
 var Users = require('./models/Users');
 
+var Keys = require('./models/Keys');
+
 /**
  * The functionality of the Authentication module.
  */
