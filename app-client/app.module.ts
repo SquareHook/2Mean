@@ -23,8 +23,7 @@ import { AppRoutingModule }      from './app-routing.module';
   ],
   declarations: [
     AppComponent,
-    PageNotFoundComponent,
-
+    PageNotFoundComponent
   ],
   bootstrap:    [ AppComponent ]
 })
