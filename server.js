@@ -1,3 +1,7 @@
+// Load global configuration
+var config = require('./config/config');
+console.log(config);
+
 var path = require('path');
 var fs = require('fs');
 
@@ -10,7 +14,7 @@ var router = express.Router();
 var app = express();
 
 var mongoose = require('mongoose');
-mongoose.connect('mongodb://localhost:27017/2Mean');
+mongoose.connect(config.mongo.uri);
 
 var authModule = require('./app-server/auth/');
 var auth = new authModule(logger);
@@ -55,10 +59,10 @@ app.get('/login', (req, res) => {
 
 app.use(express.static(path.resolve('dist')));
 
-http.createServer(app).listen(3080, () => {
-  console.log('Application started and listening on port 3080');
+http.createServer(app).listen(config.app.port_http, () => {
+  console.log('Application started and listening on port' + config.app.port_http);
 });
 
-https.createServer(https_options, app).listen(3443, () => {
-  console.log('Application started and listening on port 3443');
+https.createServer(https_options, app).listen(config.app.port_https, () => {
+  console.log('Application started and listening on port' + config.app.port_https);
 });
