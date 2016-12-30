@@ -10,3 +10,4 @@ import '@angular/platform-browser-dynamic';
 import '@angular/http';
 import '@angular/forms';
 import '@ng-bootstrap/ng-bootstrap';
+import 'bootstrap/dist/css/bootstrap.css';

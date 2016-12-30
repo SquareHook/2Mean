@@ -5,9 +5,10 @@ import { AuthService } from './auth/auth.service.client';
 @Component({
   selector: 'too-mean',
   providers: [ AuthService ],
-  template: `
-    <h1>Testing {{ name }}</h1>
-  `
+  styles: [
+    require('./app.style.less').toString()
+  ],
+  templateUrl: 'app.view.html'
 })
 
 export class AppComponent {

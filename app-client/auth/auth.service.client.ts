@@ -8,7 +8,7 @@ import { Md5 } from 'ts-md5/dist/md5';
 /**
  * Get the user class model.
  */
-import { User } from './user.model.client.ts';
+import { User } from './models/user.model.client';
 
 /**
  * Pull in the necessary HTTP objects.

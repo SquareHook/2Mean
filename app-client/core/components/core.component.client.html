@@ -1,0 +1,9 @@
+<div>
+    <ul>
+        <li style="display:inline" *ngFor="let item of menu_items">
+            <span style="margin:5px;"> 
+                <a href="{{item.state}}" [innerHTML]="item.template"></a> 
+            </span>
+        </li>
+    </ul>
+</div>
