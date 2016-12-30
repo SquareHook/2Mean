@@ -5,7 +5,7 @@ import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }     from '@angular/router';
 import { CoreMenuComponent }  from './components/core.component.menu.client';
 import { AppModule }      from '../app.module';
-
+import { AppRoutingModule }      from './../app-routing.module';
 
 @NgModule({
   imports:      [
@@ -13,9 +13,12 @@ import { AppModule }      from '../app.module';
     NgbModule,
     HttpModule
   ],
+  /*components available inside of this module */
   declarations: [
     CoreMenuComponent
   ],
+  /*components available to other modules */
+  exports: [CoreMenuComponent],
   bootstrap:    [ CoreMenuComponent ]
 })
 
