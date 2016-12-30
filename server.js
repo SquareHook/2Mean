@@ -66,7 +66,7 @@ app.get('/api/test',
 
 app.post('/api/login', auth.login);
 
-app.get('/api/user/:userId', auth.validateAPIKey, user.read);
+app.get('/api/users/:userId', auth.validateAPIKey, user.read);
 
 /*
  * Routes that can be accessed only by authenticated users.

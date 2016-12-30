@@ -86,6 +86,7 @@ function authenticationModule(logger) {
   function login(req, res, next) {
     var deferred = q.defer();
     var creds = req.body;
+    logger.info('Login Request found');
 
     if (!creds.username || !creds.password) {
       deferred.reject({
@@ -102,6 +103,13 @@ function authenticationModule(logger) {
             value: createKey(16),
             created: new Date()
           };
+
+          if (creds.password !== user.password) {
+            deferred.reject({
+              code: 401,
+              error: 'Incorrect Username/Password'
+            });
+          }
 
           // Remove the old key from the Keys collection.
           if (user.apikey && user.apikey.value) {
@@ -138,7 +146,8 @@ function authenticationModule(logger) {
           deferred.resolve({
             code: 200,
             data: {
-              apikey: user.apikey.value
+              apikey: user.apikey.value,
+              user: sanitizeUser(user)
             }
           });
         }, (error) => {
@@ -213,6 +222,28 @@ function authenticationModule(logger) {
 
     return buf.join('');
   };
+
+  /**
+   * Given a full user object, this will return an object without the sensitive parts.
+   *
+   * @param {Users} user The mongoose Users object representing the user.
+   *
+   * @return {Object} A generic object stripped of the sensitive parts.
+   */
+  function sanitizeUser(user) {
+    return {
+      id: user._id,
+      apikey: user.apikey,
+      created: user.created,
+      displayName: user.displayName,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageURL: user.profileImageURL,
+      roles: user.roles,
+      username: user.username
+    }
+  }
 
   // --------------------------- Revealing Module Section ----------------------------
 
