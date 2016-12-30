@@ -11,7 +11,8 @@ import { AppRoutingModule }      from './../app-routing.module';
   imports:      [
     BrowserModule,
     NgbModule,
-    HttpModule
+    HttpModule,
+    RouterModule
   ],
   /*components available inside of this module */
   declarations: [
