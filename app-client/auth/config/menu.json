@@ -1,8 +1,7 @@
 [{
   "template": "Auth Item Link",
   "state": "#",
-  "position": 1,
+  "position": 2,
   "roles": [],
   "subitems": []
-
 }]

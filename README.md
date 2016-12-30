@@ -16,17 +16,16 @@ cert for TLS. If you want to generate a new one you can use
 ```bash npm run gen-cert```
 
 ## Running
-To run use npm run. Wow that too is simple.
+To run use npm start. Wow that too is simple.
 
 ```bash
-$ npm run
+$ npm start
 ```
 
 This command will run webpack and the server concurrently. Webpack will
 watch for changes and compile typescript when a change is detected.
 
 # ang2cohort
-
 
 
 ## Add Menu item:
