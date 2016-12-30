@@ -27,6 +27,14 @@ var auth = new authModule(logger);
 var userModule = require('./app-server/user/');
 var user = new userModule(logger);
 
+var http = require('http');
+var https = require('https');
+
+var https_options = {
+    key: fs.readFileSync('./config/private/key.pem'),
+    cert: fs.readFileSync('./config/private/cacert.pem')
+};
+
 /*
  * Express setup.
  */
@@ -63,6 +71,10 @@ app.post('/api/login', auth.login);
 
 app.use(express.static(path.resolve('dist')));
 
-app.listen(3000, () => {
-  console.log('Application started and listening on port 3000');
+http.createServer(app).listen(3080, () => {
+  console.log('Application started and listening on port 3080');
+});
+
+https.createServer(https_options, app).listen(3443, () => {
+  console.log('Application started and listening on port 3443');
 });
