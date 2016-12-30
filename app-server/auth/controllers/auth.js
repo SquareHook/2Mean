@@ -25,29 +25,6 @@ function authenticationModule(logger) {
   // Key, 8 hours TTL
   var keyTTL = 1000 * 60 * 60 * 8;
 
-  function validateAPIKey(req, res, next) {
-    if (!req.cookies || !req.cookies.apikey) {
-      return res.status(400).send('Unauthorized');
-    }
-
-    Keys.findOne({value: req.cookies.apikey})
-      .then((data) => {
-        // TODO: Look up user and serve it back.
-        req.auth = data;
-        Users.findOne({_id: data.user})
-          .then((user) => {
-            return next(null, user);
-          }, (err) => {
-            if (err) {
-              logger.error(err);
-            }
-          });
-      }, (error) => {
-        logger.error('Authentication error looking up a key', error);
-        return res.status(400).send('Unauthorized');
-      });
-  }
-
   // Check if Database has been populated yet.  If not, inject default user.
   Users.count({}, (err, c) => {
     if (c < 1) {
@@ -69,6 +46,38 @@ function authenticationModule(logger) {
       });
     }
   });
+
+  // --------------------------- Public Function Definitions ----------------------------
+
+  /**
+   * Validation for API keys.  Will store the user in req.user and the apikey details in req.auth.
+   */
+  function validateAPIKey(req, res, next) {
+    if (!req.cookies || !req.cookies.apikey) {
+      return res.status(400).send('Unauthorized');
+    }
+
+    Keys.findOne({value: req.cookies.apikey})
+      .then((data) => {
+        // Store auth information for downstream logic.
+        req.auth = data;
+
+        // Look up user.
+        Users.findOne({_id: data.user})
+          .then((user) => {
+            // Store user for downstream logic.
+            req.user = user;
+            return next();
+          }, (err) => {
+            if (err) {
+              logger.error('Authenteication error looking up user referenced in key', err);
+            }
+          });
+      }, (error) => {
+        logger.error('Authentication error looking up a key', error);
+        return res.status(400).send('Unauthorized');
+      });
+  }
 
 
   /**
@@ -104,6 +113,7 @@ function authenticationModule(logger) {
               });
           }
 
+          // Update users reference to the key.
           user.apikey.value = apikey.value;
           user.apikey.created = apikey.created;
 
@@ -113,6 +123,7 @@ function authenticationModule(logger) {
             }
           });
 
+          // Save the new key.
           key.value = apikey.value;
           key.created = apikey.created;
           key.user = user._id;
@@ -149,9 +160,16 @@ function authenticationModule(logger) {
 
       res.status(data.code).send(data.data);
     }, (error) => {
+      logger.error('Error resolving Auth request', error);
       res.status(error.code).send(error.error);
     });
   }
+
+  function getUserInfo(req, res, next) {
+
+  }
+
+  // --------------------------- Private Function Definitions ----------------------------
 
   /**
    * Given a key object, checks that it is still a valid key or not.
@@ -196,9 +214,7 @@ function authenticationModule(logger) {
     return buf.join('');
   };
 
-  function getUserInfo(req, res, next) {
-
-  }
+  // --------------------------- Revealing Module Section ----------------------------
 
   return {
     login: login,
