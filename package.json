@@ -29,6 +29,7 @@
     "@angular/platform-browser-dynamic": "^2.4.1",
     "@angular/platform-server": "^2.4.1",
     "@angular/router": "^3.4.1",
+    "@angular2-material/icon": "^2.0.0-alpha.8-2",
     "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.15",
     "@types/node": "^6.0.54",
     "angular2-template-loader": "^0.6.0",
@@ -74,3 +75,4 @@
     "webpack-dev-server": "^1.16.2"
   }
 }
+

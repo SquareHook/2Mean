@@ -9,6 +9,7 @@ import { PageNotFoundComponent } from './components/not-found.component';
 
 /* this defines the global app routes */
 const appRoutes: Routes = [
+
 ];
 
 @NgModule({
