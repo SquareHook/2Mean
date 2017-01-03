@@ -55,16 +55,153 @@ function userController(logger) {
     }
   }
 
-  function create() {
+  /**
+   * Main function to handle create for the users collection.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
+   */
+  function create(req, res, next) {
+    var user = req.user;
+
+    var body = req.body;
+
+    var deferred = q.defer();
+
+    if (isAuthorized(user, 'create')) {
+      let newUser = mapUser(body);
+
+      newUser.save((err, data) => {
+        if (err) {
+          // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
+          logger.error('Creating User Error', err);
+          deferred.reject({
+            code: 500,
+            error: 'Internal Server Error'
+          });
+        } else {
+          logger.info('User created: ' + newUser.username);
+          deferred.resolve({
+            code: 201,
+            data: 'User Created'
+          });
+        }
+
+      });
+    } else {
+      deferred.reject({
+        code: 401,
+        error: 'Unauthorized'
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
   }
 
+  /**
+   * Main function to handle update for the users collection.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
+   */
   function update() {
+    var user = req.user;
+
+    var existingUser = mapUser(req.body);
+
+    var deferred = q.defer();
+
+    // validate the body.
+    if (!existingUser.email) {
+      deferred.reject({
+        code: 400,
+        data: 'Malformed request.  Email needed.'
+      });
+    } else {
+
+      findUserByEmail(existingUser.email)
+        .then((modifiedUser) => {
+          for (var i in Object.keys(existingUser._doc)) {
+            if (existingUser[i]) {
+              modifiedUser[i] = existingUser[i];
+            }
+          }
+          modifiedUser.updated = new Date();
+
+          modifiedUser.save((err, data) => {
+            if (err) {
+              logger.error('Error updating user', err);
+
+              deferred.reject({
+                code: 500,
+                error: 'Internal Server Error'
+              });
+            } else {
+              deferred.resolve({
+                code: 200,
+                data: 'User updated'
+              });
+            }
+          });
+        }, (err) => {
+          logger.error('Error looking up user in User collection: ', err);
+
+          deferred.reject({
+            code: 500,
+            error: 'Internal Server Error'
+          });
+        });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
   }
 
-  function deleteUser() {
+  /**
+   * Main function to handle delete for the users collection.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
+   */
+  function deleteUser(req, res, next) {
+    var userId = req.params.userId;
+
+    if (isAuthorized(user, 'delete')) {
+      Users.findOne({_id: userId}).remove((err, data) => {
+        if (err) {
+          logger.error('Error removing user', err);
+
+          res.status(500).send('Internal Server Error');
+        } else {
+          res.status(200).send('User Deleted');
+        }
+      });
+    }
   }
 
   // --------------------------- Private Function Definitions ----------------------------
+
+  function findUserByEmail(emailAddress) {
+    return Users.findOne({email: emailAddress});
+  }
   
   /*
    * Checks if the request is to the requestors data.
@@ -87,6 +224,29 @@ function userController(logger) {
     }
 
     return false;
+  }
+
+  /*
+   * Maps the post request representation of a user to a mongoose User model.
+   *
+   * @param {Object} body The body of the request.
+   *
+   * @return {User}
+   */
+  function mapUser(body) {
+    var user = new Users();
+    var index;
+
+    for(index in Object.keys(user._doc)) {
+      if (body[index]) {
+        user[index] = body[index];
+      }
+    }
+
+    user.updated = new Date();
+    user.created = new Date();
+
+    return user;
   }
 
   // --------------------------- Revealing Module Section ----------------------------

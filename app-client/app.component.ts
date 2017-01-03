@@ -15,21 +15,6 @@ import { User } from './users/models/user.model.client';
 })
 
 export class AppComponent {
-  constructor(auth: AuthService, userService: UserService) {
-    auth.login('squarehook', '12345', (err, user: User) => {
-      if (err) {
-        // This would be where the redirect to the login form would be.
-      }
-      if (user) {
-        // If we get here without errors, the user is logged in.
-        let response = userService.read(user.id);
-        response.subscribe((data) => {
-          console.log(data);
-        }, (error) => {
-          console.log(error);
-        });
-      }
-    });
-  }
+  constructor(private auth: AuthService, private userService: UserService) { }
   name = 'Too Mean';
 }

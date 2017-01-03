@@ -34,13 +34,22 @@ import 'rxjs/add/operator/map';
 @Injectable()
 export class UserService {
   user: User;
-  http: Http;
 
-  constructor(http: Http) {
-    this.http = http;
-  }
+  constructor(private http: Http) { }
 
   read(userId: string) {
     return this.http.get('api/users/' + userId);
+  }
+
+  create(newUser: User) {
+    return this.http.post('api/users', newUser);
+  }
+
+  update(updatedUser: User) {
+    return this.http.put('api/users', updatedUser);
+  }
+
+  delete(userId: string) {
+    return this.http.delete('api/users/' + userId);
   }
 }

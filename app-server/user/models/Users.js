@@ -33,7 +33,7 @@ var UserSchema = new Schema({
   },
   username: {
     type: String,
-    unique: 'Username already exists',
+    unique: true,
     required: 'Please fill in a username',
     lowercase: true,
     trim: true

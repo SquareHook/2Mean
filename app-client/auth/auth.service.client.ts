@@ -36,23 +36,15 @@ import 'rxjs/add/operator/map';
 @Injectable()
 export class AuthService {
   user: User;
-  http: Http;
   apikey: String;
 
-  HA1: string;
-  HA2: string;
-
-  constructor(http: Http) {
-    this.http = http;
+  constructor(private http: Http) {
     this.user = new User();
     this.apikey = null;
-
-    this.user.userName = 'squarehook';
-    this.user.password = '12345';
   }
 
   isLogged() {
-    if (this.user.userName) {
+    if (this.user.username) {
       return true;
     } else {
       return false;
@@ -83,8 +75,8 @@ export class AuthService {
         this.user.lastName = body.user.lastName;
         this.user.displayName = body.user.displayName;
         this.user.email = body.user.email;
-        this.user.userName = body.user.username;
-        this.user.profileImageUrl = body.user.profileImageURL;
+        this.user.username = body.user.username;
+        this.user.profileImageURL = body.user.profileImageURL;
         this.user.roles = body.user.roles;
 
         // Save the apikey
