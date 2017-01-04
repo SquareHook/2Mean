@@ -9,6 +9,7 @@ import { PageNotFoundComponent } from './components/not-found.component';
 
 import { AuthModule }            from './auth/auth.module';
 import { CoreModule }            from './core/core.module';
+import { UserService }           from './users/services/user.service';
 
 import { AppRoutingModule }      from './app-routing.module';
 
@@ -22,6 +23,7 @@ import { AppRoutingModule }      from './app-routing.module';
     CoreModule,
     AppRoutingModule
   ],
+  providers: [ UserService ],
   declarations: [
     AppComponent,
     PageNotFoundComponent

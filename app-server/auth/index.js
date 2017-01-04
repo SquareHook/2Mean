@@ -1,4 +1,4 @@
-var Users = require('./models/Users');
+var Users = require('../user/models/Users');
 
 var Keys = require('./models/Keys');
 
