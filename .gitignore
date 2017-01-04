@@ -1,4 +1,5 @@
 dist
+build
 .idea
 node_modules
 jspm_packages
