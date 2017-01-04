@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 
-import { AuthService } from './auth/auth.service.client';
+import { AuthService } from '../../auth/client/auth.service.client';
 
 @Component({
   selector: 'too-mean',

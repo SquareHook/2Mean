@@ -9,7 +9,7 @@ module.exports = {
 
   resolve: {
     extensions: [ '', '.ts', '.js' ],
-    moduleDirectories: [ 'node_modules', path.resolve(rootDir, 'app-client') ]
+    moduleDirectories: [ 'node_modules', path.resolve(rootDir, 'modules/app/client') ]
   },
   tslint: {
     emitErrors: true
@@ -37,7 +37,7 @@ module.exports = {
       { 
         test: /\.(js|ts)$/, 
         loader: 'istanbul-instrumenter?esModules=true', 
-        include: path.resolve(rootDir, './app-client'),
+        include: path.resolve(rootDir, './modules/app/client'),
         exclude: [ /\.(e2e|spec)\.ts/, /node_modules/ ] 
       }
     ]
@@ -48,7 +48,7 @@ module.exports = {
   plugins: [
     new ContextReplacementPlugin(
       /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
-      path.resolve(rootDir, './app-client')
+      path.resolve(rootDir, './modules/app/client')
     )
   ]
 };

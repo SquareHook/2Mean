@@ -19,7 +19,7 @@ export class SignupComponent {
   constructor(private authService: AuthService, private router: Router) { }
 
   signup () {
-    console.log(model);
+    console.log(this.model);
     this.loading = true;
     this.authService.create(this.model)
       .subscribe(

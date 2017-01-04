@@ -8,8 +8,7 @@ import { DebugElement }                       from '@angular/core';
 import { AppComponent }                       from './app.component';
 
 /* Dependencies */
-import { AuthService }                        from './auth/auth.service.client';
-
+import { AuthService }                        from '../../auth/client/auth.service.client';
 
 describe('AppComponent', () => {
   let comp:     AppComponent;
