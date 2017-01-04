@@ -33,7 +33,7 @@ module.exports = function (config) {
     },
     remapCoverageReporter: {
       'text-summary': null,
-      cobertura: '../build/reports/client/coverage/cobertura.xml'
+      cobertura: 'build/reports/client/coverage/cobertura.xml'
     },
 
     port: 9876,
