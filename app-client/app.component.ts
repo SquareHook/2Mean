@@ -1,6 +1,9 @@
 import { Component } from '@angular/core';
 
 import { AuthService } from './auth/auth.service.client';
+import { UserService } from './users/services/user.service';
+
+import { User } from './users/models/user.model.client';
 
 @Component({
   selector: 'too-mean',
@@ -12,8 +15,6 @@ import { AuthService } from './auth/auth.service.client';
 })
 
 export class AppComponent {
-  constructor(auth: AuthService) {
-
-  }
+  constructor(private auth: AuthService, private userService: UserService) { }
   name = 'Too Mean';
 }

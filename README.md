@@ -25,7 +25,7 @@ $ npm start
 This command will run webpack and the server concurrently. Webpack will
 watch for changes and compile typescript when a change is detected.
 
-# ang2cohort
+# Too Mean
 
 
 ## Add Menu item:
