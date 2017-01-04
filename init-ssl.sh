@@ -5,4 +5,4 @@ chmod 0600 config/private/key.pem
 
 openssl genrsa -out config/private/key.pem 4096
 
-openssl req -key config/private/key.pem -x509 -new -days 3650 -out config/private/cacert.pem
+openssl req -batch -key config/private/key.pem -x509 -new -days 3650 -out config/private/cacert.pem
