@@ -109,13 +109,13 @@ function userController(logger) {
   /**
    * Main function to handle update for the users collection.
    *
-   * @param {Request} req   The Express request object.
+   * @param {Request}  req  The Express request object.
    * @param {Response} res  The Express response object.
-   * @param {Next} next     The Express next (middleware) function.
+   * @param {Next}     next The Express next (middleware) function.
    *
    * @return {void}
    */
-  function update() {
+  function update(req, res, next) {
     var user = req.user;
 
     var existingUser = mapUser(req.body);
