@@ -96,6 +96,7 @@ nav.bg-primary {
 
 .navbar-nav .nav-link,
 .navbar-dark .navbar-nav .nav-link,
+.navbar .nav-item .btn,
 .auth a {
     padding: 1rem 0.5rem;
     text-transform: uppercase;
@@ -110,4 +111,15 @@ nav.bg-primary {
         background-color: darken(@angular-blue, 5%);
         color: @active-link-color;
     }
+}
+
+.navbar .nav-item .btn {
+    color: @inactive-link-color;
+    &:hover,
+    &:focus,
+    &:active {
+        border: none;
+    }
+    margin-bottom:0px;
+    line-height:1.45rem;
 }

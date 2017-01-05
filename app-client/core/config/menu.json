@@ -1,6 +1,6 @@
 [{
   "template": "Home",
-  "state": "#",
+  "state": "/",
   "position": 1,
   "roles": [],
   "subitems": []
