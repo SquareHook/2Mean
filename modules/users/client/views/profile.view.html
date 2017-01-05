@@ -1,4 +1,30 @@
+<!-- DEBUG row. TODO remove when not needed or hide dynamically? -->
 <div class="row">
-<p>Hello {{ user.displayName }}</p>
-<pre><code>{{ user_string }}</code></pre>
+  <div class="col-sm-3 col-md-3">
+    <p>Hello {{ user.displayName }}</p>
+  </div>
+  <div class="col-sm-9 col-md-8">
+    <pre><code>{{ user_string }}</code></pre>
+  </div>
+</div>
+<div class="row">
+  <nav class="col-sm-3 col-md-3">
+    <ul class="nav nav-pills nav-stacked">
+      <li>
+        <a [routerLink]="[{ outlets: { profile: ['edit'] } }]">Edit Profile</a>
+      </li>
+      <li>
+        <a [routerLink]="[{ outlets: { profile: ['change-profile-picture'] } }]">Change Profile Picture</a>
+      </li>
+      <li>
+        <a [routerLink]="[{ outlets: { profile: ['change-password'] } }]">Change Password</a>
+      </li>
+      <li>
+        <a [routerLink]="[{ outlets: { profile: ['manage-social'] } }]">Manage Social Accounts</a>
+      </li>
+    </ul>
+  </nav>
+  <div class="col-sm-9 sol-md-8">
+    <router-outlet name="profile"></router-outlet>
+  </div>
 </div>

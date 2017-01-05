@@ -41,28 +41,35 @@ const usersRoutes: Routes = [
   },
   // User profile
   { 
-    path: 'profile', 
-    component: ProfileComponent 
-  },
-  { 
-    path: 'profile/change-password', 
-    component: ChangePasswordComponent 
-  },
-  { 
-    path: 'profile/change-profile-picture', 
-    component: ChangeProfilePictureComponent 
-  },
-  { 
-    path: 'profile/edit', 
-    component: EditProfileComponent 
-  },
-  { 
-    path: 'profile/manage-social', 
-    component: ManageSocialComponent 
-  },
-  { 
-    path: 'profile/settings', 
-    component: SettingsComponent 
+    path: 'profile',
+    component: ProfileComponent,
+    children: [
+      { 
+        path: 'change-password',
+        component: ChangePasswordComponent,
+        outlet: 'profile'
+      },
+      { 
+        path: 'change-profile-picture',
+        component: ChangeProfilePictureComponent,
+        outlet: 'profile'
+      },
+      { 
+        path: 'edit',
+        component: EditProfileComponent,
+        outlet: 'profile'
+      },
+      { 
+        path: 'manage-social',
+        component: ManageSocialComponent,
+        outlet: 'profile'
+      },
+      { 
+        path: 'settings', 
+        component: SettingsComponent,
+        outlet: 'profile'
+      }
+    ]
   }
 ];
 
