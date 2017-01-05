@@ -88,6 +88,32 @@ export class AuthService {
       });
   }
 
+  /*
+   * Register function to create new users
+   *
+   * @param {string}   username The username to signup with
+   * @param {string}   email    The email to signup with
+   * @param {string}   password The password to signup with
+   * @param {function} cb       The callback used to get results
+   */
+  register(username: string, email: string, password: string, cb: (err: Object, user: Object) => any) : void {
+    let body = {
+      username: username,
+      email: email,
+      password: password
+    };
+
+    this.http
+      .post('api/users', body)
+      .subscribe((res: Response) => {
+        let body = res.json();
+
+        cb(null, this.user);
+      }, (error: Response | any) => {
+        cb({ error: 401 }, null);
+      });
+  }
+
   getUser(): User {
     return this.user;
   }
