@@ -10,18 +10,18 @@ const rootDir = path.resolve(__dirname, '../..');
 module.exports = {
     debug: true,
     devServer: {
-        contentBase: path.resolve(rootDir, 'app-client'),
+        contentBase: path.resolve(rootDir, 'modules/app/client'),
         port: 3000
     },
     devtool: 'source-map',
     entry: {
-        app: [ path.resolve(rootDir, 'app-client', 'main') ],
-        vendor: [ path.resolve(rootDir, 'app-client', 'vendor.browser') ]
+        app: [ path.resolve(rootDir, 'modules/app/client', 'main') ],
+        vendor: [ path.resolve(rootDir, 'modules/app/client', 'vendor.browser') ]
     },
     module: {
         loaders: [
             { loader: 'raw', test: /\.(css|html)$/ },
-            { exclude: /node_modules/, loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ },
+            { exclude: [ /.*spec\.ts/, /node_modules/ ], loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ },
             { test: /\.json$/, loaders: [ 'raw-loader', 'json-loader' ] },
             { test: /\.less$/, loaders: ['style-loader', 'css-loader', 'less-loader' ] }
         ],
@@ -39,7 +39,7 @@ module.exports = {
         new HtmlWebpack({
             filename: 'index.html',
             inject: 'body',
-            template: path.resolve(rootDir, 'app-client', 'index.html')
+            template: path.resolve(rootDir, 'modules/app/client', 'index.html')
         })
     ],
     resolve: {
