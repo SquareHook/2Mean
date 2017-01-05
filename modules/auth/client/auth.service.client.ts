@@ -120,6 +120,11 @@ export class AuthService {
     return JSON.parse(localStorage.getItem('user'));
   }
 
+  setUser(user : User) : void {
+    this.user = user;
+    this.saveUser();
+  }
+
   private saveUser(): void {
     localStorage.setItem('user', JSON.stringify(this.user));
   }
