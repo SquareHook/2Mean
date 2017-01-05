@@ -3,5 +3,15 @@
   "state": "#",
   "position": 2,
   "roles": [],
-  "subitems": []
+  "subitems": [
+  {
+    "template": "New",
+    "state": "/articles/new",
+    "roles": []
+  },
+  {
+    "template": "List",
+    "state": "/articles/list",
+    "roles": []
+  }]
 }]
