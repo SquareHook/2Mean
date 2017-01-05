@@ -1,1 +1,1 @@
-[{"template":"Articles","state":"#","position":2,"roles":[],"subitems":[]},{"template":"Home","state":"#","position":1,"roles":[],"subitems":[]}]
+[{"template":"Articles","state":"#","position":2,"roles":[],"subitems":[{"template":"New","state":"/articles/new","roles":[]},{"template":"List","state":"/articles/list","roles":[]}]},{"template":"Home","state":"/","position":1,"roles":[],"subitems":[]}]
