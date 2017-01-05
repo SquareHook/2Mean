@@ -1,0 +1,17 @@
+[
+  {
+    "template": "Profile",
+    "state": "/profile",
+    "position": "3",
+    "type": "dropdown",
+    "subitems": [
+      {
+        "template": "Change Password",
+        "state": "/profile/change-password",
+        "position": "0",
+        "type": null,
+        "subitems": [ ]
+      }
+    ]
+  }
+]
