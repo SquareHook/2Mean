@@ -8,15 +8,19 @@ import { User }             from '../models/user.model.client';
 
 /* Angular2 Services */
 import { AuthService }      from '../../../auth/client/auth.service.client';
+import { UserService }      from '../services/user.service';
+
 
 @Component({
-  providers: [ AuthService ],
+  providers: [ AuthService, UserService ],
   templateUrl: './../views/profile.view.html'
 })
 export class ProfileComponent {
   user: User;
 
-  constructor (private authService: AuthService) { 
-    user = authService.user;
+  constructor (
+    private authService: AuthService 
+  ) { 
+    this.user = authService.getUser();
   }
 }

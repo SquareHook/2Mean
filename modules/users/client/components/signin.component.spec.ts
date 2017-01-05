@@ -4,7 +4,7 @@ import { By }                               from '@angular/platform-browser';
 import { DebugElement }                     from '@angular/core';
 
 /* Unit under test */
-import { SigninComponent }                  from './signin.component.ts';
+import { SigninComponent }                  from './signin.component';
 
 /* Dependencies */
 //TODO

@@ -79,6 +79,8 @@ export class AuthService {
         this.user.profileImageURL = body.user.profileImageURL;
         this.user.roles = body.user.roles;
 
+        this.saveUser();
+
         // Save the apikey
         this.apikey = body.apikey;
 
@@ -115,7 +117,11 @@ export class AuthService {
   }
 
   getUser(): User {
-    return this.user;
+    return JSON.parse(localStorage.getItem('user'));
+  }
+
+  private saveUser(): void {
+    localStorage.setItem('user', JSON.stringify(this.user));
   }
 
 }
