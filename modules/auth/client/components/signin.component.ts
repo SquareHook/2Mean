@@ -3,7 +3,7 @@ import { Component }        from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 /*  Angular2 Models */
-import { User }             from '../../users/models/user.model.client';
+import { User }             from '../../../users/client/models/user.model.client';
 
 /*  Angular2 Services */
 import { AuthService }      from './../auth.service.client';

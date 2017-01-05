@@ -3,8 +3,9 @@ import { BrowserModule }  from '@angular/platform-browser';
 import { HttpModule }     from '@angular/http';
 import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }     from '@angular/router';
-import { AppModule }      from '../app.module';
-import { AppRoutingModule }      from './../app-routing.module';
+import { CoreMenuComponent }  from './components/core.component.menu.client';
+import { AppModule }      from '../../app/client/app.module';
+import { AppRoutingModule }      from '../../app/client/app-routing.module';
 
 @NgModule({
   imports:      [
@@ -15,10 +16,12 @@ import { AppRoutingModule }      from './../app-routing.module';
   ],
   /*components available inside of this module */
   declarations: [
+    CoreMenuComponent
   ],
   /*components available to other modules */
-  exports: [],
-  bootstrap:    [ ]
+  exports: [CoreMenuComponent],
+  bootstrap:    [ CoreMenuComponent ]
 })
 
-export class CoreModule {}
+export class CoreModule {
+}
