@@ -11,6 +11,7 @@ import { UserService }           from '../../users/client/services/user.service'
 import { AuthModule }            from '../../auth/client/auth.module';
 import { CoreModule }            from '../../core/client/core.module';
 import { UsersModule }           from '../../users/client/users.module';
+import { ArticleModule }        from '../../articles/client/articles.module';
 import { AppRoutingModule }      from './app-routing.module';
 
 
@@ -22,6 +23,7 @@ import { AppRoutingModule }      from './app-routing.module';
     AuthModule,
     CoreModule,
     UsersModule,
+    ArticleModule,
     AppRoutingModule
   ],
   providers: [ UserService ],

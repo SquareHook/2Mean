@@ -1,0 +1,16 @@
+<div *ngIf="article" class="list-group">
+    <div class="d-flex w-100 justify-content-between ">
+        <h5 class="mb-1 ">{{article.title}}</h5>
+    </div>
+    <p class="mb-1 ">{{article.content}}</p>
+    <small>By <strong>{{article.userName}}</strong> on {{article.created | date}}</small>
+</div>
+<div *ngIf="!article">
+    <div class="alert alert-danger" role="alert">
+        Whoops! no article found.
+    </div>
+</div>
+<hr/>
+<div class="text-center">
+    <button class="btn btn-primary" routerLink="/articles">All Articles</button>
+</div>

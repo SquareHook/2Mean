@@ -1,9 +1,9 @@
 <nav class="navbar navbar-dark navbar-full bg-primary main-nav">
-    <a class="navbar-brand" href="#"><span class="icon fa-social-angular-outline"></span></a>
+    <a class="navbar-brand" routerLink="/" routerLinkActive="active"><span class="icon fa-social-angular-outline"></span></a>
     <ul class="nav navbar-nav">
-        <li *ngFor="let item of menu" class="nav-item">
+        <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
             <a *ngIf="!item.dropdown" class="nav-link" routerLink="{{item.state}}" [innerHTML]="item.template"></a>
-            <div *ngIf="item.dropdown" ngbDropdown>
+            <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
                 <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
                 <div class="dropdown-menu">
                     <button *ngFor="let subitem of item.subitems" class="dropdown-item" [innerHTML]="subitem.template" routerLink="{{subitem.state}}"></button>

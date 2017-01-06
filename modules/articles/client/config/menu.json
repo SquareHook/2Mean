@@ -11,7 +11,7 @@
   },
   {
     "template": "List",
-    "state": "/articles/list",
+    "state": "/articles",
     "roles": []
   }]
 }]
