@@ -4,21 +4,30 @@ import { HttpModule }     from '@angular/http';
 import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }     from '@angular/router';
 import { AppModule }      from '../../app/client/app.module';
-import { AppRoutingModule }      from '../../app/client/app-routing.module';
+import { ArticlesRoutingModule }      from './config/articles-routing.module';
+
+
+import { ListArticlesComponent } from './components/list-articles.component';
+import { ArticleDetailComponent } from './components/article-detail.component';
 
 @NgModule({
   imports:      [
     BrowserModule,
     NgbModule,
     HttpModule,
-    RouterModule
+    ArticlesRoutingModule,
+
   ],
   /*components available inside of this module */
   declarations: [
+    ListArticlesComponent,
+    ArticleDetailComponent
   ],
   /*components available to other modules */
   exports: [],
-  bootstrap:    [ ]
+
+  /* which components to load when starting this module */
+  bootstrap:    [ ListArticlesComponent]
 })
 
-export class CoreModule {}
+export class ArticleModule {}

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-const menuItems = require('./../config/menus.json');
+const menuJson = require('./../config/menus.json');
 
 
 @Component({
@@ -9,18 +9,31 @@ const menuItems = require('./../config/menus.json');
 })
 
 export class CoreMenuComponent{
-	menu_items : any
+	menu: any
 	constructor()
 	{
-		//do some formatting to get proper JSON
-		this.menu_items = menuItems.replace('module.exports =', '');
-		this.menu_items = this.menu_items.slice(0, this.menu_items.length-1);				
-		this.menu_items = JSON.parse(this.menu_items);
+		
+	  //TODO: filter out items and subitems by role
+	  let menuItems;
+	  //do some formatting to get proper JSON
+	  menuItems = menuJson.replace("module.exports =", "");
+	  menuItems = menuItems.slice(0, menuItems.length-1);				
+      menuItems = JSON.parse(menuItems);
 
-		//sort the menu items according to the position variable
-		this.menu_items.sort((a :any, b :any) =>{
-			return a.position - b.position;
-		});
+
+      //sort the menu items according to the position variable
+      menuItems.sort((a :any, b :any) =>{
+	    return a.position - b.position;
+	  });
+
+	  for(let item of menuItems)
+	  {
+		if(item.subitems && item.subitems.length > 0)
+		  {
+			item.dropdown=true;
+		   }
+	  }
+		this.menu = menuItems;
 	}
 }	
 
