@@ -3,12 +3,16 @@
 import { async, ComponentFixture, TestBed }   from '@angular/core/testing';
 import { By }                                 from '@angular/platform-browser';
 import { DebugElement }                       from '@angular/core';
+import { RouterTestingModule }                from '@angular/router/testing';
 
 /* UUT */
 import { AppComponent }                       from './app.component';
 
 /* Dependencies */
+import { CoreModule }                         from '../../core/client/core.module';
+import { AppRoutingModule }                   from './app-routing.module';
 import { AuthService }                        from '../../auth/client/auth.service.client';
+import { UserService }                        from '../../users/client/services/user.service';
 
 describe('AppComponent', () => {
   let comp:     AppComponent;
@@ -16,8 +20,17 @@ describe('AppComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
+      imports: [
+        AppRoutingModule,
+        CoreModule,
+        RouterTestingModule
+      ],
       declarations: [ 
         AppComponent
+      ],
+      providers: [
+        UserService,
+        AuthService
       ]
     });
   }));
