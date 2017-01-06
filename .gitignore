@@ -1,4 +1,5 @@
 dist
+build
 .idea
 node_modules
 jspm_packages
@@ -12,7 +13,7 @@ _test-output
 _temp
 
 #generated menus
-app-client/core/config/menus.json
+modules/core/client/config/menus.json
 
 #swap files
 *.swp
