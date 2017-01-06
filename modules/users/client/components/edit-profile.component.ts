@@ -31,14 +31,15 @@ export class EditProfileComponent {
    */
   submit () : void {
     this.loading = true;
-
     this.userService.update(this.user)
       .subscribe(
         user => {
           this.user = user;
           this.authService.setUser(this.user);
         },
-        error => this.errorMessage = <any>error);
+        error => {
+          this.errorMessage = error._body;
+        });
 
     this.loading = false;
   }
