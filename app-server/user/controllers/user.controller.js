@@ -127,7 +127,7 @@ function userController(logger) {
     if (!existingUser.email) {
       deferred.reject({
         code: 400,
-        data: 'Malformed request.  Email needed.'
+        error: 'Malformed request.  Email needed.'
       });
     } else {
 

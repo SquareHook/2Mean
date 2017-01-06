@@ -59,6 +59,6 @@ export class UserService {
 
   private extractData(res: Response | any) {
     let body = res.json();
-    return body.data || { };
+    return JSON.parse(body.data) || { };
   }
 }
