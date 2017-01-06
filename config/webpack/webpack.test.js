@@ -1,24 +1,54 @@
 'use strict';
+const ContextReplacementPlugin = require('webpack/lib/ContextReplacementPlugin');
 const path = require('path');
-const webpack = require('webpack');
+
+const rootDir = path.resolve(__dirname, '../../');
 
 module.exports = {
-    devtool: 'inline-source-map',
-    module: {
-        preLoaders: [
-            { exclude: /node_modules/, loader: 'tslint', test: /\.ts$/ }
-        ],
-        loaders: [
-            { loader: 'raw', test: /\.(css|html)$/ },
-            { exclude: /node_modules/, loader: 'ts', test: /\.ts$/ }
-        ]
-    },
-    resolve: {
-        extensions: ['', '.js', '.ts'],
-        moduleDirectories: ['node_modules'],
-        root: path.resolve('.', 'src');
-    },
-    tslint: {
-        emitErrors: true
-    }
+  devtool: 'inline-source-map',
+
+  resolve: {
+    extensions: [ '', '.ts', '.js' ],
+    moduleDirectories: [ 'node_modules', path.resolve(rootDir, 'modules/app/client') ]
+  },
+  tslint: {
+    emitErrors: true
+  },
+
+  module: {
+    preLoaders: [
+        { exclude: /node_modules/, loader: 'tslint', test: /\.ts$/ }
+    ],
+    loaders: [
+      { 
+        test: /\.ts$/, 
+        loaders: ['awesome-typescript-loader', 'angular2-template-loader']
+      },
+      { 
+        test: /\.(css|html)$/, 
+        loader: 'raw' 
+      },
+      {
+        test: /\.less$/,
+        loader: 'null'
+      }
+    ],
+    postLoaders: [
+      { 
+        test: /\.(js|ts)$/, 
+        loader: 'istanbul-instrumenter?esModules=true', 
+        include: /modules\/.*\/client/,
+        exclude: [ /\.(e2e|spec)\.ts/, /node_modules/ ] 
+      }
+    ]
+  },
+  tslint: {
+    configFile: './config/tslint.json'
+  },
+  plugins: [
+    new ContextReplacementPlugin(
+      /angular(\\|\/)core(\\|\/)(esm(\\|\/)src|src)(\\|\/)linker/,
+      path.resolve(rootDir, './modules/app/client')
+    )
+  ]
 };
