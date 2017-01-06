@@ -1,0 +1,9 @@
+[
+  {
+    "template": "Profile",
+    "state": "/profile",
+    "position": "3",
+    "type": "dropdown",
+    "subitems": [ ]
+  }
+]

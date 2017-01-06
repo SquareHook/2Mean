@@ -12,7 +12,7 @@ require('zone.js/dist/async-test');
 require('zone.js/dist/fake-async-test');
 
 //app root, ?, regex for test names
-var appContext = require.context('../modules/app/client', true, /\.spec\.ts/);
+var appContext = require.context('../modules', true, /\.spec\.ts/);
 
 appContext.keys().forEach(appContext);
 

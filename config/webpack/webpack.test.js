@@ -37,7 +37,7 @@ module.exports = {
       { 
         test: /\.(js|ts)$/, 
         loader: 'istanbul-instrumenter?esModules=true', 
-        include: path.resolve(rootDir, './modules/app/client'),
+        include: /modules\/.*\/client/,
         exclude: [ /\.(e2e|spec)\.ts/, /node_modules/ ] 
       }
     ]

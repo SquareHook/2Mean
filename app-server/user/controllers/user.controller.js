@@ -73,6 +73,7 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
+      console.log(newUser);
 
       newUser.save((err, data) => {
         if (err) {

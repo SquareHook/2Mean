@@ -15,12 +15,10 @@ describe('AppComponent', () => {
   let fixture:  ComponentFixture<AppComponent>;
 
   beforeEach(async(() => {
-    authServiceStub = {
-    };
-
     TestBed.configureTestingModule({
-      declarations: [ AppComponent ],
-      providers:    [ { provide: AuthService, useValue: authServiceStub } ]
+      declarations: [ 
+        AppComponent
+      ]
     });
   }));
 
@@ -28,8 +26,6 @@ describe('AppComponent', () => {
     fixture = TestBed.createComponent(AppComponent);
 
     comp = fixture.componentInstance;
-
-    authService = TestBed.get(AuthService);
   });
 
   it('should display the menu', () => {

@@ -12,12 +12,14 @@ export class CoreMenuComponent{
 	menu: any
 	constructor()
 	{
+		
 	  //TODO: filter out items and subitems by role
 	  let menuItems;
 	  //do some formatting to get proper JSON
 	  menuItems = menuJson.replace("module.exports =", "");
 	  menuItems = menuItems.slice(0, menuItems.length-1);				
       menuItems = JSON.parse(menuItems);
+
 
       //sort the menu items according to the position variable
       menuItems.sort((a :any, b :any) =>{
@@ -30,7 +32,7 @@ export class CoreMenuComponent{
 		  {
 			item.dropdown=true;
 		   }
-		}
+	  }
 		this.menu = menuItems;
 	}
 }	
