@@ -1,13 +1,11 @@
 // Load global configuration
 var config = require('./config/config');
-console.log(config);
 
 var path = require('path');
 var fs = require('fs');
 
-// Initialize the Application logger.
-var logger = require('./app-server/logger.js');
-logger.info('Application Bootstrapping...');
+// This is assuming the application was executed at the root dir.
+config.basedir = path.resolve('.');
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -24,11 +22,13 @@ mongoose.connect(config.mongo.uri);
  *
  * TODO: This should be done somewhere else.
  */
-var authModule = require('./app-server/auth/');
-var auth = new authModule(logger);
+var coreModule = require('./modules/core/server/');
+var core = new coreModule(config, app);
 
-var userModule = require('./app-server/user/');
-var user = new userModule(logger);
+var logger = core.moduleLoader.get('logger');
+
+var auth = core.moduleLoader.get('auth');
+var user = core.moduleLoader.get('users');
 
 var http = require('http');
 var https = require('https');
@@ -48,6 +48,9 @@ app.use(cookieParser());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+core.routes.loadRoutes();
+
 // Impromptu logger.
 app.use((req, res, next) => {
   logger.info('Endpoint ' + req.path);
@@ -66,13 +69,6 @@ app.get('/api/test',
         user: req.auth
       });
     });
-
-app.post('/api/login', auth.login);
-
-app.get('/api/users/:userId', auth.validateAPIKey, user.read);
-app.post('/api/users', auth.validateAPIKey, user.create);
-app.put('/api/users', auth.validateAPIKey, user.update);
-app.delete('/api/users/:userId', auth.validateAPIKey, user.deleteUser);
 
 /*
  * Routes that can be accessed only by authenticated users.
