@@ -24,9 +24,8 @@ export class ChangePasswordComponent {
 
   constructor (
     private authService: AuthService,
-    private userService: UserService
-  ) { 
-    this.user = this.authService.getUser();
+    private userService: UserService) { 
+      this.user = this.authService.getUser();
   }
 
   onKey (event : any) : void {

@@ -20,9 +20,8 @@ export class EditProfileComponent {
   
   constructor (
     private authService: AuthService,
-    private userService: UserService
-  ) {
-    this.user = authService.getUser();
+    private userService: UserService) {
+      this.user = authService.getUser();
   }
 
   /*

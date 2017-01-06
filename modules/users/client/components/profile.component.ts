@@ -19,9 +19,7 @@ export class ProfileComponent {
   user: User;
   user_string: string;
 
-  constructor (
-    private authService: AuthService 
-  ) { 
+  constructor (private authService: AuthService) { 
     this.user = authService.getUser();
     this.user_string = JSON.stringify(this.user, null, 2);
   }
