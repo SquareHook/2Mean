@@ -3,24 +3,35 @@
 import { async, ComponentFixture, TestBed }   from '@angular/core/testing';
 import { By }                                 from '@angular/platform-browser';
 import { DebugElement }                       from '@angular/core';
+import { RouterTestingModule }                from '@angular/router/testing';
 
 /* UUT */
 import { AppComponent }                       from './app.component';
 
 /* Dependencies */
+import { CoreModule }                         from '../../core/client/core.module';
+import { AppRoutingModule }                   from './app-routing.module';
 import { AuthService }                        from '../../auth/client/auth.service.client';
+import { UserService }                        from '../../users/client/services/user.service';
 
 describe('AppComponent', () => {
   let comp:     AppComponent;
   let fixture:  ComponentFixture<AppComponent>;
 
   beforeEach(async(() => {
-    authServiceStub = {
-    };
-
     TestBed.configureTestingModule({
-      declarations: [ AppComponent ],
-      providers:    [ { provide: AuthService, useValue: authServiceStub } ]
+      imports: [
+        AppRoutingModule,
+        CoreModule,
+        RouterTestingModule
+      ],
+      declarations: [ 
+        AppComponent
+      ],
+      providers: [
+        UserService,
+        AuthService
+      ]
     });
   }));
 
@@ -28,8 +39,6 @@ describe('AppComponent', () => {
     fixture = TestBed.createComponent(AppComponent);
 
     comp = fixture.componentInstance;
-
-    authService = TestBed.get(AuthService);
   });
 
   it('should display the menu', () => {

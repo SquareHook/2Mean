@@ -73,6 +73,7 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
+      console.log(newUser);
 
       newUser.save((err, data) => {
         if (err) {
@@ -126,7 +127,7 @@ function userController(logger) {
     if (!existingUser.email) {
       deferred.reject({
         code: 400,
-        data: 'Malformed request.  Email needed.'
+        error: 'Malformed request.  Email needed.'
       });
     } else {
 

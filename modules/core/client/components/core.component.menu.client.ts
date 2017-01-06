@@ -13,7 +13,7 @@ export class CoreMenuComponent{
 	constructor()
 	{
 		//do some formatting to get proper JSON
-		this.menu_items = menuItems.replace("module.exports =", "");
+		this.menu_items = menuItems.replace('module.exports =', '');
 		this.menu_items = this.menu_items.slice(0, this.menu_items.length-1);				
 		this.menu_items = JSON.parse(this.menu_items);
 

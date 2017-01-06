@@ -22,7 +22,8 @@ module.exports = function (config) {
 
     reporters: [ 'nyan', 'junit', 'coverage', 'remap-coverage' ],
     nyanReporter: {
-      renderOnRunCompleteOnly: process.env.TOOMEAN_CI_IS_RUNNER || false
+      renderOnRunCompleteOnly: process.env.TOOMEAN_CI_IS_RUNNER || false,
+      suppressErrorHighlighting: true
     },
     junitReporter: {
       outputDir: '../build/reports/client',
@@ -32,7 +33,6 @@ module.exports = function (config) {
       type: 'in-memory'
     },
     remapCoverageReporter: {
-      'text-summary': null,
       cobertura: 'build/reports/client/coverage/cobertura.xml'
     },
 
@@ -41,6 +41,7 @@ module.exports = function (config) {
     logLevel: config.LOG_INFO,
     autoWatch: false,
     browsers: [ 'PhantomJS' ],
+
     singleRun: true
   };
 

@@ -37,19 +37,28 @@ export class UserService {
 
   constructor(private http: Http) { }
 
-  read(userId: string) {
-    return this.http.get('api/users/' + userId);
+  read(userId: string) : Observable<User> {
+    return this.http.get('api/users/' + userId)
+      .map(this.extractData);
   }
 
-  create(newUser: User) {
-    return this.http.post('api/users', newUser);
+  create(newUser: User) : Observable<User> {
+    return this.http.post('api/users', newUser)
+      .map(this.extractData);
   }
 
-  update(updatedUser: User) {
-    return this.http.put('api/users', updatedUser);
+  update(updatedUser: User) : Observable<User> {
+    return this.http.put('api/users', updatedUser)
+      .map(this.extractData);
   }
 
-  delete(userId: string) {
-    return this.http.delete('api/users/' + userId);
+  delete(userId: string) : Observable<User> {
+    return this.http.delete('api/users/' + userId)
+      .map(this.extractData);
+  }
+
+  private extractData(res: Response | any) {
+    let body = res.json();
+    return JSON.parse(body.data) || { };
   }
 }

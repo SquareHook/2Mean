@@ -79,6 +79,8 @@ export class AuthService {
         this.user.profileImageURL = body.user.profileImageURL;
         this.user.roles = body.user.roles;
 
+        this.saveUser();
+
         // Save the apikey
         this.apikey = body.apikey;
 
@@ -88,8 +90,43 @@ export class AuthService {
       });
   }
 
+  /*
+   * Register function to create new users
+   *
+   * @param {string}   username The username to signup with
+   * @param {string}   email    The email to signup with
+   * @param {string}   password The password to signup with
+   * @param {function} cb       The callback used to get results
+   */
+  register(username: string, email: string, password: string, cb: (err: Object, user: Object) => any) : void {
+    let body = {
+      username: username,
+      email: email,
+      password: password
+    };
+
+    this.http
+      .post('api/users', body)
+      .subscribe((res: Response) => {
+        let body = res.json();
+
+        cb(null, this.user);
+      }, (error: Response | any) => {
+        cb({ error: 401 }, null);
+      });
+  }
+
   getUser(): User {
-    return this.user;
+    return JSON.parse(localStorage.getItem('user'));
+  }
+
+  setUser(user : User) : void {
+    this.user = user;
+    this.saveUser();
+  }
+
+  private saveUser(): void {
+    localStorage.setItem('user', JSON.stringify(this.user));
   }
 
 }

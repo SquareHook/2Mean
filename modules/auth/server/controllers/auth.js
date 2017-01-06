@@ -162,9 +162,10 @@ function authenticationModule(logger) {
 
     deferred.promise.then((data) => {
       // TODO !!!! This needs to be set to environment vars.
+      // dylan-ive commented it out for now so the auth api will work
       res.cookie('apikey', data.data.apikey, {
-        expires: new Date(Date.now() + keyTTL),
-        domain: 'localhost'
+        expires: new Date(Date.now() + keyTTL)
+        //domain: 'localhost'
       });
 
       res.status(data.code).send(data.data);
