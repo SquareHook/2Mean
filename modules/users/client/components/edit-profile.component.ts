@@ -35,11 +35,12 @@ export class EditProfileComponent {
         user => {
           this.user = user;
           this.authService.setUser(this.user);
+          this.loading = false;
         },
         error => {
           this.errorMessage = error._body;
+          this.loading = false;
         });
 
-    this.loading = false;
   }
 }
