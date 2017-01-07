@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import {Router }   from '@angular/router';
 const menuJson = require('./../config/menus.json');
 
 
@@ -10,7 +11,7 @@ const menuJson = require('./../config/menus.json');
 
 export class CoreMenuComponent{
 	menu: any
-	constructor()
+	constructor(private router:Router)
 	{
 		
 	  //TODO: filter out items and subitems by role
@@ -31,9 +32,25 @@ export class CoreMenuComponent{
 		if(item.subitems && item.subitems.length > 0)
 		  {
 			item.dropdown=true;
-		   }
+			//temp fix for subitems with a different outlet
+			for(let subitem of item.subitems)
+			{
+				if(subitem.outlet)
+				{
+					subitem.state = subitem.outlet +'/(' +subitem.outlet + ":" + subitem.state + ')';
+				}
+			}
+		  }
+
 	  }
 		this.menu = menuItems;
 	}
+
+	navByUrl(state:string):void{
+
+        this.router.navigateByUrl(state);
+    
+	}
+ 
 }	
 
