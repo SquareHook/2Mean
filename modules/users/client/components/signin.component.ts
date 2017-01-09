@@ -1,7 +1,7 @@
 /*  Vendor */
-import { Component }        from '@angular/core';
+import { Component, OnInit }from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
-import { Router }           from '@angular/router';
+import { Router, ActivatedRoute }           from '@angular/router';
 /*  Angular2 Models */
 import { User }             from './../models/user.model.client';
 
@@ -11,12 +11,19 @@ import { AuthService }      from './../../../auth/client/auth.service.client';
 @Component({
   templateUrl: './../views/signin.view.html'
 })
-export class SigninComponent {
+export class SigninComponent implements OnInit {
   model: any = {};
   loading = false;
   returnUrl: string;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(
+    private authService: AuthService, 
+    private router: Router,
+    private activatedRoute: ActivatedRoute
+  ) { }
+
+  ngOnInit() {
+  }
 
   login () {
     this.loading = true;
