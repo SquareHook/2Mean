@@ -7,22 +7,32 @@ import { Router }           from '@angular/router';
 import { User }             from '../models/user.model.client';
 
 /* Angular2 Services */
-import { AuthService }      from '../../../auth/client/auth.service.client';
+import { UserService }      from '../services/user.service';
 
 @Component({
   templateUrl: './../views/signup.view.html'
 })
 export class SignupComponent {
   model: any = {};
-  loading = false;
+  errorMessage: string = null;
 
-  constructor(private authService: AuthService, private router: Router) { }
+  constructor(private userService: UserService, private router: Router) { }
 
   signup () {
-    console.log(this.model);
-    this.loading = true;
+    let newUser = new User();
 
-    this.authService.register(this.model.username, this.model.email, this.model.password);
+    newUser.username = this.model.username;
+    newUser.email = this.model.email;
+    newUser.password = this.model.password;
+
+    this.userService.register(newUser)
+      .subscribe(
+        user => {
+          router.navigate(['/login']);
+        },
+        error => {
+          this.errorMessage = error._body;
+        });
   }
 
   get diagnostic() {

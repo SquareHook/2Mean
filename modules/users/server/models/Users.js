@@ -22,7 +22,8 @@ var UserSchema = new Schema({
   },
   displayName: {
     type: String,
-    trim: true
+    trim: true,
+    default: ''
   },
   email: {
     type: String,
@@ -36,7 +37,8 @@ var UserSchema = new Schema({
     unique: true,
     required: 'Please fill in a username',
     lowercase: true,
-    trim: true
+    trim: true,
+    default: ''
   },
   password: {
     type: String,
@@ -68,7 +70,8 @@ var UserSchema = new Schema({
     required: 'Please provide at least one role'
   },
   updated: {
-    type: Date
+    type: Date,
+    default: Date.now
   },
   created: {
     type: Date,
