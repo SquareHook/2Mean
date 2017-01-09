@@ -1,33 +1,32 @@
 [
+{
+  "template": "Profile",
+  "state": "#",
+  "position": "3",
+  "subitems": [
   {
-    "template": "Profile",
-    "state": "#",
-    "position": "3",
-    "subitems": [ 
-      {
-        "template": "Edit",
-        "outlet": "profile",
-        "state": "edit",
-        "roles": []
-      },
-      {
-        "template": "Change Picture",
-        "outlet": "profile",
-        "state": "change-profile-picture",
-        "roles": []
-      },
-      {
-        "template": "Change Password",
-        "outlet": "profile",
-        "state": "change-password",
-        "roles": []
-      },
-      {
-        "template": "Manage Social",
-        "outlet": "profile",
-        "state": "manage-social",
-        "roles": []
-      }
-    ]
-  }
-]
+    "template": "Edit",
+    "outlet": "profile",
+
+    "state": "edit",
+    "roles": []
+  },
+  {
+    "template": "Change Picture",
+    "outlet": "profile",
+    "state": "change-profile-picture",
+    "roles": []
+  },
+  {
+    "template": "Change Password",
+    "outlet": "profile",
+    "state": "change-password",
+    "roles": []
+  },
+  {
+    "template": "Manage Social",
+    "outlet": "profile",
+    "state": "manage-social",
+    "roles": []
+  }]
+}]

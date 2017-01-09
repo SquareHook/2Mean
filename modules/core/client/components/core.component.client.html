@@ -2,11 +2,17 @@
     <a class="navbar-brand" routerLink="/" routerLinkActive="active"><span class="icon fa-social-angular-outline"></span></a>
     <ul class="nav navbar-nav">
         <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
-            <a *ngIf="!item.dropdown" class="nav-link" routerLink="{{item.state}}" [innerHTML]="item.template"></a>
+            <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
             <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
                 <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
                 <div class="dropdown-menu">
-                    <button *ngFor="let subitem of item.subitems" class="dropdown-item" [innerHTML]="subitem.template" routerLink="{{subitem.state}}"></button>
+                    <span *ngFor="let subitem of item.subitems">
+                    <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> </button>
+                   
+                    <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
+
+                    </button>
+                    </span>
                 </div>
             </div>
         </li>
