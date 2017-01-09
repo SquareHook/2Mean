@@ -30,7 +30,67 @@ function userController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
 
   /**
+   * Registers a new user with bare minimum roles.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
+   */
+  function register(req, res, next) {
+    var user = req.user;
+
+    var body = req.body;
+
+    var deferred = q.defer();
+
+    if (isAuthorized(user, 'create')) {
+      let newUser = mapUser(body);
+
+      // Overwrite any roles set or make sure they get set appropriately.
+      newUser.roles = [ 'user' ];
+
+      newUser.save((err, data) => {
+        if (err) {
+          // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
+          logger.error('Creating User Error', err);
+          deferred.reject({
+            code: 500,
+            error: 'Internal Server Error'
+          });
+        } else {
+          logger.info('User created: ' + newUser.username);
+          deferred.resolve({
+            code: 201,
+            data: 'User Created'
+          });
+        }
+
+      });
+    } else {
+      deferred.reject({
+        code: 401,
+        error: 'Unauthorized'
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+
+  /**
    * Reads a user from the database if the permissions are adequate.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
    */
   function read(req, res, next) {
     var user = req.user;
@@ -73,7 +133,6 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
-      console.log(newUser);
 
       newUser.save((err, data) => {
         if (err) {
@@ -256,7 +315,8 @@ function userController(logger) {
     read        : read,
     create      : create,
     update      : update,
-    deleteUser  : deleteUser
+    deleteUser  : deleteUser,
+    register    : register
   };
 }
 

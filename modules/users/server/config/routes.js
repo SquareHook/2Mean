@@ -23,4 +23,10 @@ module.exports = [
     method: 'deleteUser',
     secure: true
   },
+  {
+    route: '/users/register',
+    type: 'POST',
+    method: 'register',
+    secure: false
+  }
 ];
