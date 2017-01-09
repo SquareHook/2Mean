@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Article }      from '../../models/article.client.model';
+import { Article }      from '../models/article.client.model';
 import { ArticleService } from '../services/articles.service';
 
 @Component({
@@ -19,7 +19,6 @@ export class ListArticlesComponent implements OnInit{
 	*/
 	constructor(private articleService: ArticleService){}
 
-	
 	/* 
 	* Leave it to angular to call the initialization code at the right time
 	*/
