@@ -52,12 +52,24 @@ function userController(logger) {
 
     newUser.save((err, data) => {
       if (err) {
-        // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
-        logger.error('Creating User Error', err);
-        deferred.reject({
-          code: 500,
-          error: 'Internal Server Error'
+        let errors = extractMongooseErrors(err.errors);
+        let validation = _.find(errors, (o) => {
+          return (o.name === 'ValidatorError'); 
         });
+
+        if (validation) {
+          logger.error('Validation error on registering a new user', validation);
+          deferred.reject({
+            code: 400,
+            error: validation.message
+          });
+        } else {
+          logger.error('Creating User Error', err.errors);
+          deferred.reject({
+            code: 500,
+            error: 'Internal Server Error'
+          });
+        }
       } else {
         logger.info('User created: ' + newUser.username);
         deferred.resolve({
@@ -252,6 +264,19 @@ function userController(logger) {
 
   // --------------------------- Private Function Definitions ----------------------------
 
+  function extractMongooseErrors(error) {
+    var errors = [];
+
+    for (var field in error) {
+      errors.push(error[field]);
+    }
+
+    return errors;
+  }
+
+  /*
+   *
+   */
   function findUserByEmail(emailAddress) {
     return Users.findOne({email: emailAddress});
   }
@@ -291,8 +316,9 @@ function userController(logger) {
     var index;
 
     for(index in Object.keys(user._doc)) {
-      if (body[index]) {
-        user[index] = body[index];
+      let realIndex = Object.keys(user._doc)[index];
+      if (body[realIndex]) {
+        user[realIndex] = body[realIndex];
       }
     }
 
