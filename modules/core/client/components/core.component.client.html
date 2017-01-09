@@ -8,6 +8,7 @@
                 <div class="dropdown-menu">
                     <span *ngFor="let subitem of item.subitems">
                     <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> </button>
+                   
                     <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
 
                     </button>

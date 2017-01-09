@@ -6,7 +6,7 @@ const menuJson = require('./../config/menus.json');
 @Component({
 	selector:'core-menu',
 	providers: [],
-	templateUrl: './core.component.client.html'
+	templateUrl: 'core.component.client.html'
 })
 
 export class CoreMenuComponent{
