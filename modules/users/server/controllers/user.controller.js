@@ -45,35 +45,28 @@ function userController(logger) {
 
     var deferred = q.defer();
 
-    if (isAuthorized(user, 'create')) {
-      let newUser = mapUser(body);
+    let newUser = mapUser(body);
 
-      // Overwrite any roles set or make sure they get set appropriately.
-      newUser.roles = [ 'user' ];
+    // Overwrite any roles set or make sure they get set appropriately.
+    newUser.roles = [ 'user' ];
 
-      newUser.save((err, data) => {
-        if (err) {
-          // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
-          logger.error('Creating User Error', err);
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        } else {
-          logger.info('User created: ' + newUser.username);
-          deferred.resolve({
-            code: 201,
-            data: 'User Created'
-          });
-        }
+    newUser.save((err, data) => {
+      if (err) {
+        // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
+        logger.error('Creating User Error', err);
+        deferred.reject({
+          code: 500,
+          error: 'Internal Server Error'
+        });
+      } else {
+        logger.info('User created: ' + newUser.username);
+        deferred.resolve({
+          code: 201,
+          data: 'User Created'
+        });
+      }
 
-      });
-    } else {
-      deferred.reject({
-        code: 401,
-        error: 'Unauthorized'
-      });
-    }
+    });
 
     return deferred.promise
       .then((data) => {
