@@ -30,7 +30,72 @@ function userController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
 
   /**
+   * Registers a new user with bare minimum roles.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
+   */
+  function register(req, res, next) {
+    var user = req.user;
+
+    var body = req.body;
+
+    var deferred = q.defer();
+
+    let newUser = mapUser(body);
+
+    // Overwrite any roles set or make sure they get set appropriately.
+    newUser.roles = [ 'user' ];
+
+    newUser.save((err, data) => {
+      if (err) {
+        let errors = extractMongooseErrors(err.errors);
+        let validation = _.find(errors, (o) => {
+          return (o.name === 'ValidatorError'); 
+        });
+
+        if (validation) {
+          logger.error('Validation error on registering a new user', validation);
+          deferred.reject({
+            code: 400,
+            error: validation.message
+          });
+        } else {
+          logger.error('Creating User Error', err.errors);
+          deferred.reject({
+            code: 500,
+            error: 'Internal Server Error'
+          });
+        }
+      } else {
+        logger.info('User created: ' + newUser.username);
+        deferred.resolve({
+          code: 201,
+          data: 'User Created'
+        });
+      }
+
+    });
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+
+  /**
    * Reads a user from the database if the permissions are adequate.
+   *
+   * @param {Request} req   The Express request object.
+   * @param {Response} res  The Express response object.
+   * @param {Next} next     The Express next (middleware) function.
+   *
+   * @return {void}
    */
   function read(req, res, next) {
     var user = req.user;
@@ -73,7 +138,6 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
-      console.log(newUser);
 
       newUser.save((err, data) => {
         if (err) {
@@ -200,6 +264,19 @@ function userController(logger) {
 
   // --------------------------- Private Function Definitions ----------------------------
 
+  function extractMongooseErrors(error) {
+    var errors = [];
+
+    for (var field in error) {
+      errors.push(error[field]);
+    }
+
+    return errors;
+  }
+
+  /*
+   *
+   */
   function findUserByEmail(emailAddress) {
     return Users.findOne({email: emailAddress});
   }
@@ -239,8 +316,9 @@ function userController(logger) {
     var index;
 
     for(index in Object.keys(user._doc)) {
-      if (body[index]) {
-        user[index] = body[index];
+      let realIndex = Object.keys(user._doc)[index];
+      if (body[realIndex]) {
+        user[realIndex] = body[realIndex];
       }
     }
 
@@ -256,7 +334,8 @@ function userController(logger) {
     read        : read,
     create      : create,
     update      : update,
-    deleteUser  : deleteUser
+    deleteUser  : deleteUser,
+    register    : register
   };
 }
 

@@ -57,6 +57,11 @@ export class UserService {
       .map(this.extractData);
   }
 
+  register(newUser: User) : Observable<User> {
+    return this.http.post('api/users/register', newUser)
+      .map(this.extractData);
+  }
+
   private extractData(res: Response | any) {
     let body = res.json();
     return JSON.parse(body.data) || { };
