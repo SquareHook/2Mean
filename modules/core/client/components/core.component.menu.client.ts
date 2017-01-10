@@ -29,7 +29,7 @@ export class CoreMenuComponent{
 
 
     //update the menu when auth changes
-	authService.authChanged$.subscribe(
+   authService.authChanged$.subscribe(
       data => {
       this.loggedIn = data;
       this.user = authService.getUser();
