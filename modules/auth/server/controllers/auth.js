@@ -79,6 +79,58 @@ function authenticationModule(logger) {
       });
   }
 
+  /**
+   * This function logs out a user by removing the apikey references.
+   *
+   * NOTE: Cookies still need to be removed by client.
+   *
+   */
+  function logout(req, res, next) {
+    var deferred = q.defer();
+
+    Users.findOne({_id: req.user._id})
+      .then((user) => {
+        let apikey = user.apikey;
+
+        user.apikey = {};
+
+        user.save((err, data) => {
+          if (err) {
+            logger.error('Error logging user out', err);
+            deferred.reject({
+              code: 500,
+              error: 'Error looking up user.'
+            });
+          }
+        });
+
+        Keys.remove({value: apikey.value})
+          .then((err) => {
+            if (err) {
+              logger.error('Error logging user out', err);
+              deferred.reject({
+                code: 500,
+                error: 'Unable to clear api key.'
+              });
+            }
+
+            deferred.resolve({
+              code: 200,
+              data: 'Signed Out'
+            });
+          });
+      });
+
+    res.clearCookie('apikey', {});
+
+    return deferred.promise.then((error, data) => {
+      if (error) {
+        res.status(error.code).send(error.error);
+      } else {
+        res.status(data.code).send(data.data);
+      }
+    });
+  }
 
   /**
    * The main login logic.
@@ -86,7 +138,6 @@ function authenticationModule(logger) {
   function login(req, res, next) {
     var deferred = q.defer();
     var creds = req.body;
-    logger.info('Login Request found');
 
     if (!creds.username || !creds.password) {
       deferred.reject({
@@ -130,6 +181,8 @@ function authenticationModule(logger) {
               logger.error(err);
             }
           });
+
+          logger.info('User logged in.', user.username);
 
           // Save the new key.
           key.value = apikey.value;
@@ -250,6 +303,7 @@ function authenticationModule(logger) {
 
   return {
     login: login,
+    logout: logout,
     getUserInfo: getUserInfo,
     validateAPIKey: validateAPIKey
   }

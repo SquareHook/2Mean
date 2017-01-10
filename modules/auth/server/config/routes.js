@@ -4,5 +4,11 @@ module.exports = [
     type: 'POST',
     method: 'login',
     secure: false
+  },
+  {
+    route: '/logout',
+    type: 'GET',
+    method: 'logout',
+    secure: true
   }
 ];

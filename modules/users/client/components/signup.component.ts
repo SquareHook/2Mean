@@ -40,7 +40,7 @@ export class SignupComponent implements AfterViewChecked {
     this.userService.register(newUser)
       .subscribe(
         user => {
-          router.navigate(['/login']);
+          this.router.navigate(['/login']);
         },
         error => {
           this.errorMessage = error._body;
