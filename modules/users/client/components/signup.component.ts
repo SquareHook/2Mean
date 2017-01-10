@@ -1,8 +1,10 @@
 /* Vendor */
-import { Component, AfterViewChecked, ViewChild }        from '@angular/core';
+import { Component, AfterViewChecked, ViewChild, Inject }        from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 import { NgForm }          from '@angular/forms';
+
+import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config.ts';
 
 /* Angular2 Models */
 import { User }             from '../models/user.model.client';
@@ -16,8 +18,17 @@ import { UserService }      from '../services/user.service';
 export class SignupComponent implements AfterViewChecked {
   model: any = {};
   errorMessage: string = null;
+  strongPasswordRe: RegExp;
 
-  constructor(private userService: UserService, private router: Router) { }
+  constructor(
+    private userService: UserService, 
+    private router: Router,
+    @Inject(USERS_CONFIG) config: UsersConfig
+  ) { 
+    // At least one Upper, lower, digit, symbol
+    // min length 8
+    this.strongPasswordRe = config.passwordValidatorRe;
+  }
 
   signup () {
     let newUser = new User();

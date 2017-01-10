@@ -1,10 +1,12 @@
 /* Vendor */
-import { NgModule }              from '@angular/core';
+import { NgModule, OpaqueToken }              from '@angular/core';
 import { BrowserModule }         from '@angular/platform-browser';
 import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }  from '@angular/router';
 import { FormsModule }          from '@angular/forms';
+
+import { USERS_CONFIG, USERS_DI_CONFIG } from './config/users-config.ts';
 
 /* Components */
 import { UsersComponent }       from './components/users.component';
@@ -46,7 +48,6 @@ import { StrongPasswordValidatorDirective } from './directives/strong-password.d
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
 
-
 @NgModule({
   imports:      [
     BrowserModule,
@@ -67,6 +68,7 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     SettingsComponent,
     StrongPasswordValidatorDirective
   ],
+  providers:    [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
   bootstrap:    [ UsersComponent ]
 })
 

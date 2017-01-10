@@ -22,7 +22,7 @@
     <div class="form-group">
       <label for="password">Password</label>
       <input type="password" class="form-control" id="password" 
-             required  strongPassword="[A-Za-z0-9]{8,}"
+             required  [strongPassword]="strongPasswordRe"
              [(ngModel)]="model.password" name="password">
       <div *ngIf="formErrors.password" class="alert  alert-danger">
         {{ formErrors.password }}
