@@ -79,20 +79,19 @@ export class CoreMenuComponent{
 
 	  if(item.subitems && item.subitems.length > 0)
 	  {
-		  for(let subitem of item.subitems)
+		for(let subitem of item.subitems)
+		{
+	      if(subitem.outlet)
 		  {
-			if(subitem.outlet)
-			{
-				subitem.state = subitem.outlet +'/(' +subitem.outlet + ":" + subitem.state + ')';
-			}
-			if(this.authorized(subitem))
-			{
-				menuItem.subitems.push(subitem);
-				menuItem.dropdown=true;
-			}
+			subitem.state = subitem.outlet +'/(' +subitem.outlet + ":" + subitem.state + ')';
+		  }
+		  if(this.authorized(subitem))
+		  {
+			menuItem.subitems.push(subitem);
+			menuItem.dropdown=true;
+		  }
 		}
 	  }
-
 		  return menuItem;
 	}
 
