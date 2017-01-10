@@ -28,7 +28,7 @@ export class SignupComponent {
     this.userService.register(newUser)
       .subscribe(
         user => {
-          router.navigate(['/login']);
+          this.router.navigate(['/login']);
         },
         error => {
           this.errorMessage = error._body;
