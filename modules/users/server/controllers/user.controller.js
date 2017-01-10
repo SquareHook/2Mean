@@ -74,7 +74,7 @@ function userController(logger) {
         logger.info('User created: ' + newUser.username);
         deferred.resolve({
           code: 201,
-          data: 'User Created'
+          data: data
         });
       }
 
@@ -151,7 +151,7 @@ function userController(logger) {
           logger.info('User created: ' + newUser.username);
           deferred.resolve({
             code: 201,
-            data: 'User Created'
+            data: data
           });
         }
 
@@ -197,12 +197,18 @@ function userController(logger) {
 
       findUserByEmail(existingUser.email)
         .then((modifiedUser) => {
-          for (var i in Object.keys(existingUser._doc)) {
-            if (existingUser[i]) {
-              modifiedUser[i] = existingUser[i];
+          var keys = Object.keys(existingUser._doc);
+
+          for (var i in keys) {
+            if (existingUser[keys[i]]) {
+              // save to existing user's id
+              if (keys[i] !== '_id') {
+                modifiedUser[keys[i]] = existingUser[keys[i]];
+              }
             }
           }
           modifiedUser.updated = new Date();
+          console.log(modifiedUser);
 
           modifiedUser.save((err, data) => {
             if (err) {
@@ -215,7 +221,7 @@ function userController(logger) {
             } else {
               deferred.resolve({
                 code: 200,
-                data: 'User updated'
+                data: data
               });
             }
           });
