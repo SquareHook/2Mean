@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
 import {Router }   from '@angular/router';
+
+import { AuthService } from '../../../auth/client/auth.service.client';
+
 const menuJson = require('./../config/menus.json');
 
 
@@ -10,10 +13,13 @@ const menuJson = require('./../config/menus.json');
 })
 
 export class CoreMenuComponent{
-	menu: any
-	constructor(private router:Router)
-	{
-		
+	menu: any;
+  loggedIn: boolean;
+
+	constructor(
+    private router:Router,
+    private authService: AuthService
+  ) {
 	  //TODO: filter out items and subitems by role
 	  let menuItems;
 	  //do some formatting to get proper JSON
@@ -44,6 +50,9 @@ export class CoreMenuComponent{
 
 	  }
 		this.menu = menuItems;
+
+    // Determine if logged in
+    this.loggedIn = this.authService.loggedIn;
 	}
 
 	navByUrl(state:string):void{
