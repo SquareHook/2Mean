@@ -40,6 +40,9 @@ import {
 import { UserService }          from './services/user.service';
 import { AuthService }          from './../../auth/client/auth.service.client';
 
+/* Directives */
+import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
+
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
 
@@ -61,7 +64,8 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     ChangeProfilePictureComponent,
     EditProfileComponent,
     ManageSocialComponent,
-    SettingsComponent
+    SettingsComponent,
+    StrongPasswordValidatorDirective
   ],
   bootstrap:    [ UsersComponent ]
 })
