@@ -1,7 +1,11 @@
 /* Vendor */
-import { Component }        from '@angular/core';
+import { Component, AfterViewChecked, ViewChild, Inject }        from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
+import { NgForm }           from '@angular/forms';
+
+/* Config */
+import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config';
 
 /* Angular2 Models */
 import { User }             from '../models/user.model.client';
@@ -21,11 +25,15 @@ export class ChangePasswordComponent {
   passwordNew1 : string;
   password0Valid : boolean;
   password1Valid : boolean;
+  strongPasswordRe: RegExp;
 
   constructor (
     private authService: AuthService,
-    private userService: UserService) { 
+    private userService: UserService,
+    @Inject(USERS_CONFIG) config: UsersConfig
+  ) { 
       this.user = this.authService.getUser();
+      this.strongPasswordRe = config.passwordValidatorRe;
   }
 
   onKey (event : any) : void {
@@ -61,4 +69,63 @@ export class ChangePasswordComponent {
     }
 
   }
+
+  userForm: NgForm;
+  @ViewChild('userForm') currentForm: NgForm;
+
+  ngAfterViewChecked() {
+    this.formChanged();
+  }
+
+  formChanged() {
+    if (this.currentForm === this.userForm) {
+      return;
+    }
+
+    this.userForm = this.currentForm;
+
+    this.userForm.valueChanges
+      .subscribe(data => this.onValueChanged(data));
+  }
+
+  onValueChanged(data?: any) {
+    if (!this.userForm) {
+      return;
+    }
+
+    const form = this.userForm.form;
+
+    for (const field in this.formErrors) {
+      // clear previous errors
+      this.formErrors[field] = '';
+      const control = form.get(field);
+
+      if (control && control.dirty && !control.valid) {
+        const messages = this.validationMessages[field];
+        for (const key in control.errors) {
+          this.formErrors[field] += messages[key] + ' ';
+        }
+      }
+    }
+  }
+
+  formErrors = {
+    'password': '',
+    'passwordNew0': '',
+    'passwordNew1': ''
+  };
+
+  validationMessages = {
+    'password': {
+      'required': 'Password is required'
+    },
+    'passwordNew0': {
+      'required': 'New password is required',
+      'strongPassword': 'Password must contain uppper, lower case letter, digit, and symbol'
+    },
+    'passwordNew1': {
+      'required': 'New password is required',
+      'strongPassword': 'Password must contain uppper, lower case letter, digit, and symbol'
+    }
+  };
 }
