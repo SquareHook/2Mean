@@ -18,7 +18,12 @@
         </li>
     </ul>
     <div class="auth float-xs-right">
+      <div *ngIf="!loggedIn">
         <a routerLink="/signin" routerLinkActive="active">Signin</a>
         <a routerLink="/signup" routerLinkActive="active">SignUp</a>
+      </div>
+      <div *ngIf="loggedIn">
+        <a routerLink="/signout">SignOut</a>
+      </div>
     </div>
 </nav>

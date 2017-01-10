@@ -14,6 +14,9 @@ import {
 import {
   SignupComponent
 } from './components/signup.component';
+import {
+  SignoutComponent
+} from './components/signout.component';
 import { 
   ProfileComponent 
 } from './components/profile.component';
@@ -48,11 +51,11 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     FormsModule,
     UsersRoutingModule
   ],
-  providers: [ UserService ],
   declarations: [
     UsersComponent,
     SigninComponent,
     SignupComponent,
+    SignoutComponent,
     ProfileComponent,
     ChangePasswordComponent,
     ChangeProfilePictureComponent,

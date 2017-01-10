@@ -46,11 +46,12 @@ export class ChangePasswordComponent {
     this.loading = true;
 
     if (this.password0Valid && this.password1Valid) {
+      this.user.password = this.passwordNew0;
+
       this.userService.update(this.user)
         .subscribe(
           user => {
-            this.user = user;
-            this.authService.setUser(this.user);
+            this.authService.user = user;
             this.loading = false;
           },
           error => {

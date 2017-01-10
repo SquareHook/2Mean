@@ -9,6 +9,9 @@ import {
 import {
   SignupComponent
 } from './../components/signup.component';
+import {
+  SignoutComponent
+} from './../components/signout.component';
 import { 
   ProfileComponent 
 } from './../components/profile.component';
@@ -38,6 +41,10 @@ const usersRoutes: Routes = [
   {
     path: 'signup',
     component: SignupComponent
+  },
+  {
+    path: 'signout',
+    component: SignoutComponent
   },
   // User profile
   { 

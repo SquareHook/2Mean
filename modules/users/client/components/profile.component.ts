@@ -12,15 +12,16 @@ import { UserService }      from '../services/user.service';
 
 
 @Component({
-  providers: [ AuthService, UserService ],
   templateUrl: './../views/profile.view.html'
 })
 export class ProfileComponent {
   user: User;
-  user_string: string;
 
   constructor (private authService: AuthService) { 
-    this.user = authService.getUser();
-    this.user_string = JSON.stringify(this.user, null, 2);
+    this.user = authService.user;
+  }
+
+  getUserString() {
+    return JSON.stringify(this.user, null, 2);
   }
 }

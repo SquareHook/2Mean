@@ -21,7 +21,7 @@ export class EditProfileComponent {
   constructor (
     private authService: AuthService,
     private userService: UserService) {
-      this.user = authService.getUser();
+      this.user = authService.user;
   }
 
   /*
@@ -33,9 +33,7 @@ export class EditProfileComponent {
     this.userService.update(this.user)
       .subscribe(
         user => {
-          this.user = user;
-          this.authService.setUser(this.user);
-          this.loading = false;
+          this.authService.user = user;
         },
         error => {
           this.errorMessage = error._body;

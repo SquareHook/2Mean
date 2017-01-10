@@ -37,9 +37,19 @@ import 'rxjs/add/operator/map';
 export class AuthService {
   user: User;
   apikey: String;
+  loggedIn: boolean;
 
   constructor(private http: Http) {
-    this.user = new User();
+    this.user = this.getUser();
+    
+    // user not logged in
+    if (!this.user) {
+      this.loggedIn = false;
+      this.user = new User();
+    } else {
+      this.loggedIn = true;
+    }
+
     this.apikey = null;
   }
 
@@ -80,6 +90,7 @@ export class AuthService {
         this.user.roles = body.user.roles;
 
         this.saveUser();
+        this.loggedIn = true;
 
         // Save the apikey
         this.apikey = body.apikey;
@@ -113,6 +124,25 @@ export class AuthService {
         cb(null, this.user);
       }, (error: Response | any) => {
         cb({ error: 401 }, null);
+      });
+  }
+
+  /*
+   * Logout function to log user out
+   */
+  logout() : void {
+    this.http
+      .get('api/logout')
+      .subscribe((res: Response) => {
+        this.setUser(null);
+        this.apikey = null;
+        this.loggedIn = false;
+      }, (error: Response | any) => {
+        // either way invalidate local creds. Server may still accept
+        console.log('Error logging out: ', error);
+        this.setUser(null);
+        this.apikey = null;
+        this.loggedIn = false;
       });
   }
 
