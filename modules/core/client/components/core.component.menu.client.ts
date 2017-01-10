@@ -17,23 +17,23 @@ const menuJson = require('./../config/menus.json');
 })
 
 export class CoreMenuComponent{
-	menu: Array<any>;
-    loggedIn: boolean;
-    user: any;
+  menu: Array<any>;
+  loggedIn: boolean;
+  user: any;
+  
+  constructor(private router:Router, private authService: AuthService) {
+    this.menu = [];
+	// Determine if logged in
+    this.loggedIn = this.authService.loggedIn;
+    this.setup();
 
-	constructor(private router:Router, private authService: AuthService) {
-	  this.menu = [];
-	  // Determine if logged in
-      this.loggedIn = this.authService.loggedIn;
-      this.setup();
 
-
-      //update the menu when auth changes
-	  authService.authChanged$.subscribe(
-        data => {
-      	this.loggedIn = data;
-      	this.user = authService.getUser();
-        this.setup();
+    //update the menu when auth changes
+	authService.authChanged$.subscribe(
+      data => {
+      this.loggedIn = data;
+      this.user = authService.getUser();
+       this.setup();
       });
 	}
 
@@ -69,29 +69,29 @@ export class CoreMenuComponent{
 	*/
 	private processSubitems(item: any): any
 	{
-		let menuItem: any = {
-			template: item.template,
-			state: item.state,
-			position: item.position,
-			subitems: [],
-			dropdown: false
-		};
+	  let menuItem: any = {
+	    template: item.template,
+		state: item.state,
+		position: item.position,
+		subitems: [],
+		dropdown: false
+	  };
 
-		if(item.subitems && item.subitems.length > 0)
+	  if(item.subitems && item.subitems.length > 0)
+	  {
+		  for(let subitem of item.subitems)
 		  {
-			for(let subitem of item.subitems)
+			if(subitem.outlet)
 			{
-				if(subitem.outlet)
-				{
-					subitem.state = subitem.outlet +'/(' +subitem.outlet + ":" + subitem.state + ')';
-				}
-				if(this.authorized(subitem))
-				{
-					menuItem.subitems.push(subitem);
-					menuItem.dropdown=true;
-				}
+				subitem.state = subitem.outlet +'/(' +subitem.outlet + ":" + subitem.state + ')';
 			}
-		  }
+			if(this.authorized(subitem))
+			{
+				menuItem.subitems.push(subitem);
+				menuItem.dropdown=true;
+			}
+		}
+	  }
 
 		  return menuItem;
 	}
@@ -101,13 +101,12 @@ export class CoreMenuComponent{
 	*/
 	private authorized(item: any): boolean
 	{
-		//if the item has one or more roles assigned, check authorization
-		if(item.roles && item.roles.length > 0)
-		{
-			return this.loggedIn;
-
-		}
-		return true;	
+      //if the item has one or more roles assigned, check authorization
+      if(item.roles && item.roles.length > 0)
+	  {
+		return this.loggedIn;
+	  }
+	  return true;	
 	}
 
 	/*
@@ -115,7 +114,7 @@ export class CoreMenuComponent{
 	*/
 	navByUrl(state:string):void{
 
-        this.router.navigateByUrl(state);
+      this.router.navigateByUrl(state);
     
 	}
 }	
