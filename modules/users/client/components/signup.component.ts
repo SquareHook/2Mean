@@ -4,7 +4,7 @@ import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 import { NgForm }          from '@angular/forms';
 
-import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config.ts';
+import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config';
 
 /* Angular2 Models */
 import { User }             from '../models/user.model.client';
