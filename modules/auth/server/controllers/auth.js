@@ -79,6 +79,12 @@ function authenticationModule(logger) {
       });
   }
 
+  /**
+   * This function logs out a user by removing the apikey references.
+   *
+   * NOTE: Cookies still need to be removed by client.
+   *
+   */
   function logout(req, res, next) {
     var deferred = q.defer();
 
@@ -114,6 +120,8 @@ function authenticationModule(logger) {
             });
           });
       });
+
+    res.clearCookie('apikey', {});
 
     return deferred.promise.then((error, data) => {
       if (error) {
