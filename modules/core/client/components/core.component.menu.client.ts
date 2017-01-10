@@ -52,10 +52,10 @@ export class CoreMenuComponent{
 
 	  for(let item of tempMenu)
 	  {
-	 	  if(this.authorized(item))
-	 	  {
-	 	  	this.menu.push(this.processSubitems(item));
-	 	  }
+	 	if(this.authorized(item))
+	 	{
+	 	  this.menu.push(this.processSubitems(item));
+	 	}
 	  	
 	  }
 
