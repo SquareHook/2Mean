@@ -31,6 +31,8 @@ export class ListArticlesComponent implements OnInit{
 	*/
 	getArticles() : void{
 	
+		this.articleService.getArticles()
+			.subscribe((data) => { this.articles = data;});
 		//then(articles => this.articles = articles);
 
 	}

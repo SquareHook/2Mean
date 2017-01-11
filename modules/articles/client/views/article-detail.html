@@ -21,11 +21,13 @@
             <label for="content">Content</label>
             <input type="text" class="form-control" id="content" name="content" [(ngModel)]="article.content" />
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <div class="form-group text-center">
+            <button type="submit" class="btn btn-primary">Submit</button>
+        </div>
         {{ errorMessage }}
     </form>
 </div>
 <hr/>
-<div class="text-center">
-    <button class="btn btn-primary" routerLink="/articles">All Articles</button>
+<div class="pg-bottom">
+    <button class="btn btn-default" routerLink="/articles">All Articles</button>
 </div>

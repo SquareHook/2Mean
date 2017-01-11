@@ -4,30 +4,108 @@ var Article = mongoose.model('Article');
 var q = require('q');
 var _ = require('lodash');
 
-
+const MAX_RESULTS = 100;
 function articleController(logger) {
 
-  function test(req, res, next) {
-    var user = req.user;
-    return res.status(200).send('hit server endpoint for articles');
-  }
+
+  function getArticle(req, res, next) {
+
+    var id = req.params.id || null; 
+    var deferred = q.defer();
+    Article.findOne({_id: id}, (err, data) => {
+      if (err) {
+        logger.error('Error creating article', err);
+        deferred.reject({
+        code: 500,
+        error: 'Error creating article'
+        });
+      }
+      else
+      {
+        deferred.resolve({
+          code: 201,
+          data: data
+        });
+      }
+    });
+    return deferred.promise
+    .then((data) => {
+        res.status(data.code).send(data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+
+    }
+
+  function getArticles(req, res, next) {
+    var deferred = q.defer();
+    Article.find({}, (err, data) => {
+      if (err) {
+        logger.error('Error creating article', err);
+        deferred.reject({
+        code: 500,
+        error: 'Error creating article'
+        });
+      }
+      else
+      {
+        deferred.resolve({
+          code: 201,
+          data: data
+        });
+      }
+    }).limit(MAX_RESULTS);
+    return deferred.promise
+    .then((data) => {
+        res.status(data.code).send(data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+
+    }
+
+
 
   function create(req, res, next)
   {
-    logger.info("create method");
-    /*var article = new Article();
-    newUser.save((err, data) => {
 
-    });
-	  */
-    return res.status(200).send('hit server endpoint for articles');
-  }
+    var deferred = q.defer();
+    var article = new Article();
+    article.title = req.body.title;
+    article.content = req.body.content;
+    article.userName = req.user.username;
+    article.userId = req.user._id;
 
+    article.save((err, data) => {
+      if (err) {
+        logger.error('Error creating article', err);
+        deferred.reject({
+          code: 500,
+          error: 'Error creating article'
+        });
+      }
+      else
+      {
+        deferred.resolve({
+          code: 201,
+          data: data
+        });
+      }
+    })
 
-  return {
-    read: test,
-    create: create
-  };
-}
+    return deferred.promise
+    .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
 
-module.exports = articleController;
+    }
+      return {
+        read: getArticles,
+        readOne: getArticle,
+        create: create
+      };
+    }
+
+    module.exports = articleController;
