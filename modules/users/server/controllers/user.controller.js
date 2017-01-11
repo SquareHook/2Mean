@@ -49,6 +49,11 @@ var uuid = require('uuid');
 var path = require('path');
 
 /*
+ * fs for unlinking files
+ */
+var fs = require('fs');
+
+/*
  * application config
  */
 var config = require(path.resolve('config/config'));
@@ -310,7 +315,20 @@ function userController(logger) {
    */
   function changeProfilePicture(req, res, next) {
     var user = req.user;
+    //TODO only allow images of a certain size
     var profileUploadFileFilter = undefined;
+
+    // save old image uri so it can be removed if save works
+    var re = /\/[^\/]*$/;
+    var start = user.profileImageURL.search(re);
+    // start 1 after to remove slash
+    var oldFileName = user.profileImageURL.slice(start+1);
+
+    if (oldFileName.length === 0) {
+      // no old url
+      oldFileName = undefined;
+      logger.warning('Old url did not exist while changing user profile picture');
+    }
     
     var deferred = q.defer();
 
@@ -372,6 +390,15 @@ function userController(logger) {
                 error: 'Internal Server Error'
               });
             } else {
+              if (config.uploads.profilePicture.use == 'local') {
+                // delete old profile picture
+                fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
+                  () => {
+                    logger.info('Old profile picture deleted');
+                  });
+              } else if (config.uploads.profilePicture.use === 's3') {
+                //TODO how?
+              }
               deferred.resolve({
                 code: 200,
                 data: data
