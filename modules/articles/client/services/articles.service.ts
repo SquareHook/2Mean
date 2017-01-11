@@ -1,18 +1,46 @@
 import { Injectable } from '@angular/core';
-import { Article } from '../../models/article.client.model';
-import { ARTICLES } from './mock-articles';
+import { Article } from '../models/article.client.model';
+
+import {
+  Http,
+  Response,
+  HttpModule,
+  RequestOptions,
+  Request,
+  RequestMethod,
+  Headers
+} from '@angular/http';
+
+import { Observable } from 'rxjs'; 
+import 'rxjs/add/operator/map';
 
 @Injectable()
 export class ArticleService {
-	//TODO: switch over to obersvables one the server side endpoints are set up
-	getArticles(): Promise<Article[]>
+
+	constructor(private http: Http){}
+	
+
+	getArticles(): Observable<Article[]>
 	{
-		return Promise.resolve(ARTICLES);
+		return this.http
+		.get('api/articles')
+		.map((r: Response) => r.json().data);
 	}
 
-	getArticle(id: string) : Promise<Article>
+	publishArticle(formData: Article) : void
 	{
-		 return Promise.resolve(ARTICLES.find((x) => {return x.id === id}));
-	}
 
+		this.http.post('api/articles', formData).map((r: any) => console.log(r));
+				
+  }
+  getArticle(id: string) : Observable<Article>
+  {
+		return null;
+  }
+
+	extractData(res: Response | any) {
+		let body = res.json();
+		console.log(body);
+		return body;
+	}
 }

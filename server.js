@@ -30,23 +30,28 @@ var logger = core.moduleLoader.get('logger');
 var auth = core.moduleLoader.get('auth');
 var user = core.moduleLoader.get('users');
 
+
 var http = require('http');
 var https = require('https');
 
 var https_options = {
-    key: fs.readFileSync('./config/private/key.pem'),
-    cert: fs.readFileSync('./config/private/cacert.pem')
+  key: fs.readFileSync('./config/private/key.pem'),
+  cert: fs.readFileSync('./config/private/cacert.pem')
 };
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(cookieParser());
 
 /*
  * Express setup.
  */
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(cookieParser());
 
 core.routes.loadRoutes();
@@ -63,12 +68,12 @@ app.use((req, res, next) => {
  * TODO: This should be done somewhere else.
  */
 app.get('/api/test',
-    auth.validateAPIKey,
-    (req, res) => {
-      res.send({
-        user: req.auth
-      });
+  auth.validateAPIKey,
+  (req, res) => {
+    res.send({
+      user: req.auth
     });
+  });
 
 /*
  * Routes that can be accessed only by authenticated users.
@@ -87,7 +92,7 @@ app.use(express.static(path.resolve('dist')));
 /**
  * Sends angular app back for all other requests
  */
-app.get('*', function (req, res) {
+app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
 
