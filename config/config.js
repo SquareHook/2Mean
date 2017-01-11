@@ -17,10 +17,11 @@ module.exports = {
         port_https: process.env.port_https || 3443
     },
     uploads: {
+      root: 'uploads',
       profilePicture: {
         use: 'local',
         local: {
-          dest: './modules/users/client/img/profile/uploads/',
+          dest: './uploads/users/img/profilePicture/',
           limits: {
             fileSize: 1*1024*1024
           }

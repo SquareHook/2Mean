@@ -44,9 +44,14 @@ var aws = require('aws-sdk');
 var uuid = require('uuid');
 
 /*
+ * path for resolving files
+ */
+var path = require('path');
+
+/*
  * application config
  */
-var config = require('../../../../config/config');
+var config = require(path.resolve('config/config'));
 
 /**
  * Main business logic for handling requests.
@@ -137,6 +142,7 @@ function userController(logger) {
         .then((user) => {
           res.status(201).send(user);
         }, (error) => {
+          w
           logger.error('User Module Error: Reading User from Database', error);
           res.status(500).send('Error retrieving user information');
         });
@@ -330,8 +336,21 @@ function userController(logger) {
       }).single('file');
       url = config.uploads.profilePicture.s3.dest + fileName;
     } else if (config.uploads.profilePicture.use == 'local') {
-      upload = multer(config.uploads.profilePicture.local).single('file');
-      url = config.uploads.profilePicture.local.dest + fileName;
+      upload = multer({
+        storage: multer.diskStorage({
+          destination: function (req, file, cb) {
+            cb(null, config.uploads.profilePicture.local.dest);
+          },
+          filename: function (req, file, cb) {
+            cb(null, fileName);
+          }
+        })
+      }).single('file');
+      url = '/api/users/' + user._id + '/picture/' + fileName;
+    } else {
+      logger.error('Upload strategy unknown', config.uploads.profilePicture.use);
+      //TODO is there a server config error code?
+      res.status(400).send('Server Configuration Error: Upload strategy unknown');
     }
 
     if (isAuthorized(user, 'update')) {
@@ -368,6 +387,43 @@ function userController(logger) {
         res.status(data.code).send(data.data);
       }, (error) => {
         res.status(error.code).send(error.error);
+      });
+  }
+    
+  /**
+   * Sends a user's profile picture if the local strategy is being used
+   *
+   * @param {Request}   req   The Express request object
+   * @param {Response}  res   The Express response object
+   * @param {Next}      next  The Express next (middleware) function
+   *
+   * @returns {void}
+   */
+  function getProfilePicture(req, res, next) {
+    // local strategy stores image on filesystem
+    // s3 strategy serves direct urls
+    if (config.uploads.profilePicture.use !== 'local') {
+      res.status(400).send('Local strategy not in use');
+    }
+
+    var userId = req.params.userId;
+    var fileName = req.params.fileName;
+
+    Users.findOne({_id: userId})
+      .then((user) => {
+        var url = user.profileImageURL;
+        var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
+        logger.info(serveUrl);
+
+        // if filename exists
+        if (serveUrl.length !== 0) {
+          res.status(201).sendFile(serveUrl);
+        } else {
+          logger.error('Filename does not exist');
+          res.status(400).send('Error retrieving file');
+        }
+      }, (error) => {
+        res.status(500).send('Error retrieving user information');
       });
   }
 
@@ -445,7 +501,8 @@ function userController(logger) {
     update                : update,
     deleteUser            : deleteUser,
     register              : register,
-    changeProfilePicture  : changeProfilePicture
+    changeProfilePicture  : changeProfilePicture,
+    getProfilePicture     : getProfilePicture
   };
 }
 
