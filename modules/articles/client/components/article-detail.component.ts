@@ -39,16 +39,15 @@ export class ArticleDetailComponent implements OnInit {
 					//here we use rxjs to watch for changes to the url, once changed we use the articles service to get
 					//the new object without having to reload the component 
 					this.route.params
-					.switchMap((params: Params) => 
-						this.articleService.getArticle(params['id']))
-						  .subscribe((_article: Article) => { this.article = _article });
+						.switchMap((params: Params) =>
+							this.articleService.getArticle(params['id']))
+						.subscribe((_article: Article) => { this.article = _article });
 				}
 			});
 
 	};
 
-	submit():void
-	{
+	submit(): void {
 		this.articleService.publishArticle(this.article);
 	}
 
