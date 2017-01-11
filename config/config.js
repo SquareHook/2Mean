@@ -15,5 +15,23 @@ module.exports = {
         host: process.env.host || 'localhost',
         port_http: process.env.port_http || 3080,
         port_https: process.env.port_https || 3443
+    },
+    uploads: {
+      profilePicture: {
+        use: 'local',
+        local: {
+          dest: './modules/users/client/img/profile/uploads/',
+          limits: {
+            fileSize: 1*1024*1024
+          }
+        },
+        s3: {
+          dest: process.env.TOOMEAN_AWS_S3_DEST_URL,
+          bucket: process.env.TOOMEAN_AWS_S3_BUCKET,
+          limits: {
+            fileSize: 1*1024*1024
+          }
+        }
+      }
     }
 };

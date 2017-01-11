@@ -1,9 +1,10 @@
 <div class="row">
-  <img src="{{ user.profileImageUrl }}" alt="Profile image" class="img-thumbnail">
-  <form>
+  <img [src]="getImageUrl()" alt="Profile image" class="img-thumbnail">
+  <form (ngSubmit)="upload()">
     <div class="form-group">
       <label for="profilePicture">Profile Picture</label>
-      <input type="file" class="form-control" id="profilePicture" required>
+      <input type="file" class="form-control" id="profilePicture" 
+             required ng2FileSelect [uploader]="uploader">
     </div>
     <button type="submit" class="btn btn-primary">Change Picture</button>
   </form>

@@ -20,4 +20,4 @@ modules/core/client/config/menus.json
 
 #tls cert and other private items
 config/private/
-
+modules/users/client/img

@@ -23,6 +23,31 @@ var q = require('q');
  */
 var _ = require('lodash');
 
+/*
+ * Multer multipart form data  (for files)
+ */
+var multer = require('multer');
+
+/*
+ * multers3 for piping multer data directly to s3
+ */
+var multerS3 = require('multer-s3');
+
+/*
+ * aws aws-sdk toolkit
+ */
+var aws = require('aws-sdk');
+
+/*
+ * uuid for generating good random names for files
+ */
+var uuid = require('uuid');
+
+/*
+ * application config
+ */
+var config = require('../../../../config/config');
+
 /**
  * Main business logic for handling requests.
  */
@@ -208,7 +233,6 @@ function userController(logger) {
             }
           }
           modifiedUser.updated = new Date();
-          console.log(modifiedUser);
 
           modifiedUser.save((err, data) => {
             if (err) {
@@ -266,6 +290,85 @@ function userController(logger) {
         }
       });
     }
+  }
+
+  /**
+   * Handle post requests with multer picture
+   *  should respond with the updated user model (including new picture url)
+   *
+   * @param {Request}   req   The express request object
+   * @param {Response}  res   The express response object
+   * @param {Next}      next  The express (middleware) function
+   *
+   * @return {void}
+   */
+  function changeProfilePicture(req, res, next) {
+    var user = req.user;
+    var profileUploadFileFilter = undefined;
+    
+    var deferred = q.defer();
+
+    //use uuid timestamp based id
+    var fileName = uuid.v1();
+    var upload;
+    var url;
+
+    if (config.uploads.profilePicture.use == 's3') {
+      var s3 = new aws.S3();
+      upload = multer({
+        storage: multerS3({
+          s3: s3,
+          bucket: config.uploads.profilePicture.s3.bucket,
+          acl: 'public-read',
+          metadata: function (req, file, cb) {
+            cb(null, {fieldName: file.fieldname});
+          },
+          key: function (req, file, cb) {
+            cb(null, fileName);
+          }
+        })
+      }).single('file');
+      url = config.uploads.profilePicture.s3.dest + fileName;
+    } else if (config.uploads.profilePicture.use == 'local') {
+      upload = multer(config.uploads.profilePicture.local).single('file');
+      url = config.uploads.profilePicture.local.dest + fileName;
+    }
+
+    if (isAuthorized(user, 'update')) {
+      upload(req, res, function (uploadError) {
+        if (uploadError) {
+          logger.error(uploadError);
+          return res.status(400).send({
+            message: 'Error occurred while uploading profile picture'
+          });
+        } else {
+          user.profileImageURL = url;
+
+          user.save((err, data) => {
+            if (err) {
+              logger.error('Error updating user', err);
+
+              deferred.reject({
+                code: 500,
+                error: 'Internal Server Error'
+              });
+            } else {
+              deferred.resolve({
+                code: 200,
+                data: data
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
   }
 
   // --------------------------- Private Function Definitions ----------------------------
@@ -337,11 +440,12 @@ function userController(logger) {
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    read        : read,
-    create      : create,
-    update      : update,
-    deleteUser  : deleteUser,
-    register    : register
+    read                  : read,
+    create                : create,
+    update                : update,
+    deleteUser            : deleteUser,
+    register              : register,
+    changeProfilePicture  : changeProfilePicture
   };
 }
 
