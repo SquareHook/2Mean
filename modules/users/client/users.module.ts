@@ -5,9 +5,10 @@ import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }  from '@angular/router';
 import { FormsModule }          from '@angular/forms';
+import { FileSelectDirective }  from 'ng2-file-upload';
 
-import { USERS_CONFIG, USERS_DI_CONFIG } from './config/users-config.ts';
-
+/* Config */
+import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from './config/users-config';
 /* Components */
 import { UsersComponent }       from './components/users.component';
 import {
@@ -56,6 +57,7 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     UsersRoutingModule
   ],
   declarations: [
+    FileSelectDirective,
     UsersComponent,
     SigninComponent,
     SignupComponent,
@@ -68,7 +70,7 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     SettingsComponent,
     StrongPasswordValidatorDirective
   ],
-  providers:    [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
+  providers: [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
   bootstrap:    [ UsersComponent ]
 })
 

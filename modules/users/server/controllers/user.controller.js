@@ -23,6 +23,41 @@ var q = require('q');
  */
 var _ = require('lodash');
 
+/*
+ * Multer multipart form data  (for files)
+ */
+var multer = require('multer');
+
+/*
+ * multers3 for piping multer data directly to s3
+ */
+var multerS3 = require('multer-s3');
+
+/*
+ * aws aws-sdk toolkit
+ */
+var aws = require('aws-sdk');
+
+/*
+ * uuid for generating good random names for files
+ */
+var uuid = require('uuid');
+
+/*
+ * path for resolving files
+ */
+var path = require('path');
+
+/*
+ * fs for unlinking files
+ */
+var fs = require('fs');
+
+/*
+ * application config
+ */
+var config = require(path.resolve('config/config'));
+
 /**
  * Main business logic for handling requests.
  */
@@ -112,6 +147,7 @@ function userController(logger) {
         .then((user) => {
           res.status(201).send(user);
         }, (error) => {
+          w
           logger.error('User Module Error: Reading User from Database', error);
           res.status(500).send('Error retrieving user information');
         });
@@ -208,7 +244,6 @@ function userController(logger) {
             }
           }
           modifiedUser.updated = new Date();
-          console.log(modifiedUser);
 
           modifiedUser.save((err, data) => {
             if (err) {
@@ -266,6 +301,168 @@ function userController(logger) {
         }
       });
     }
+  }
+
+  /**
+   * Handle post requests with multer picture
+   *  should respond with the updated user model (including new picture url)
+   *
+   * @param {Request}   req   The express request object
+   * @param {Response}  res   The express response object
+   * @param {Next}      next  The express (middleware) function
+   *
+   * @return {void}
+   */
+  function changeProfilePicture(req, res, next) {
+    var user = req.user;
+    //TODO only allow images of a certain size
+    var profileUploadFileFilter = undefined;
+
+    // save old image uri so it can be removed if save works
+    var re = /\/[^\/]*$/;
+    var start = user.profileImageURL.search(re);
+    // start 1 after to remove slash
+    var oldFileName = user.profileImageURL.slice(start+1);
+
+    if (oldFileName.length === 0) {
+      // no old url
+      oldFileName = undefined;
+      logger.warning('Old url did not exist while changing user profile picture');
+    }
+    
+    var deferred = q.defer();
+
+    //use uuid timestamp based id
+    var fileName = uuid.v1();
+    var upload;
+    var url;
+
+    if (config.uploads.profilePicture.use == 's3') {
+      var s3 = new aws.S3();
+      logger.info(config.uploads.profilePicture.s3);
+      upload = multer({
+        storage: multerS3({
+          s3: s3,
+          bucket: config.uploads.profilePicture.s3.bucket,
+          acl: 'public-read',
+          metadata: function (req, file, cb) {
+            cb(null, {fieldName: file.fieldname});
+          },
+          key: function (req, file, cb) {
+            cb(null, fileName);
+          }
+        })
+      }).single('file');
+      url = config.uploads.profilePicture.s3.dest + fileName;
+    } else if (config.uploads.profilePicture.use == 'local') {
+      upload = multer({
+        storage: multer.diskStorage({
+          destination: function (req, file, cb) {
+            cb(null, config.uploads.profilePicture.local.dest);
+          },
+          filename: function (req, file, cb) {
+            cb(null, fileName);
+          }
+        })
+      }).single('file');
+      url = '/api/users/' + user._id + '/picture/' + fileName;
+    } else {
+      logger.error('Upload strategy unknown', config.uploads.profilePicture.use);
+      //TODO is there a server config error code?
+      res.status(400).send('Server Configuration Error: Upload strategy unknown');
+    }
+
+    if (isAuthorized(user, 'update')) {
+      upload(req, res, function (uploadError) {
+        if (uploadError) {
+          logger.error(uploadError);
+          return res.status(400).send({
+            message: 'Error occurred while uploading profile picture'
+          });
+        } else {
+          user.profileImageURL = url;
+
+          user.save((err, data) => {
+            if (err) {
+              logger.error('Error updating user', err);
+
+              deferred.reject({
+                code: 500,
+                error: 'Internal Server Error'
+              });
+            } else {
+              if (config.uploads.profilePicture.use == 'local') {
+                // delete old profile picture
+                fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
+                  () => {
+                    logger.info('Old profile picture deleted');
+                  });
+              } else if (config.uploads.profilePicture.use === 's3') {
+                var params = {
+                  Bucket: config.uploads.profilePicture.s3.bucket,
+                  Key: oldFileName
+                };
+                s3.deleteObject(params, function(err, data) {
+                  if (err) {
+                    logger.error('Error while deleting object on s3', err);
+                  } else {
+                    logger.info('Old profile picture deleted');
+                  }
+                });
+              }
+              deferred.resolve({
+                code: 200,
+                data: data
+              });
+            }
+          });
+        }
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+    
+  /**
+   * Sends a user's profile picture if the local strategy is being used
+   *
+   * @param {Request}   req   The Express request object
+   * @param {Response}  res   The Express response object
+   * @param {Next}      next  The Express next (middleware) function
+   *
+   * @returns {void}
+   */
+  function getProfilePicture(req, res, next) {
+    // local strategy stores image on filesystem
+    // s3 strategy serves direct urls
+    if (config.uploads.profilePicture.use !== 'local') {
+      res.status(400).send('Local strategy not in use');
+    }
+
+    var userId = req.params.userId;
+    var fileName = req.params.fileName;
+
+    Users.findOne({_id: userId})
+      .then((user) => {
+        var url = user.profileImageURL;
+        var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
+        logger.info(serveUrl);
+
+        // if filename exists
+        if (serveUrl.length !== 0) {
+          res.status(201).sendFile(serveUrl);
+        } else {
+          logger.error('Filename does not exist');
+          res.status(400).send('Error retrieving file');
+        }
+      }, (error) => {
+        res.status(500).send('Error retrieving user information');
+      });
   }
 
   // --------------------------- Private Function Definitions ----------------------------
@@ -337,11 +534,13 @@ function userController(logger) {
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    read        : read,
-    create      : create,
-    update      : update,
-    deleteUser  : deleteUser,
-    register    : register
+    read                  : read,
+    create                : create,
+    update                : update,
+    deleteUser            : deleteUser,
+    register              : register,
+    changeProfilePicture  : changeProfilePicture,
+    getProfilePicture     : getProfilePicture
   };
 }
 
