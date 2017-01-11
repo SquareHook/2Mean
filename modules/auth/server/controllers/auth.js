@@ -90,13 +90,13 @@ function authenticationModule(logger) {
 
     Users.findOne({_id: req.user._id})
       .then((user) => {
-        let apikey = user.apikey;
+        let apikeyValue = user.apikey.value;
 
         user.apikey = {};
 
         user.save((err, data) => {
           if (err) {
-            logger.error('Error logging user out', err);
+            logger.error('Error logging user out: remove key from user', err);
             deferred.reject({
               code: 500,
               error: 'Error looking up user.'
@@ -104,22 +104,21 @@ function authenticationModule(logger) {
           }
         });
 
-        Keys.remove({value: apikey.value})
-          .then((err) => {
-            if (err) {
-              logger.error('Error logging user out', err);
-              deferred.reject({
-                code: 500,
-                error: 'Unable to clear api key.'
-              });
-            }
-
+        Keys.remove({value: apikeyValue})
+          .then((data) => {
             deferred.resolve({
               code: 200,
               data: 'Signed Out'
             });
-          });
-      });
+          })
+          .catch((err) => {
+            logger.error('Error logging user out: remove key from db', err);
+            deferred.reject({
+              code: 500,
+              error: 'Unable to clear api key.'
+            });
+        });
+    });
 
     res.clearCookie('apikey', {});
 
