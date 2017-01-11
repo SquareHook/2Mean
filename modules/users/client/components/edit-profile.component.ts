@@ -34,6 +34,12 @@ export class EditProfileComponent {
       .subscribe(
         user => {
           this.authService.user = user;
+          this.userService.uploadProfilePicture((item: any, response: any, headers: any) => {
+            let userRes = JSON.parse(response);
+            console.log(userRes);
+            this.authService.setUser(userRes);
+            this.user.profileImageURL = userRes.profileImageURL;
+          });
         },
         error => {
           this.errorMessage = error._body;
@@ -42,3 +48,4 @@ export class EditProfileComponent {
 
   }
 }
+
