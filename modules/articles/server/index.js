@@ -1,20 +1,16 @@
 var Users = require('../../users/server/models/Users');
+var Article = require('./models/Article');
 
-var Keys = require('./models/Keys');
-
-/**
- * The functionality of the Authentication module.
- */
-var AuthModule = require('./controllers/auth');
+var ArticleController = require('./controllers/article.controller.js');
 
 
 /**
  * Top level function that wraps all of the module together to return to the application.
  */
-function Auth([logger]) {
-  var AuthController = new AuthModule(logger);
+function Articles([logger]) {
+  var articleController = new ArticleController(logger);
 
-  return AuthController;
+  return articleController;
 };
 
-module.exports = Auth;
+module.exports = Articles;

@@ -14,6 +14,7 @@ import { CoreModule }                         from '../../core/client/core.modul
 import { AppRoutingModule }                   from './app-routing.module';
 import { UserService }                        from '../../users/client/services/user.service';
 
+
 describe('AppComponent', () => {
   let comp:     AppComponent;
   let fixture:  ComponentFixture<AppComponent>;

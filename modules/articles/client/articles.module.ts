@@ -5,7 +5,7 @@ import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }     from '@angular/router';
 import { AppModule }      from '../../app/client/app.module';
 import { ArticlesRoutingModule }      from './config/articles-routing.module';
-
+import { FormsModule } from '@angular/forms';
 
 import { ListArticlesComponent } from './components/list-articles.component';
 import { ArticleDetailComponent } from './components/article-detail.component';
@@ -16,6 +16,7 @@ import { ArticleDetailComponent } from './components/article-detail.component';
     NgbModule,
     HttpModule,
     ArticlesRoutingModule,
+    FormsModule
 
   ],
   /*components available inside of this module */

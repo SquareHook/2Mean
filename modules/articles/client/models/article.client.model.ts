@@ -1,7 +1,9 @@
+/* this is the class we'll use to generate Article forms with */
 export class Article {
-  id: string = null;
-  title: string = null;
-  userName: string = null;
-  created: number= null;
-  content: string = null;
+	id: string
+	constructor(
+		public title: string,
+		public content: string,
+		public created: Date
+	) { }
 }

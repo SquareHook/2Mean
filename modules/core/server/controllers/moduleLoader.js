@@ -2,7 +2,7 @@ var path = require('path');
 
 var fs = require('fs');
 
-function moduleLoader(config ) {
+function moduleLoader(config) {
   var modDirs = [];
 
   var moduleDir = path.resolve(config.basedir, 'modules');
