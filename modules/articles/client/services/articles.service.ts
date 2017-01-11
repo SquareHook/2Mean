@@ -29,17 +29,14 @@ export class ArticleService {
 
 	publishArticle(formData: Article) : Observable<any>
 	{
-		    return this.http.post('api/articles', formData)
-        .map(this.extractData);
+	  return this.http.post('api/articles', formData)
+    .map(this.extractData);		
+  }
 
-				
-  }
-  getArticle(id: string) : Observable<Article>
-  {
+	getArticle(id: string): Observable<Article> {
 		return this.http.get('api/articles/' + id)
-		.map((r: Response) => r.json().data);
-        
-  }
+			.map((r: Response) => r.json().data);
+	}
 
 	extractData(res: Response | any) {
 		let body = res.json();

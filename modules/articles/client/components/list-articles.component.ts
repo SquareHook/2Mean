@@ -30,11 +30,9 @@ export class ListArticlesComponent implements OnInit{
 	* Our service returns a promise, once resolved we will bind the data 
 	*/
 	getArticles() : void{
-	
 		this.articleService.getArticles()
 			.subscribe((data) => { this.articles = data;});
-		//then(articles => this.articles = articles);
-
+		
 	}
 	
 	onSelect(article: Article): void{
