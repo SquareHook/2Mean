@@ -19,7 +19,7 @@ module.exports = {
     uploads: {
       root: 'uploads',
       profilePicture: {
-        use: 'local',
+        use: 's3',
         local: {
           dest: './uploads/users/img/profilePicture/',
           limits: {

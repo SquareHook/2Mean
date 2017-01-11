@@ -339,6 +339,7 @@ function userController(logger) {
 
     if (config.uploads.profilePicture.use == 's3') {
       var s3 = new aws.S3();
+      logger.info(config.uploads.profilePicture.s3);
       upload = multer({
         storage: multerS3({
           s3: s3,
@@ -397,7 +398,17 @@ function userController(logger) {
                     logger.info('Old profile picture deleted');
                   });
               } else if (config.uploads.profilePicture.use === 's3') {
-                //TODO how?
+                var params = {
+                  Bucket: config.uploads.profilePicture.s3.bucket,
+                  Key: oldFileName
+                };
+                s3.deleteObject(params, function(err, data) {
+                  if (err) {
+                    logger.error('Error while deleting object on s3', err);
+                  } else {
+                    logger.info('Old profile picture deleted');
+                  }
+                });
               }
               deferred.resolve({
                 code: 200,
