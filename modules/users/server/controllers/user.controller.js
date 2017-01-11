@@ -339,7 +339,6 @@ function userController(logger) {
 
     if (config.uploads.profilePicture.use == 's3') {
       var s3 = new aws.S3();
-      logger.info(config.uploads.profilePicture.s3);
       upload = multer({
         storage: multerS3({
           s3: s3,
@@ -395,7 +394,7 @@ function userController(logger) {
                 // delete old profile picture
                 fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
                   () => {
-                    logger.info('Old profile picture deleted');
+                    logger.debug('Old profile picture deleted');
                   });
               } else if (config.uploads.profilePicture.use === 's3') {
                 var params = {
@@ -406,7 +405,7 @@ function userController(logger) {
                   if (err) {
                     logger.error('Error while deleting object on s3', err);
                   } else {
-                    logger.info('Old profile picture deleted');
+                    logger.debug('Old profile picture deleted');
                   }
                 });
               }
@@ -451,7 +450,6 @@ function userController(logger) {
       .then((user) => {
         var url = user.profileImageURL;
         var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
-        logger.info(serveUrl);
 
         // if filename exists
         if (serveUrl.length !== 0) {
