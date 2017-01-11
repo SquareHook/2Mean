@@ -1,17 +1,17 @@
 [{
   "template": "Articles",
-  "state": "#",
+  "state": "/articles",
   "position": 2,
   "roles": [],
   "subitems": [
   {
     "template": "New",
     "state": "/articles/new",
-    "roles": []
+    "roles": ["user"]
   },
   {
     "template": "List",
     "state": "/articles",
-    "roles": []
+    "roles": ["user"]
   }]
 }]

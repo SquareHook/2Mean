@@ -9,9 +9,9 @@ import { RouterTestingModule }                from '@angular/router/testing';
 import { AppComponent }                       from './app.component';
 
 /* Dependencies */
+import { AuthService }                        from '../../auth/client/auth.service.client';
 import { CoreModule }                         from '../../core/client/core.module';
 import { AppRoutingModule }                   from './app-routing.module';
-import { AuthService }                        from '../../auth/client/auth.service.client';
 import { UserService }                        from '../../users/client/services/user.service';
 
 describe('AppComponent', () => {

@@ -5,6 +5,8 @@ import { Injectable } from '@angular/core';
 
 import { Md5 } from 'ts-md5/dist/md5';
 
+import { Subject } from 'rxjs/Subject';
+
 /**
  * Get the user class model.
  */
@@ -39,7 +41,14 @@ export class AuthService {
   apikey: String;
   loggedIn: boolean;
 
+  // Observable sources
+  private authChangedSource = new Subject<boolean>();
+
+  // Observable streams
+  authChanged$ = this.authChangedSource.asObservable();
+
   constructor(private http: Http) {
+
     this.user = this.getUser();
     
     // user not logged in
@@ -48,9 +57,11 @@ export class AuthService {
       this.user = new User();
     } else {
       this.loggedIn = true;
+
     }
 
     this.apikey = null;
+
   }
 
   isLogged() {
@@ -69,6 +80,7 @@ export class AuthService {
    * @param {function} cb       The callback to use to get results.
    */
   login(username: string, password: string, cb: (err: Object, user: Object) =>  any) : void {
+  
     let body = {
       username: username,
       password: password
@@ -79,6 +91,7 @@ export class AuthService {
       .subscribe((res: Response) => {
         let body = res.json();
 
+        this.user = new User();
         // Save the user information for use later.
         this.user.id = body.user.id;
         this.user.firstName = body.user.firstName;
@@ -95,10 +108,15 @@ export class AuthService {
         // Save the apikey
         this.apikey = body.apikey;
 
+        //notify subscribers
+        this.authChanged(true);
+
         cb(null, this.user);
       }, (error: Response | any) => {
         cb({ error: 401}, null);
       });
+
+
   }
 
   /*
@@ -144,9 +162,13 @@ export class AuthService {
         this.apikey = null;
         this.loggedIn = false;
       });
+      //notify subscribers
+      this.authChanged(false);
   }
 
+
   getUser(): User {
+
     return JSON.parse(localStorage.getItem('user'));
   }
 
@@ -155,8 +177,16 @@ export class AuthService {
     this.saveUser();
   }
 
+  // emit data to subscribers
+  authChanged(data: boolean) {
+    this.authChangedSource.next(data);
+  }
+
+
   private saveUser(): void {
     localStorage.setItem('user', JSON.stringify(this.user));
   }
+
+
 
 }

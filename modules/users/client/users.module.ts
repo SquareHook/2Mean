@@ -1,5 +1,5 @@
 /* Vendor */
-import { NgModule }              from '@angular/core';
+import { NgModule, OpaqueToken }              from '@angular/core';
 import { BrowserModule }         from '@angular/platform-browser';
 import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
@@ -43,9 +43,11 @@ import {
 import { UserService }          from './services/user.service';
 import { AuthService }          from './../../auth/client/auth.service.client';
 
+/* Directives */
+import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
+
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
-
 
 @NgModule({
   imports:      [
@@ -65,7 +67,8 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     ChangeProfilePictureComponent,
     EditProfileComponent,
     ManageSocialComponent,
-    SettingsComponent
+    SettingsComponent,
+    StrongPasswordValidatorDirective
   ],
   providers: [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
   bootstrap:    [ UsersComponent ]
