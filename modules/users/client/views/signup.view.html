@@ -1,19 +1,34 @@
 <div class="container">
-    <form (ngSubmit)="signup()">
-        <h2>Sign Up</h2>
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" class="form-control" id="username" required [(ngModel)]="model.username" name="username">
-        </div>
-        <div class="form-group">
-            <label for="email">Email</label>
-            <input type="text" class="form-control" id="email" required [(ngModel)]="model.email" name="email">
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" class="form-control" id="password" required [(ngModel)]="model.password" name="password">
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
-    <p [hidden]="!errorMessage">{{errorMessage}}</p>
+  <form #userForm="ngForm" (ngSubmit)="signup()">
+    <h2>Sign Up</h2>
+    <div class="form-group">
+      <label for="username">Username</label>
+      <input type="text" class="form-control" id="username" 
+             required
+             [(ngModel)]="model.username" name="username">
+      <div *ngIf="formErrors.username" class="alert alert-danger">
+        {{ formErrors.username }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="email">Email</label>
+      <input type="text" class="form-control" id="email" 
+             required 
+             [(ngModel)]="model.email" name="email">
+      <div *ngIf="formErrors.email" class="alert alert-danger">
+        {{ formErrors.email }}
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="password">Password</label>
+      <input type="password" class="form-control" id="password" 
+             required  [strongPassword]="strongPasswordRe"
+             [(ngModel)]="model.password" name="password">
+      <div *ngIf="formErrors.password" class="alert  alert-danger">
+        {{ formErrors.password }}
+      </div>
+    </div>
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </form>
+  <p [hidden]="!errorMessage">{{errorMessage}}</p>
 </div>
