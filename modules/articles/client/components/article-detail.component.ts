@@ -27,10 +27,9 @@ export class ArticleDetailComponent implements OnInit {
 
 
 	ngOnInit(): void {
-
-		this.route.params
-			.subscribe((data: any) => {
-				//display form or display article based on route params
+	  this.route.params
+		  .subscribe((data: any) => {
+			 //display form or display article based on route params
 				if (data.id && data.id === 'new') {
 					this.detailView = false;
 					this.article = new Article("", "", null);

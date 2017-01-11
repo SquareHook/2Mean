@@ -27,10 +27,11 @@ export class ArticleService {
 		.map((r: Response) => r.json().data);
 	}
 
-	publishArticle(formData: Article) : void
+	publishArticle(formData: Article) : Observable<any>
 	{
+		    return this.http.post('api/users', formData)
+      .map(this.extractData);
 
-		this.http.post('api/articles', formData).map((r: any) => console.log(r));
 				
   }
   getArticle(id: string) : Observable<Article>
