@@ -7,6 +7,7 @@
              formControlName="profilePicture"
              (change)="fileChange($event)"
              required accept="image/*"
+             [class.ng-valid]="'true'"
              ng2FileSelect [uploader]="this.userService.uploader">
       <input type="hidden" class="form-control" id="profilePictureType" name="profilePictureType"
              formControlName="profilePictureType">
@@ -23,5 +24,6 @@
         </ul>
       </div>
     </div>
-    <button type="submit" class="btn btn-primary">Change Picture</button>
+    <button type="submit" class="btn btn-primary"
+            [disabled]="!formValid">Change Picture</button>
   </form>

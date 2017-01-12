@@ -37,6 +37,7 @@ import { allowedTypesValidator }  from '../directives/allowed-types.directive';
 export class ChangeProfilePictureComponent {
   @Input() user: User;
   userForm: FormGroup;  
+  formValid: boolean;
 
   private formErrors: any;
   private validationMessages: any;
@@ -53,6 +54,7 @@ export class ChangeProfilePictureComponent {
     private fb: FormBuilder
   ) { 
     this.user = authService.user;
+    this.formValid = false;
 
     // get config for validation
     this.allowedTypes = config.uploads.profilePicture.allowedTypes;
@@ -181,6 +183,9 @@ export class ChangeProfilePictureComponent {
 
     const form = this.userForm;
 
+    // assume form is valide
+    this.formValid = true;
+
     // only check form-controls which have error messages defined
     // (done in ngOnInit)
     for (const field in this.formErrors) {
@@ -189,6 +194,11 @@ export class ChangeProfilePictureComponent {
       const control = form.get(field);
 
       if (control && control.dirty && !control.valid) {
+        // if a non profilePicture field is invalid the form is invalid
+        if (field !== 'profilePicture') {
+          this.formValid = false;
+        }
+
         const messages = this.validationMessages[field];
         for (const key in control.errors) {
           // concat errors together

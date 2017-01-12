@@ -45,6 +45,10 @@ export class EditProfileComponent implements OnInit {
   profilePicture: any;
   fileType: string;
   fileSize: number;
+  // this is a bit of a hack because file inputs are not updated like
+  // other inputs
+  // formValid is used to control the button disabled attribute
+  formValid: boolean;
 
   private allowedTypes: Array<string>;
   private maxSize: number;
@@ -58,6 +62,7 @@ export class EditProfileComponent implements OnInit {
     private fb: FormBuilder
   ) {
       this.user = authService.user;
+      this.formValid = false;
 
       // get config for validation
       this.allowedTypes = config.uploads.profilePicture.allowedTypes;
@@ -87,7 +92,7 @@ export class EditProfileComponent implements OnInit {
 
       },
       'email': {
-
+        'required': 'Email is required'
       },
       //TODO KB/MB
       'profilePictureSize': {
@@ -204,6 +209,9 @@ export class EditProfileComponent implements OnInit {
 
     const form = this.userForm;
 
+    // assume the form is valid
+    this.formValid = true;
+
     for (const field in this.formErrors) {
       // clear previous errors
       this.formErrors[field] = '';
@@ -212,6 +220,11 @@ export class EditProfileComponent implements OnInit {
       // only check form-controls which have error messages defined
       // (done in ngOnInit)
       if (control && control.dirty && !control.valid) {
+        // if a non profilePicture field is invalid the form is invalid
+        if (field !== 'profilePicture') {
+          this.formValid = false;
+        }
+
         const messages = this.validationMessages[field];
         for (const key in control.errors) {
           this.formErrors[field] += messages[key] + ' ';
