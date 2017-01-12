@@ -38,7 +38,17 @@ export class ArticleService {
 			.map((r: Response) => r.json().data);
 	}
 
-	extractData(res: Response | any) {
+	updateArticle(formData: Article) : Observable<any>
+	{
+		return this.http.put('api/articles/' + formData.id, formData)
+    .map(this.extractData);		
+	}
+
+	removeArticle(id: string): Observable<Article> {
+		return this.http.delete('api/articles/' + id)
+			.map((r: Response) => r.json().data);
+	}
+	private extractData(res: Response | any) {
 		let body = res.json();
 		return body;
 	}
