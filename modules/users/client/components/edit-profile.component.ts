@@ -112,15 +112,17 @@ export class EditProfileComponent implements OnInit {
       .subscribe(
         user => {
           this.authService.user = user;
-          this.userService.uploadProfilePicture((item: any, response: any, headers: any) => {
-            let userRes = JSON.parse(response);
+          this.userService.uploadProfilePicture((item: any, response: any, status: number, headers: any) => {
+            if (status === 200) {
+              let userRes = JSON.parse(response);
 
-            // update the local data
-            this.authService.setUser(userRes);
-            this.user.profileImageURL = userRes.profileImageURL;
+              // update the local data
+              this.authService.setUser(userRes);
+              this.user.profileImageURL = userRes.profileImageURL;
 
-            // clear the queue so next files will not accumulate
-            this.userService.clearUploaderQueue();
+              // clear the queue so next files will not accumulate
+              this.userService.clearUploaderQueue();
+            }
           });
         },
         error => {

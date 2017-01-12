@@ -8,7 +8,7 @@ module.exports = {
     pass: process.env.TOOMEAN_MONGO_PASS
   },
   logger: {
-    level: process.env.TOOMEAN_LOG_LEVEL || 'info',
+    level: process.env.TOOMEAN_LOG_LEVEL || 'debug',
     es: {
       host: process.env.TOOMEAN_ES_HOST || undefined,
       port: process.env.TOOMEAN_ES_PORT || undefined,
@@ -24,6 +24,7 @@ module.exports = {
   uploads: {
     root: 'uploads',
     profilePicture: {
+      allowedTypes: ['image/png', 'image/gif', 'image/jpeg', 'image/svg+xml'],
       use: process.env.TOOMEAN_UPLOADS_STRATEGY || 'local',
       local: {
         dest: './uploads/users/img/profilePicture/',

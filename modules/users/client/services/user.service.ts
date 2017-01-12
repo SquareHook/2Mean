@@ -99,7 +99,7 @@ export class UserService {
    *    process is done
    *  //TODO either switch uploader or add cb's for error/success
    */
-  uploadProfilePicture(onCompleteItem : (item: any, response: any, headers: any) => void) {
+  uploadProfilePicture(onCompleteItem : (item: any, response: any, status: number, headers: any) => void) {
     // Only if file(s) are queued
     if (this.uploader.queue.length > 0) {
       // Bind callback. I don't like that it is done here
