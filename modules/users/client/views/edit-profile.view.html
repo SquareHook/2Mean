@@ -1,4 +1,4 @@
-  <form (ngSubmit)="submit()">
+  <form #userForm="ngForm" (ngSubmit)="submit()">
     <div class="form-group">
       <label for="firstName">First Name</label>
       <input type="text" class="form-control" id="firstName" name="firstName" [(ngModel)]="user.firstName">
@@ -10,11 +10,20 @@
     <div class="form-group">
       <label for="email">Email</label>
       <input type="text" class="form-control" id="email" name="email" [(ngModel)]="user.email">
+      <div *ngIf="formErrors.email" class="alert alert-danger">
+        {{ formErrors.email }}
+      </div>
     </div>
     <div class="form-group">
       <label for="profilePicture">Profile Picture</label>
-      <input type="file" class="form-control" id="profilePicture"
-             ng2FileSelect [uploader]="this.userService.uploader">
+      <input type="file" class="form-control" id="profilePicture" name="profilePicture"
+             (change)="fileChange($event)"
+             maxSize allowedType
+             ng2FileSelect [uploader]="this.userService.uploader"
+             [(ngModel)]="profilePicture">
+      <div *ngIf="formErrors.profilePicture" class="alert alert-danger">
+        {{ formErrors.profilePicture }}
+      </div>
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>
     {{ errorMessage }}

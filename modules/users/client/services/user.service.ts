@@ -40,12 +40,16 @@ export class UserService {
   user: User;
   uploader: FileUploader;
 
+  private allowedTypes: Array<string>;
+  private maxSize: number;
+
   constructor(
     private http: Http,
     @Inject(USERS_CONFIG) config : UsersConfig
   ) { 
-
     this.uploader = new FileUploader({ url: config.uploads.profilePicture.url });
+    this.allowedTypes = config.uploads.profilePicture.allowedTypes;
+    this.maxSize = config.uploads.profilePicture.maxSize;
   }
 
   read(userId: string) : Observable<User> {
@@ -76,7 +80,25 @@ export class UserService {
   uploadProfilePicture(onCompleteItem : (item: any, response: any, headers: any) => void) {
     this.uploader.onCompleteItem = onCompleteItem;
     if (this.uploader.queue.length === 1) {
-      this.uploader.queue[0].upload();
+      let fileItem = this.uploader.queue[0];
+      let fileType = fileItem.file.type;
+      let fileSize = fileItem.file.size;
+
+      let fileTypeGood = this.allowedTypes.includes(fileType);
+      let fileSizeGood = this.maxSize >= fileSize;
+
+      if (fileTypeGood && fileSizeGood) {
+        this.uploader.queue[0].upload();
+        return {
+          type: true,
+          size: true
+        };
+      } else {
+        return {
+          type: fileTypeGood,
+          size: fileSizeGood
+        };
+      }
     }
   }
 
