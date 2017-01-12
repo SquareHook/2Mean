@@ -3,17 +3,16 @@ function routeLoader(logger, modLoader, app) {
 
   constructor();
 
-  function constructor() { 
-  }
+  function constructor() {}
 
   function loadRoutes() {
     var routeList = modLoader.getRoutes();
-
     var auth = modLoader.get('auth');
 
     // A little unwieldy, but functional.
     // Couldn't find the express function that used to exist where you can define the method in the function call.
     for (var mod in routeList) {
+
       routeList[mod].forEach((route) => {
         if (route.type.toUpperCase() === 'GET') {
           if (route.secure) {

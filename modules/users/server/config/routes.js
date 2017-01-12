@@ -28,5 +28,17 @@ module.exports = [
     type: 'POST',
     method: 'register',
     secure: false
+  },
+  {
+    route: '/users/picture',
+    type: 'POST',
+    method: 'changeProfilePicture',
+    secure: true
+  },
+  {
+    route: '/users/:userId/picture/:fileName',
+    type: 'GET',
+    method: 'getProfilePicture',
+    secure: true
   }
 ];

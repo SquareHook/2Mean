@@ -6,6 +6,7 @@ import { RouterModule, Routes } from '@angular/router';
 import { ListArticlesComponent } from '../components/list-articles.component';
 import { ArticleDetailComponent } from '../components/article-detail.component';
 
+
 /* register the routes to these components */
 const articlesRoutes: Routes = [
   {

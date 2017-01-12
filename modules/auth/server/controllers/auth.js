@@ -18,6 +18,16 @@ var Keys = mongoose.model('Keys');
  */
 var q = require('q');
 
+/*
+ * path makes resolving easier
+ */
+var path = require('path');
+
+/**
+ * config
+ */
+var config = require(path.resolve('config/config'));
+
 /**
  * Main business logic for handling requests.
  */
@@ -90,13 +100,13 @@ function authenticationModule(logger) {
 
     Users.findOne({_id: req.user._id})
       .then((user) => {
-        let apikey = user.apikey;
+        let apikeyValue = user.apikey.value;
 
         user.apikey = {};
 
         user.save((err, data) => {
           if (err) {
-            logger.error('Error logging user out', err);
+            logger.error('Error logging user out: remove key from user', err);
             deferred.reject({
               code: 500,
               error: 'Error looking up user.'
@@ -104,22 +114,21 @@ function authenticationModule(logger) {
           }
         });
 
-        Keys.remove({value: apikey.value})
-          .then((err) => {
-            if (err) {
-              logger.error('Error logging user out', err);
-              deferred.reject({
-                code: 500,
-                error: 'Unable to clear api key.'
-              });
-            }
-
+        Keys.remove({value: apikeyValue})
+          .then((data) => {
             deferred.resolve({
               code: 200,
               data: 'Signed Out'
             });
-          });
-      });
+          })
+          .catch((err) => {
+            logger.error('Error logging user out: remove key from db', err);
+            deferred.reject({
+              code: 500,
+              error: 'Unable to clear api key.'
+            });
+        });
+    });
 
     res.clearCookie('apikey', {});
 
@@ -214,11 +223,9 @@ function authenticationModule(logger) {
     }
 
     deferred.promise.then((data) => {
-      // TODO !!!! This needs to be set to environment vars.
-      // dylan-ive commented it out for now so the auth api will work
       res.cookie('apikey', data.data.apikey, {
-        expires: new Date(Date.now() + keyTTL)
-        //domain: 'localhost'
+        expires: new Date(Date.now() + keyTTL),
+        domain: config.app.host
       });
 
       res.status(data.code).send(data.data);
@@ -267,7 +274,7 @@ function authenticationModule(logger) {
    */
   function createKey(len) {
     var buf = []
-      , chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
+       chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
       , charlen = chars.length;
 
     for (var i = 0; i < len; ++i) {
