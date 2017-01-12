@@ -15,7 +15,7 @@ export const USERS_DI_CONFIG: UsersConfig = {
       url: '/api/users/picture'
     }
 	},
-  passwordValidatorRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!@#\$%\^&\*\(\)-_=+\[\]\{\}\\\|;:'"~`<\,\.>\/\?])(?=.{8,}))/
+  passwordValidatorRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[$-/:-?{-~~"^_`\]\[])(?=.{8,}))/
 };
 
 export let USERS_CONFIG = new OpaqueToken('users.config');
