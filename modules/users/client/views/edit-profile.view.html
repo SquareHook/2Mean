@@ -1,15 +1,18 @@
-  <form #userForm="ngForm" (ngSubmit)="submit()">
+  <form [formGroup]="userForm" (ngSubmit)="submit()">
     <div class="form-group">
       <label for="firstName">First Name</label>
-      <input type="text" class="form-control" id="firstName" name="firstName" [(ngModel)]="user.firstName">
+      <input type="text" class="form-control" id="firstName" name="firstName"
+             formControlName="firstName">
     </div>
     <div class="form-group">
       <label for="lastName">Last Name</label>
-      <input type="text" class="form-control" id="lastName" name="lastName" [(ngModel)]="user.lastName">
+      <input type="text" class="form-control" id="lastName" name="lastName" 
+             formControlName="lastName">
     </div>
     <div class="form-group">
       <label for="email">Email</label>
-      <input type="text" class="form-control" id="email" name="email" [(ngModel)]="user.email">
+      <input type="text" class="form-control" id="email" name="email" 
+             formControlName="email">
       <div *ngIf="formErrors.email" class="alert alert-danger">
         {{ formErrors.email }}
       </div>
@@ -18,11 +21,22 @@
       <label for="profilePicture">Profile Picture</label>
       <input type="file" class="form-control" id="profilePicture" name="profilePicture"
              (change)="fileChange($event)"
-             maxSize allowedType
+             maxSize allowedType accept="image/*"
              ng2FileSelect [uploader]="this.userService.uploader"
-             [(ngModel)]="profilePicture">
-      <div *ngIf="formErrors.profilePicture" class="alert alert-danger">
-        {{ formErrors.profilePicture }}
+             formControlName="profilePicture">
+      <input type="hidden" class="form-control" id="profilePictureType" name="profilePictureType"
+             formControlName="profilePictureType">
+      <input type="hidden" class="form-control" id="profilePictureSize" name="profilePictureSize"
+             formControlName="profilePictureSize">
+      <div *ngIf="formErrors.profilePictureSize || formErrors.profilePictureType" class="alert alert-danger">
+        <ul>
+          <li *ngIf="formErrors.profilePictureType">
+            {{ formErrors.profilePictureType }}
+          </li>
+          <li *ngIf="formErrors.profilePictureSize">
+            {{ formErrors.profilePictureSize }}
+          </li>
+        </ul>
       </div>
     </div>
     <button type="submit" class="btn btn-primary">Submit</button>

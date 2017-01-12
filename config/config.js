@@ -24,7 +24,7 @@ module.exports = {
   uploads: {
     root: 'uploads',
     profilePicture: {
-      use: 's3',
+      use: process.env.TOOMEAN_UPLOADS_STRATEGY || 'local',
       local: {
         dest: './uploads/users/img/profilePicture/',
         limits: {
