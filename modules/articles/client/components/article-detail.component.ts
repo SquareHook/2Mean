@@ -19,7 +19,10 @@ export class ArticleDetailComponent implements OnInit {
 	article: Article;
 	detailView: boolean;
 	loggedIn: boolean;
-	constructor(private articleService: ArticleService, private authService: AuthService, private router: Router, private route: ActivatedRoute) {
+	constructor(private articleService: ArticleService,
+	 private authService: AuthService,
+	 private router: Router, 
+	 private route: ActivatedRoute) {
 		this.article = null;
 		this.detailView = true;
 		this.loggedIn = authService.loggedIn;
@@ -38,16 +41,23 @@ export class ArticleDetailComponent implements OnInit {
 					//here we use rxjs to watch for changes to the url, once changed we use the articles service to get
 					//the new object without having to reload the component 
 					this.route.params
-						.switchMap((params: Params) =>
-							this.articleService.getArticle(params['id']))
-						.subscribe((_article: Article) => { this.article = _article });
+					.switchMap((params: Params) =>
+						this.articleService.getArticle(params['id']))
+							.subscribe((_article: Article) => { this.article = _article; this.detailView = true; });
 				}
 			});
 
 	};
 
 	submit(): void {
-		this.articleService.publishArticle(this.article);
+    this.articleService.publishArticle(this.article)
+		.subscribe((data) => 
+		{
+				if(data._id)
+				{
+					this.router.navigate(['articles']);
+				}
+		});
 	}
 
 
