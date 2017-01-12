@@ -57,11 +57,9 @@ export class AuthService {
       this.user = new User();
     } else {
       this.loggedIn = true;
-
     }
 
     this.apikey = null;
-
   }
 
   isLogged() {
@@ -155,15 +153,17 @@ export class AuthService {
         this.setUser(null);
         this.apikey = null;
         this.loggedIn = false;
+        //notify subscribers
+        this.authChanged(false);
+
       }, (error: Response | any) => {
         // either way invalidate local creds. Server may still accept
         console.log('Error logging out: ', error);
         this.setUser(null);
         this.apikey = null;
         this.loggedIn = false;
+
       });
-      //notify subscribers
-      this.authChanged(false);
   }
 
 
