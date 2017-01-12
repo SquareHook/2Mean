@@ -50,7 +50,7 @@ export class ArticleDetailComponent implements OnInit {
 	};
 
 	submit(): void {
-		this.articleService.publishArticle(this.article)
+    this.articleService.publishArticle(this.article)
 		.subscribe((data) => 
 		{
 				if(data._id)
