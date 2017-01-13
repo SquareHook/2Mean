@@ -123,8 +123,7 @@ export class EditProfileComponent implements OnInit {
 
               // update the local data
               this.authService.setUser(userRes);
-              //= userRes;
-              //this.user.profileImageURL = userRes.profileImageURL;
+              this.user = userRes;
 
               // clear the queue so next files will not accumulate
               this.userService.clearUploaderQueue();

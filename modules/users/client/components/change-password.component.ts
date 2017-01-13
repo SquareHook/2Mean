@@ -31,6 +31,7 @@ export class ChangePasswordComponent {
   constructor (
     private authService: AuthService,
     private userService: UserService,
+    private router: Router,
     @Inject(USERS_CONFIG) config: UsersConfig
   ) { 
       this.user = this.authService.getUser();
@@ -61,10 +62,14 @@ export class ChangePasswordComponent {
         .subscribe(
           (user: User) => {
             this.authService.setUser(user);
+            this.errorMessage = "";
             this.loading = false;
+            this.router.navigate(['/profile']);
           },
           error => {
-            this.errorMessage = error._body;
+            // determine which error to display
+            let errorCode = error.status;
+            this.errorMessage = JSON.parse(error._body).message + errorCode;
             this.loading = false;
           });
     }
@@ -111,13 +116,13 @@ export class ChangePasswordComponent {
   }
 
   formErrors = {
-    'password': '',
+    'passwordOld': '',
     'passwordNew0': '',
     'passwordNew1': ''
   };
 
   validationMessages = {
-    'password': {
+    'passwordOld': {
       'required': 'Password is required'
     },
     'passwordNew0': {

@@ -526,19 +526,19 @@ function userController(logger) {
     // this is the password the user wants to change to
     let newPassword = req.body.newPassword;
 
-    // check password strength
-    if (!isStrongPassword(newPassword)) {
-      deferred.reject({
-        code: 400,
-        // TODO more generic message? its probably fine because the user
-        // is already authenticated and it does not reveal any information
-        // besides the input was bad
-        error: { message: 'Invalid password' }
-      });
-    } else {
-      // check user's password is correct
-      argon2.verify(user.password, oldPassword).then(match => {
-        if (match) {
+    // check user's password is correct
+    argon2.verify(user.password, oldPassword).then(match => {
+      if (match) {
+        // check password strength
+        if (!isStrongPassword(newPassword)) {
+          deferred.reject({
+            code: 400,
+            // TODO more generic message? its probably fine because the user
+            // is already authenticated and it does not reveal any information
+            // besides the input was bad
+            error: { message: 'Invalid password' }
+          });
+        } else {
           // generate new hash
           argon2.generateSalt().then(salt => {
             argon2.hash(newPassword, salt).then(hash => {
@@ -577,23 +577,24 @@ function userController(logger) {
               });
             });
           });
-        } else {
-          // Passwords do not match
-          logger.info('Invalid password used change password', { username: user.username, _id: user._id.toString() });
-          deferred.reject({
-            code: 401,
-            error: { message: 'Incorrect Username/Password' }
-          });
         }
-      }).catch(err => {
-        // Error from argon.verify
-        logger.error(err);
+      } else {
+        // Passwords do not match
+        logger.info('Invalid password used change password', { username: user.username, _id: user._id.toString() });
         deferred.reject({
-          code: 500,
-          error: { message: 'Internal Server error' }
+          code: 401,
+          error: { message: 'Incorrect Username/Password' }
         });
+      }
+    }).catch(err => {
+      // Error from argon.verify
+      logger.error(err);
+      deferred.reject({
+        code: 500,
+        error: { message: 'Internal Server error' }
       });
-    }
+    });
+    
 
     return deferred.promise
       .then((data) => {
