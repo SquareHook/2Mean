@@ -26,12 +26,16 @@ export class CoreMenuComponent {
     // Determine if logged in
     this.loggedIn = this.authService.loggedIn;
     this.setup();
-
+    this.user = authService.getUser();
 
     //update the menu when auth changes
     authService.authChanged$.subscribe(
       data => {
         this.loggedIn = data;
+        if(!this.loggedIn)
+        {
+          this.router.navigateByUrl('/signin');
+        }
         this.user = authService.getUser();
         this.setup();
       });

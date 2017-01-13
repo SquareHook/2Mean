@@ -10,6 +10,7 @@ var mongoose = require('mongoose'),
  * User Schema
  */
 var ArticleSchema = new Schema({
+  _id: Schema.Types.ObjectId,
   title: {
   	type: String,
   	default: "untitled"
@@ -23,8 +24,7 @@ var ArticleSchema = new Schema({
     default: Date.now
   },
   updated: {
-    type: Date,
-    default: Date.now
+    type: Date
   },
   userName: String,
   userId: Schema.ObjectId
