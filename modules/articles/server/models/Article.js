@@ -10,10 +10,24 @@ var mongoose = require('mongoose'),
  * User Schema
  */
 var ArticleSchema = new Schema({
-
-  resetPasswordExpires: {
+  _id: Schema.Types.ObjectId,
+  title: {
+  	type: String,
+  	default: "untitled"
+  },
+  content: {
+    type: String,
+    default: "nothing here yet"
+  },
+  created: {
+    type: Date,
+    default: Date.now
+  },
+  updated: {
     type: Date
-  }
+  },
+  userName: String,
+  userId: Schema.ObjectId
 });
 
 mongoose.model('Article', ArticleSchema);

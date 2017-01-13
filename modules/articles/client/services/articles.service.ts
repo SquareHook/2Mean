@@ -29,19 +29,27 @@ export class ArticleService {
 
 	publishArticle(formData: Article) : Observable<any>
 	{
-		    return this.http.post('api/users', formData)
-      .map(this.extractData);
-
-				
-  }
-  getArticle(id: string) : Observable<Article>
-  {
-		return null;
+	  return this.http.post('api/articles', formData)
+    .map(this.extractData);		
   }
 
-	extractData(res: Response | any) {
+	getArticle(id: string): Observable<Article> {
+		return this.http.get('api/articles/' + id)
+			.map((r: Response) => r.json().data);
+	}
+
+	updateArticle(formData: Article) : Observable<any>
+	{
+		return this.http.put('api/articles/' + formData.id, formData)
+    .map(this.extractData);		
+	}
+
+	removeArticle(id: string): Observable<Article> {
+		return this.http.delete('api/articles/' + id)
+			.map((r: Response) => r.json().data);
+	}
+	private extractData(res: Response | any) {
 		let body = res.json();
-		console.log(body);
 		return body;
 	}
 }

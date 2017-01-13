@@ -54,13 +54,14 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(cookieParser());
 
-core.routes.loadRoutes();
 
 // Impromptu logger.
 app.use((req, res, next) => {
   logger.info('Endpoint ' + req.path);
   next();
 });
+core.routes.loadRoutes();
+
 
 /*
  * Endpoint Definitions.
