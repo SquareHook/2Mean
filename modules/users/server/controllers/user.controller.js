@@ -511,11 +511,10 @@ function userController(logger) {
 
     // this is the user injected by the auth middleware
     var user = req.user;
-
-    // this is the user sent in the request it will have its password
-    // set as the old password
-    let sentUser = mapUser(req.body.user);
     
+    // this is the old password the user has entered
+    let oldPassword = req.body.oldPassword;
+
     // this is the password the user wants to change to
     let newPassword = req.body.newPassword;
 
@@ -528,69 +527,65 @@ function userController(logger) {
         // besides the input was bad
         error: { message: 'Invalid password' }
       });
-    }
+    } else {
+      // check user's password is correct
+      argon2.verify(user.password, oldPassword).then(match => {
+        if (match) {
+          // generate new hash
+          argon2.generateSalt().then(salt => {
+            argon2.hash(newPassword, salt).then(hash => {
+              user.password = hash;
 
-    // check that the request is being sent over a secure channel
-    // (tls)
-    // TODO redirect to port 443/configured port
-
-    // check user's password is correct
-    argon2.verify(user.password, sentUser.password).then(match => {
-      if (match) {
-        // generate new hash
-        argon2.generateSalt().then(salt => {
-          argon2.hash(req.body.newPassword, salt).then(hash => {
-            user.password = hash;
-
-            user.save((err, data) => {
-              if (err) {
-                let errors = extractMongooseErrors(err.errors);
-                let validation = _.fild(errors, (o) => {
-                  return (o.name === 'ValidatorError');
-                });
-
-                if (validation) {
-                  // Mongoose error
-                  logger.error('Validation error on changing user password', validation);
-                  deferred.reject({
-                    code: 400,
-                    error: { message: validation.message }
+              user.save((err, data) => {
+                if (err) {
+                  let errors = extractMongooseErrors(err.errors);
+                  let validation = _.fild(errors, (o) => {
+                    return (o.name === 'ValidatorError');
                   });
+
+                  if (validation) {
+                    // Mongoose error
+                    logger.error('Validation error on changing user password', validation);
+                    deferred.reject({
+                      code: 400,
+                      error: { message: validation.message }
+                    });
+                  } else {
+                    // unknown error. log it
+                    logger.error('Changing password Error', err.errors);
+                    deferred.reject({
+                      code: 500,
+                      error: { message: 'Internal Server Error' }
+                    });
+                  }
                 } else {
-                  // unknown error. log it
-                  logger.error('Changing password Error', err.errors);
-                  deferred.reject({
-                    code: 500,
-                    error: { message: 'Internal Server Error' }
+                  // Sucess
+                  logger.debug('User password changed ' + user.username);
+                  deferred.resolve({
+                    code: 201,
+                    data: data
                   });
                 }
-              } else {
-                // Sucess
-                logger.debug('User password changed ' + user.username);
-                deferred.resolve({
-                  code: 201,
-                  data: data
-                });
-              }
+              });
             });
           });
-        });
-      } else {
-        // Passwords do not match
-        logger.info('Invalid password used change password', { username: user.username, _id: user._id });
+        } else {
+          // Passwords do not match
+          logger.info('Invalid password used change password', { username: user.username, _id: user._id.toString() });
+          deferred.reject({
+            code: 401,
+            error: { message: 'Incorrect Username/Password' }
+          });
+        }
+      }).catch(err => {
+        // Error from argon.verify
+        logger.error(err);
         deferred.reject({
-          code: 401,
-          error: { message: 'Incorrect Username/Password' }
+          code: 500,
+          error: { message: 'Internal Server error' }
         });
-      }
-    }).catch(err => {
-      // Error from argon.verify
-      logger.error(err);
-      deferred.reject({
-        code: 500,
-        error: { message: 'Internal Server error' }
       });
-    });
+    }
 
     return deferred.promise
       .then((data) => {
@@ -710,7 +705,8 @@ function userController(logger) {
     deleteUser            : deleteUser,
     register              : register,
     changeProfilePicture  : changeProfilePicture,
-    getProfilePicture     : getProfilePicture
+    getProfilePicture     : getProfilePicture,
+    changePassword        : changePassword
   };
 }
 

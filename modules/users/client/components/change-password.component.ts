@@ -21,6 +21,7 @@ export class ChangePasswordComponent {
   user: User;
   loading = false;
   errorMessage: string;
+  passwordOld: string;
   passwordNew0 : string;
   passwordNew1 : string;
   password0Valid : boolean;
@@ -54,12 +55,12 @@ export class ChangePasswordComponent {
     this.loading = true;
 
     if (this.password0Valid && this.password1Valid) {
-      this.user.password = this.passwordNew0;
-
-      this.userService.update(this.user)
+      // using changePassword instead of update because we want to be sure
+      // to re-authenticate the user before changing its password
+      this.userService.changePassword(this.passwordOld, this.passwordNew0)
         .subscribe(
-          user => {
-            this.authService.user = user;
+          (user: User) => {
+            this.authService.setUser(user);
             this.loading = false;
           },
           error => {
