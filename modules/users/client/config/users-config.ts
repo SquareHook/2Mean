@@ -9,6 +9,7 @@ export interface UsersConfig {
     }
   },
   passwordValidatorRe: RegExp,
+  emailValidatorRe: RegExp
 }
 
 export const USERS_DI_CONFIG: UsersConfig = {
@@ -24,6 +25,9 @@ export const USERS_DI_CONFIG: UsersConfig = {
   // match at least one UPPER, lower, digit, symbol, and length must be >= 8
   // ?= is a lookahead
   passwordValidatorRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[$-/:-?{-~~"^_`\]\[])(?=.{8,}))/,
+  // TODO either write a full regex for emails (RFC3696 would help) or
+  // implement confirmation email sender
+  emailValidatorRe: /.+@.+/
 };
 
 export let USERS_CONFIG = new OpaqueToken('users.config');
