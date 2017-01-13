@@ -23,6 +23,11 @@ var q = require('q');
  */
 var path = require('path');
 
+/*
+ * argon2 for password checking
+ */
+var argon2 = require('argon2');
+
 /**
  * config
  */
@@ -34,25 +39,30 @@ var config = require(path.resolve('config/config'));
 function authenticationModule(logger) {
   // Key, 8 hours TTL
   var keyTTL = 1000 * 60 * 60 * 8;
+  var defaultPassword = 12345;
 
   // Check if Database has been populated yet.  If not, inject default user.
   Users.count({}, (err, c) => {
     if (c < 1) {
-      let newUser = new Users();
-      logger.info('Users collection is empty, adding default user...');
+      argon2.generateSalt().then(salt => {
+        argon2.hash(defaultPassword, salt).then(hash => {
+          let newUser = new Users();
+          logger.info('Users collection is empty, adding default user...');
 
-      newUser.firstName = 'Admin';
-      newUser.lastName = 'User';
-      newUser.displayName = 'Squarehook';
-      newUser.email = 'support@squarehook.com';
-      newUser.username = 'squarehook';
-      newUser.password = '12345';
-      newUser.roles = [ 'user', 'admin' ];
+          newUser.firstName = 'Admin';
+          newUser.lastName = 'User';
+          newUser.displayName = 'Squarehook';
+          newUser.email = 'support@squarehook.com';
+          newUser.username = 'squarehook';
+          newUser.password = hash;
+          newUser.roles = [ 'user', 'admin' ];
 
-      newUser.save((err, data) => {
-        if (err) {
-          logger.error(err);
-        }
+          newUser.save((err, data) => {
+            if (err) {
+              logger.error(err);
+            }
+          });
+        });
       });
     }
   });
@@ -164,53 +174,57 @@ function authenticationModule(logger) {
             created: new Date()
           };
 
-          if (creds.password !== user.password) {
-            deferred.reject({
-              code: 401,
-              error: 'Incorrect Username/Password'
-            });
-          }
-
-          // Remove the old key from the Keys collection.
-          if (user.apikey && user.apikey.value) {
-            Keys.findOne({value: user.apikey.value})
-              .then((data) => {
-                data.remove();
-              }, (err) => {
-                logger.error('Error finding old key to remove', err);
+          argon2.verify(user.password, creds.password).then(match => {
+            if (!match) {
+              deferred.reject({
+                code: 401,
+                error: 'Incorrect Username/Password'
               });
-          }
-
-          // Update users reference to the key.
-          user.apikey.value = apikey.value;
-          user.apikey.created = apikey.created;
-
-          user.save((err, data) => {
-            if (err) {
-              logger.error(err);
+            } else {
+              // Remove the old key from the Keys collection.
+              if (user.apikey && user.apikey.value) {
+                Keys.findOne({value: user.apikey.value})
+                  .then((data) => {
+                    data.remove();
+                  }, (err) => {
+                    logger.error('Error finding old key to remove', err);
+                  });
+              }
+    
+              // Update users reference to the key.
+              user.apikey.value = apikey.value;
+              user.apikey.created = apikey.created;
+    
+              user.save((err, data) => {
+                if (err) {
+                  logger.error(err);
+                }
+              });
+    
+              logger.info('User logged in.', user.username);
+    
+              // Save the new key.
+              key.value = apikey.value;
+              key.created = apikey.created;
+              key.user = user._id;
+              key.roles = user.roles;
+    
+              key.save((err, data) => {
+                if (err) {
+                  logger.error(err);
+                }
+              });
+    
+              deferred.resolve({
+                code: 200,
+                data: {
+                  apikey: user.apikey.value,
+                  user: sanitizeUser(user)
+                }
+              });
             }
-          });
-
-          logger.info('User logged in.', user.username);
-
-          // Save the new key.
-          key.value = apikey.value;
-          key.created = apikey.created;
-          key.user = user._id;
-          key.roles = user.roles;
-
-          key.save((err, data) => {
-            if (err) {
-              logger.error(err);
-            }
-          });
-
-          deferred.resolve({
-            code: 200,
-            data: {
-              apikey: user.apikey.value,
-              user: sanitizeUser(user)
-            }
+          }).catch(err => {
+            console.log(err);
           });
         }, (error) => {
           logger.error('Auth Module error: Hit error querying for user.', error);
@@ -225,7 +239,8 @@ function authenticationModule(logger) {
     deferred.promise.then((data) => {
       res.cookie('apikey', data.data.apikey, {
         expires: new Date(Date.now() + keyTTL),
-        domain: config.app.host
+        domain: config.app.host,
+        secure: true
       });
 
       res.status(data.code).send(data.data);

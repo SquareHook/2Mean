@@ -40,5 +40,9 @@ module.exports = {
         }
       }
     }
+  },
+  auth: {
+    //                        UPPER      lower      digit      symbol
+    passwordStrengthRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[$-/:-?{-~~"^_`\]\[])(?=.{8,}))/
   }
 };

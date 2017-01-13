@@ -54,6 +54,11 @@ var path = require('path');
 var fs = require('fs');
 
 /*
+ * argon2 password hashing algorithm
+ */
+var argon2 = require('argon2');
+
+/*
  * application config
  */
 var config = require(path.resolve('config/config'));
@@ -85,34 +90,41 @@ function userController(logger) {
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.roles = [ 'user' ];
 
-    newUser.save((err, data) => {
-      if (err) {
-        let errors = extractMongooseErrors(err.errors);
-        let validation = _.find(errors, (o) => {
-          return (o.name === 'ValidatorError'); 
-        });
+    // get password and salt
+    argon2.generateSalt().then(salt => {
+      argon2.hash(newUser.password, salt).then(hash => {
+        newUser.password = hash;
+    
+        // save the user
+        newUser.save((err, data) => {
+          if (err) {
+            let errors = extractMongooseErrors(err.errors);
+            let validation = _.find(errors, (o) => {
+              return (o.name === 'ValidatorError'); 
+            });
 
-        if (validation) {
-          logger.error('Validation error on registering a new user', validation);
-          deferred.reject({
-            code: 400,
-            error: validation.message
-          });
-        } else {
-          logger.error('Creating User Error', err.errors);
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        }
-      } else {
-        logger.info('User created: ' + newUser.username);
-        deferred.resolve({
-          code: 201,
-          data: data
+            if (validation) {
+              logger.error('Validation error on registering a new user', validation);
+              deferred.reject({
+                code: 400,
+                error: validation.message
+              });
+            } else {
+              logger.error('Creating User Error', err.errors);
+              deferred.reject({
+                code: 500,
+                error: 'Internal Server Error'
+              });
+            }
+          } else {
+            logger.info('User created: ' + newUser.username);
+            deferred.resolve({
+              code: 201,
+              data: data
+            });
+          }
         });
-      }
-
+      });
     });
 
     return deferred.promise
@@ -230,9 +242,9 @@ function userController(logger) {
         error: 'Malformed request.  Email needed.'
       });
     } else {
-
       findUserByEmail(existingUser.email)
         .then((modifiedUser) => {
+
           var keys = Object.keys(existingUser._doc);
 
           for (var i in keys) {
@@ -482,6 +494,112 @@ function userController(logger) {
       });
   }
 
+  /**
+   * changes a user's password if the password sent is verified with their old
+   * hash
+   *
+   * @param {Request}   req   The Express request object
+   *                    req.body.newPassword
+   * @param {Response}  res   The Express response object
+   * @param {Next}      next  The Express next (middleware) function
+   *
+   * @returns {void}
+   */
+  function changePassword(req, res, next) {
+    // set up deferred promise
+    var deferred = q.defer();
+
+    // this is the user injected by the auth middleware
+    var user = req.user;
+
+    // this is the user sent in the request it will have its password
+    // set as the old password
+    let sentUser = mapUser(req.body.user);
+    
+    // this is the password the user wants to change to
+    let newPassword = req.body.newPassword;
+
+    // check password strength
+    if (!isStrongPassword(newPassword)) {
+      deferred.reject({
+        code: 400,
+        // TODO more generic message? its probably fine because the user
+        // is already authenticated and it does not reveal any information
+        // besides the input was bad
+        error: { message: 'Invalid password' }
+      });
+    }
+
+    // check that the request is being sent over a secure channel
+    // (tls)
+    // TODO redirect to port 443/configured port
+
+    // check user's password is correct
+    argon2.verify(user.password, sentUser.password).then(match => {
+      if (match) {
+        // generate new hash
+        argon2.generateSalt().then(salt => {
+          argon2.hash(req.body.newPassword, salt).then(hash => {
+            user.password = hash;
+
+            user.save((err, data) => {
+              if (err) {
+                let errors = extractMongooseErrors(err.errors);
+                let validation = _.fild(errors, (o) => {
+                  return (o.name === 'ValidatorError');
+                });
+
+                if (validation) {
+                  // Mongoose error
+                  logger.error('Validation error on changing user password', validation);
+                  deferred.reject({
+                    code: 400,
+                    error: { message: validation.message }
+                  });
+                } else {
+                  // unknown error. log it
+                  logger.error('Changing password Error', err.errors);
+                  deferred.reject({
+                    code: 500,
+                    error: { message: 'Internal Server Error' }
+                  });
+                }
+              } else {
+                // Sucess
+                logger.debug('User password changed ' + user.username);
+                deferred.resolve({
+                  code: 201,
+                  data: data
+                });
+              }
+            });
+          });
+        });
+      } else {
+        // Passwords do not match
+        logger.info('Invalid password used change password', { username: user.username, _id: user._id });
+        deferred.reject({
+          code: 401,
+          error: { message: 'Incorrect Username/Password' }
+        });
+      }
+    }).catch(err => {
+      // Error from argon.verify
+      logger.error(err);
+      deferred.reject({
+        code: 500,
+        error: { message: 'Internal Server error' }
+      });
+    });
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
   function extractMongooseErrors(error) {
@@ -566,6 +684,21 @@ function userController(logger) {
       logger.debug('file uploaded is valid');
       cb(null, true);
     }
+  }
+
+  /*
+   * checks the password is valid before updating it
+   * by default:
+   *  the password contain UPPER, lower, digit, and 5ymb0l
+   *  the password must be at least 8 characters long
+   * theses validation settings can be changed in the configuration
+   */
+  function isStrongPassword(password) {
+    // get config (/config/config.js)
+    var strengthRe = config.auth.passwordStrengthRe;
+
+    // apply the re
+    return strengthRe.test(password);
   }
 
   // --------------------------- Revealing Module Section ----------------------------
