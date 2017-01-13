@@ -2,6 +2,7 @@
  * Database handle.
  */
 var mongoose = require('mongoose');
+var ObjectId = mongoose.Schema.ObjectId;
 
 /**
  * User model.
@@ -242,7 +243,8 @@ function userController(logger) {
         error: 'Malformed request.  Email needed.'
       });
     } else {
-      Users.findOne({_id: existingUser._id})
+      //TODO WHY ISNT THIS WORKING UGH
+      Users.findById(ObjectId(existingUser._id))
         .then((modifiedUser) => {
           // findOne will resolve to null (no error) if no document found
           if (modifiedUser) {
@@ -274,7 +276,8 @@ function userController(logger) {
               }
             });
           } else {
-            // trying to change a no existent user
+            logger.error('Error updating user, user does not exist');
+            // trying to change a non existent user
             deferred.reject({
               code: 500,
               error: { message: 'Internal Server Error' }

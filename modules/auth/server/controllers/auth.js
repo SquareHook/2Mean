@@ -240,7 +240,7 @@ function authenticationModule(logger) {
       res.cookie('apikey', data.data.apikey, {
         expires: new Date(Date.now() + keyTTL),
         domain: config.app.host,
-        secure: true
+        secure: config.app.force_https
       });
 
       res.status(data.code).send(data.data);

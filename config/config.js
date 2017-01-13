@@ -19,7 +19,9 @@ module.exports = {
   app: {  
     host: process.env.TOOMEAN_APP_HOST || 'localhost',
     port_http: process.env.TOOMEAN_APP_PORT || 3080,
-    port_https: process.env.TOOMEAN_APP_HTTPS_PORT || 3443
+    port_https: process.env.TOOMEAN_APP_HTTPS_PORT || 3443,
+    // TODO in production default to true
+    force_https: process.env.TOOMEAN_APP_FORCE_HTTPS || false
   },
   uploads: {
     root: 'uploads',

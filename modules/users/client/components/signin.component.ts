@@ -32,7 +32,6 @@ export class SigninComponent implements OnInit {
     this.authService.login(this.model.userName, this.model.password, (error, data) => {
       // server has returned data
       if (data) {
-        console.log(data);
         // is there a return url
         let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
         this.router.navigateByUrl(redirect);
