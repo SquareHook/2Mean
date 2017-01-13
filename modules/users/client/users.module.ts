@@ -42,6 +42,7 @@ import {
 /* Services */
 import { UserService }          from './services/user.service';
 import { AuthService }          from './../../auth/client/auth.service.client';
+import { AuthGuard }            from './services/auth-guard.service';
 
 /* Directives */
 import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
@@ -75,7 +76,10 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     AllowedTypesValidatorDirective,
     MaxSizeValidatorDirective
   ],
-  providers: [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
+  providers: [ 
+    { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },
+    AuthGuard
+  ],
   bootstrap:    [ UsersComponent ]
 })
 

@@ -10,7 +10,6 @@ import { Subject } from 'rxjs/Subject';
 
 @Component({
   selector: 'too-mean',
-  providers: [ AuthService ],
   styles: [
     require('./less/app.style.less').toString()
   ],
