@@ -242,36 +242,44 @@ function userController(logger) {
         error: 'Malformed request.  Email needed.'
       });
     } else {
-      findUserByEmail(existingUser.email)
+      Users.findOne({_id: existingUser._id})
         .then((modifiedUser) => {
+          // findOne will resolve to null (no error) if no document found
+          if (modifiedUser) {
+            var keys = Object.keys(existingUser._doc);
 
-          var keys = Object.keys(existingUser._doc);
-
-          for (var i in keys) {
-            if (existingUser[keys[i]]) {
-              // save to existing user's id
-              if (keys[i] !== '_id') {
-                modifiedUser[keys[i]] = existingUser[keys[i]];
+            for (var i in keys) {
+              if (existingUser[keys[i]]) {
+                // save to existing user's id
+                if (keys[i] !== '_id') {
+                  modifiedUser[keys[i]] = existingUser[keys[i]];
+                }
               }
             }
+            modifiedUser.updated = new Date();
+
+            modifiedUser.save((err, data) => {
+              if (err) {
+                logger.error('Error updating user', err);
+
+                deferred.reject({
+                  code: 500,
+                  error: 'Internal Server Error'
+                });
+              } else {
+                deferred.resolve({
+                  code: 200,
+                  data: data
+                });
+              }
+            });
+          } else {
+            // trying to change a no existent user
+            deferred.reject({
+              code: 500,
+              error: { message: 'Internal Server Error' }
+            });
           }
-          modifiedUser.updated = new Date();
-
-          modifiedUser.save((err, data) => {
-            if (err) {
-              logger.error('Error updating user', err);
-
-              deferred.reject({
-                code: 500,
-                error: 'Internal Server Error'
-              });
-            } else {
-              deferred.resolve({
-                code: 200,
-                data: data
-              });
-            }
-          });
         }, (err) => {
           logger.error('Error looking up user in User collection: ', err);
 
