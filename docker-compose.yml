@@ -7,6 +7,8 @@ services:
       - "3443:3443"
     links:
       - mongo
+    volumes:
+      - .:/usr/src/app
     environment:
       - TOOMEAN_MONGO_HOST=mongo
   mongo:
