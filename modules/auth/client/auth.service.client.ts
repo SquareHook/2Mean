@@ -40,6 +40,7 @@ export class AuthService {
   user: User;
   apikey: String;
   loggedIn: boolean;
+  redirect: string;
 
   // Observable sources
   private authChangedSource = new Subject<boolean>();

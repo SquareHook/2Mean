@@ -4,7 +4,7 @@ import { BrowserModule }         from '@angular/platform-browser';
 import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }  from '@angular/router';
-import { FormsModule }          from '@angular/forms';
+import { FormsModule, ReactiveFormsModule }          from '@angular/forms';
 import { FileSelectDirective }  from 'ng2-file-upload';
 
 /* Config */
@@ -42,9 +42,12 @@ import {
 /* Services */
 import { UserService }          from './services/user.service';
 import { AuthService }          from './../../auth/client/auth.service.client';
+import { AuthGuard }            from './services/auth-guard.service';
 
 /* Directives */
 import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
+import { AllowedTypesValidatorDirective } from './directives/allowed-types.directive';
+import { MaxSizeValidatorDirective } from './directives/max-size.directive';
 
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
@@ -54,6 +57,7 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     BrowserModule,
     NgbModule,
     FormsModule,
+    ReactiveFormsModule,
     UsersRoutingModule
   ],
   declarations: [
@@ -68,9 +72,14 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     EditProfileComponent,
     ManageSocialComponent,
     SettingsComponent,
-    StrongPasswordValidatorDirective
+    StrongPasswordValidatorDirective,
+    AllowedTypesValidatorDirective,
+    MaxSizeValidatorDirective
   ],
-  providers: [ { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG } ],
+  providers: [ 
+    { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },
+    AuthGuard
+  ],
   bootstrap:    [ UsersComponent ]
 })
 

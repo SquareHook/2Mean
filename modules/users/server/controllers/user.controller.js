@@ -314,14 +314,13 @@ function userController(logger) {
    * @return {void}
    */
   function changeProfilePicture(req, res, next) {
+    // get user from request
     var user = req.user;
-    //TODO only allow images of a certain size
-    var profileUploadFileFilter = undefined;
 
     // save old image uri so it can be removed if save works
     var re = /\/[^\/]*$/;
     var start = user.profileImageURL.search(re);
-    // start 1 after to remove slash
+    // start 1 after to remove slash from file name
     var oldFileName = user.profileImageURL.slice(start+1);
 
     if (oldFileName.length === 0) {
@@ -350,8 +349,12 @@ function userController(logger) {
           key: function (req, file, cb) {
             cb(null, fileName);
           }
-        })
+        }),
+        fileFilter: profilePictureFileFilter,
+        limits: config.uploads.profilePicture.s3.limits
       }).single('file');
+
+      // s3 file acessed directly from aws
       url = config.uploads.profilePicture.s3.dest + fileName;
     } else if (config.uploads.profilePicture.use == 'local') {
       upload = multer({
@@ -362,8 +365,12 @@ function userController(logger) {
           filename: function (req, file, cb) {
             cb(null, fileName);
           }
-        })
+        }),
+        fileFilter: profilePictureFileFilter,
+        limits: config.uploads.profilePicture.local.limits
       }).single('file');
+
+      // local files accessed through api
       url = '/api/users/' + user._id + '/picture/' + fileName;
     } else {
       logger.error('Upload strategy unknown', config.uploads.profilePicture.use);
@@ -371,14 +378,19 @@ function userController(logger) {
       res.status(400).send('Server Configuration Error: Upload strategy unknown');
     }
 
+    //TODO pretty sure this is hitting a stub
     if (isAuthorized(user, 'update')) {
-      upload(req, res, function (uploadError) {
-        if (uploadError) {
-          logger.error(uploadError);
+      // use the multer upload object
+      upload(req, res, function (err) {
+        if (err) {
+          logger.error(err);
+
           return res.status(400).send({
             message: 'Error occurred while uploading profile picture'
           });
         } else {
+          // on successful upload we should change the user's imageUrl in
+          // the database
           user.profileImageURL = url;
 
           user.save((err, data) => {
@@ -391,18 +403,25 @@ function userController(logger) {
               });
             } else {
               if (config.uploads.profilePicture.use == 'local') {
+                // fs uses unlink to delete files
                 // delete old profile picture
                 fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
                   () => {
                     logger.debug('Old profile picture deleted');
                   });
               } else if (config.uploads.profilePicture.use === 's3') {
+                // s3 sdk sends a delete request to the aws-s3 api
                 var params = {
                   Bucket: config.uploads.profilePicture.s3.bucket,
                   Key: oldFileName
                 };
+
                 s3.deleteObject(params, function(err, data) {
                   if (err) {
+                    // this will need to be logged and resolved to prevent
+                    // cluttering of s3 resources
+                    // AKA use elasticsearch/kibana logger config
+                    // to stay aware of this kind of event and fix it
                     logger.error('Error while deleting object on s3', err);
                   } else {
                     logger.debug('Old profile picture deleted');
@@ -527,6 +546,26 @@ function userController(logger) {
     user.created = new Date();
 
     return user;
+  }
+
+  /*
+   * checks the file is valid for upload
+   *  fileSize is handled by multer using limits property of config
+   *  object.
+   *  type is handled here
+   */
+  function profilePictureFileFilter (req, file, cb) {
+    // get config
+    var allowedTypes = config.uploads.profilePicture.allowedTypes;
+    var fileType = file.mimetype;
+
+    if (!allowedTypes.includes(fileType)) {
+      logger.debug('file uploaded is invalid');
+      cb(null, false);
+    } else {
+      logger.debug('file uploaded is valid');
+      cb(null, true);
+    }
   }
 
   // --------------------------- Revealing Module Section ----------------------------

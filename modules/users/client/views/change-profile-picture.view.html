@@ -1,10 +1,29 @@
 
   <img [src]="getImageUrl()" alt="Profile image" class="img-thumbnail">
-  <form (ngSubmit)="upload()">
+  <form [formGroup]="userForm" (ngSubmit)="upload()">
     <div class="form-group">
       <label for="profilePicture">Profile Picture</label>
-      <input type="file" class="form-control" id="profilePicture" 
-             required ng2FileSelect [uploader]="this.userService.uploader">
+      <input type="file" class="form-control" id="profilePicture" name="profilePicture"
+             formControlName="profilePicture"
+             (change)="fileChange($event)"
+             required accept="image/*"
+             [class.ng-valid]="'true'"
+             ng2FileSelect [uploader]="this.userService.uploader">
+      <input type="hidden" class="form-control" id="profilePictureType" name="profilePictureType"
+             formControlName="profilePictureType">
+      <input type="hidden" class="form-control" id="profilePictureSize" name="profilePictureSize"
+             formControlName="profilePictureSize">
+      <div *ngIf="formErrors.profilePictureSize || formErrors.profilePictureType" class="alert alert-danger">
+        <ul>
+          <li *ngIf="formErrors.profilePictureType">
+            {{ formErrors.profilePictureType }}
+          </li>
+          <li *ngIf="formErrors.profilePictureSize">
+            {{ formErrors.profilePictureSize }}
+          </li>
+        </ul>
+      </div>
     </div>
-    <button type="submit" class="btn btn-primary">Change Picture</button>
+    <button type="submit" class="btn btn-primary"
+            [disabled]="!formValid">Change Picture</button>
   </form>
