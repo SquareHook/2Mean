@@ -533,10 +533,11 @@ function userController(logger) {
    */
   function mapUser(body) {
     var user = new Users();
+    var schemaFields = Users.schema.obj;
     var index;
 
-    for(index in Object.keys(user._doc)) {
-      let realIndex = Object.keys(user._doc)[index];
+    for(index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
       if (body[realIndex]) {
         user[realIndex] = body[realIndex];
       }
