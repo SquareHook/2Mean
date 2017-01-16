@@ -1,0 +1,13 @@
+version: '2'
+services:
+  web:
+    build: .
+    ports:
+      - "3080:3080"
+      - "3443:3443"
+    links:
+      - mongo
+    environment:
+      - TOOMEAN_MONGO_HOST=mongo
+  mongo:
+    image: "mongo"

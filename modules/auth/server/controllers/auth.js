@@ -39,7 +39,7 @@ var config = require(path.resolve('config/config'));
 function authenticationModule(logger) {
   // Key, 8 hours TTL
   var keyTTL = 1000 * 60 * 60 * 8;
-  var defaultPassword = 12345;
+  var defaultPassword = "12345";
 
   // Check if Database has been populated yet.  If not, inject default user.
   Users.count({}, (err, c) => {
@@ -107,7 +107,6 @@ function authenticationModule(logger) {
    */
   function logout(req, res, next) {
     var deferred = q.defer();
-
     Users.findOne({_id: req.user._id})
       .then((user) => {
         let apikeyValue = user.apikey.value;
@@ -224,7 +223,7 @@ function authenticationModule(logger) {
               });
             }
           }).catch(err => {
-            console.log(err);
+            logger.error(err);
           });
         }, (error) => {
           logger.error('Auth Module error: Hit error querying for user.', error);
