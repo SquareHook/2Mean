@@ -243,8 +243,7 @@ function userController(logger) {
         error: 'Malformed request.  Email needed.'
       });
     } else {
-      //TODO WHY ISNT THIS WORKING UGH
-      Users.findById(ObjectId(existingUser._id))
+      Users.findById(existingUser._id)
         .then((modifiedUser) => {
           // findOne will resolve to null (no error) if no document found
           if (modifiedUser) {
@@ -667,6 +666,7 @@ function userController(logger) {
       }
     }
 
+    user._id = body.id;
     user.updated = new Date();
     user.created = new Date();
 
