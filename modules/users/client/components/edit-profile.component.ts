@@ -30,6 +30,7 @@ import { UserService }            from '../services/user.service';
 /* Angular2 Directives */
 import { maxSizeValidator }       from '../directives/max-size.directive';
 import { allowedTypesValidator }  from '../directives/allowed-types.directive';
+import { emailValidator }         from '../directives/valid-email.directive';
 
 @Component({
   templateUrl: './../views/edit-profile.view.html'
@@ -54,6 +55,7 @@ export class EditProfileComponent implements OnInit {
   private maxSize: number;
   private formErrors: any;
   private validationMessages: any;
+  private emailRe: RegExp;
   
   constructor (
     private authService: AuthService,
@@ -67,6 +69,7 @@ export class EditProfileComponent implements OnInit {
       // get config for validation
       this.allowedTypes = config.uploads.profilePicture.allowedTypes;
       this.maxSize = config.uploads.profilePicture.maxSize;
+      this.emailRe = config.emailValidatorRe;
   }
 
   /**
@@ -92,6 +95,7 @@ export class EditProfileComponent implements OnInit {
 
       },
       'email': {
+        'validEmail': 'That is not a valid email',
         'required': 'Email is required'
       },
       //TODO KB/MB
@@ -123,8 +127,7 @@ export class EditProfileComponent implements OnInit {
 
               // update the local data
               this.authService.setUser(userRes);
-              //= userRes;
-              //this.user.profileImageURL = userRes.profileImageURL;
+              this.user = userRes;
 
               // clear the queue so next files will not accumulate
               this.userService.clearUploaderQueue();
@@ -174,7 +177,8 @@ export class EditProfileComponent implements OnInit {
       'firstName': [ this.user.firstName, [ ] ],
       'lastName': [ this.user.lastName, [ ] ],
       'email': [ this.user.email, [
-          Validators.required
+          Validators.required,
+          emailValidator(this.emailRe)
         ]
       ],
       'profilePicture': [ this.profilePicture, [ ] ],

@@ -1,3 +1,4 @@
+
 /* Vendor */
 import { NgModule, OpaqueToken }              from '@angular/core';
 import { BrowserModule }         from '@angular/platform-browser';
@@ -48,6 +49,7 @@ import { AuthGuard }            from './services/auth-guard.service';
 import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
 import { AllowedTypesValidatorDirective } from './directives/allowed-types.directive';
 import { MaxSizeValidatorDirective } from './directives/max-size.directive';
+import { ValidEmailValidatorDirective } from './directives/valid-email.directive';
 
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
@@ -74,7 +76,8 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     SettingsComponent,
     StrongPasswordValidatorDirective,
     AllowedTypesValidatorDirective,
-    MaxSizeValidatorDirective
+    MaxSizeValidatorDirective,
+    ValidEmailValidatorDirective
   ],
   providers: [ 
     { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },

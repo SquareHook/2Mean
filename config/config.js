@@ -19,7 +19,9 @@ module.exports = {
   app: {  
     host: process.env.TOOMEAN_APP_HOST || 'localhost',
     port_http: process.env.TOOMEAN_APP_PORT || 3080,
-    port_https: process.env.TOOMEAN_APP_HTTPS_PORT || 3443
+    port_https: process.env.TOOMEAN_APP_HTTPS_PORT || 3443,
+    // TODO in production default to true
+    force_https: process.env.TOOMEAN_APP_FORCE_HTTPS || false
   },
   uploads: {
     root: 'uploads',
@@ -40,5 +42,10 @@ module.exports = {
         }
       }
     }
+  },
+  auth: {
+    //                        UPPER      lower      digit      symbol
+    passwordStrengthRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[$-/:-?{-~~"^_`\]\[])(?=.{8,}))/,
+    invalidPasswordMessage: 'Password must contain one of each of the following: upper case, lower case, digit, and symbol. The password must be at least eight characters long'
   }
 };

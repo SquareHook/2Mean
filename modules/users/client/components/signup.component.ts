@@ -19,6 +19,7 @@ export class SignupComponent implements AfterViewChecked {
   model: any = {};
   errorMessage: string = null;
   strongPasswordRe: RegExp;
+  validEmailRe: RegExp;
 
   constructor(
     private userService: UserService, 
@@ -28,6 +29,9 @@ export class SignupComponent implements AfterViewChecked {
     // At least one Upper, lower, digit, symbol
     // min length 8
     this.strongPasswordRe = config.passwordValidatorRe;
+
+    // an @
+    this.validEmailRe = config.emailValidatorRe;
   }
 
   signup () {
@@ -96,7 +100,8 @@ export class SignupComponent implements AfterViewChecked {
       'required': 'Username is required'
     },
     'email': {
-      'required': 'Email is required'
+      'required': 'Email is required',
+      'validEmail': 'That is not a valid email'
     },
     'password': {
       'required': 'Password is required',

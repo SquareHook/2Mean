@@ -151,20 +151,14 @@ export class AuthService {
     this.http
       .get('api/logout')
       .subscribe((res: Response) => {
-        this.setUser(null);
-        this.apikey = null;
-        this.loggedIn = false;
-        //notify subscribers
-        this.authChanged(false);
-
       }, (error: Response | any) => {
-        // either way invalidate local creds. Server may still accept
-        console.log('Error logging out: ', error);
-        this.setUser(null);
-        this.apikey = null;
-        this.loggedIn = false;
-
+        console.log(error);
       });
+
+    this.setUser(null);
+    this.apikey = null;
+    this.loggedIn = false;
+    this.authChanged(false);
   }
 
 
@@ -187,7 +181,4 @@ export class AuthService {
   private saveUser(): void {
     localStorage.setItem('user', JSON.stringify(this.user));
   }
-
-
-
 }

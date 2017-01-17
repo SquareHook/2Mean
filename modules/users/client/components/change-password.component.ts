@@ -21,6 +21,7 @@ export class ChangePasswordComponent {
   user: User;
   loading = false;
   errorMessage: string;
+  passwordOld: string;
   passwordNew0 : string;
   passwordNew1 : string;
   password0Valid : boolean;
@@ -30,6 +31,7 @@ export class ChangePasswordComponent {
   constructor (
     private authService: AuthService,
     private userService: UserService,
+    private router: Router,
     @Inject(USERS_CONFIG) config: UsersConfig
   ) { 
       this.user = this.authService.getUser();
@@ -54,16 +56,20 @@ export class ChangePasswordComponent {
     this.loading = true;
 
     if (this.password0Valid && this.password1Valid) {
-      this.user.password = this.passwordNew0;
-
-      this.userService.update(this.user)
+      // using changePassword instead of update because we want to be sure
+      // to re-authenticate the user before changing its password
+      this.userService.changePassword(this.passwordOld, this.passwordNew0)
         .subscribe(
-          user => {
-            this.authService.user = user;
+          (user: User) => {
+            this.authService.setUser(user);
+            this.errorMessage = "";
             this.loading = false;
+            this.router.navigate(['/profile']);
           },
           error => {
-            this.errorMessage = error._body;
+            // determine which error to display
+            let errorCode = error.status;
+            this.errorMessage = JSON.parse(error._body).message + errorCode;
             this.loading = false;
           });
     }
@@ -110,13 +116,13 @@ export class ChangePasswordComponent {
   }
 
   formErrors = {
-    'password': '',
+    'passwordOld': '',
     'passwordNew0': '',
     'passwordNew1': ''
   };
 
   validationMessages = {
-    'password': {
+    'passwordOld': {
       'required': 'Password is required'
     },
     'passwordNew0': {

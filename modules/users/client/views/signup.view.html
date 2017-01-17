@@ -13,7 +13,7 @@
     <div class="form-group">
       <label for="email">Email</label>
       <input type="text" class="form-control" id="email" 
-             required 
+             required [validEmail]="validEmailRe"
              [(ngModel)]="model.email" name="email">
       <div *ngIf="formErrors.email" class="alert alert-danger">
         {{ formErrors.email }}

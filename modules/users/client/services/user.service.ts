@@ -118,6 +118,21 @@ export class UserService {
   }
 
   /**
+   * called to change the password of the user
+   * this alternate route must be used because update does not authenticate
+   * the user before updating
+   *
+   * @param {string} oldPassword  the old password
+   * @param {string} newPassword  the new password
+   */
+  changePassword(oldPassword: string, newPassword: string) {
+    return this.http.put('api/users/changePassword', { 
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    }).map(this.extractData);
+  }
+
+  /**
    * for encapsulation
    */
   clearUploaderQueue() : void {

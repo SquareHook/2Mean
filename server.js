@@ -60,6 +60,21 @@ app.use((req, res, next) => {
   logger.info('Endpoint ' + req.path);
   next();
 });
+
+// redirect all requests to https
+if (config.app.force_https) {
+  app.use(function(req, res, next) {
+    if (!req.secure) {
+      let redirect = 'https://' + req.hostname +
+        (config.app.port_https === '443' ? '' : ':' + config.app.port_https) +
+        req.url;
+      res.redirect(redirect);
+      console.log(redirect);
+    }
+
+    next();
+  });
+}
 core.routes.loadRoutes();
 
 
@@ -96,6 +111,7 @@ app.use(express.static(path.resolve('dist')));
 app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
+
 
 http.createServer(app).listen(config.app.port_http, () => {
   console.log('Application started and listening on port' + config.app.port_http);
