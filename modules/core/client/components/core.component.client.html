@@ -23,7 +23,33 @@
             <a routerLink="/signup" routerLinkActive="active">SignUp</a>
         </div>
         <div *ngIf="loggedIn">
-            <a routerLink="/profile"> {{userdisplayName? user.displayName : user.username}} </a> |
+        <div class="navbar-nav">
+          <div class="nav-item">
+            <div ngbDropdown routerLinkActive="active">
+              <button class="btn btn-outline-primary" ngbDropdownToggle>
+                <img alt="profile" class="rounded-circle" [src]="user.profileImageURL">
+              </button>
+              <div class="dropdown-menu">
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['edit'] }} ]">
+                  Edit
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-profile-picture'] }} ]">
+                  Change Picture
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-password'] }} ]">
+                  Change Password
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['manage-social'] }} ]">
+                  Manage Social
+                </button>
+                </div>
+            </div>
+          </div>
+        </div>
             <a routerLink="/signout">SignOut</a>
         </div>
     </div>

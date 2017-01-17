@@ -112,11 +112,29 @@ function userController(logger) {
                 error: validation.message
               });
             } else {
-              logger.error('Creating User Error', err.errors);
-              deferred.reject({
-                code: 500,
-                error: 'Internal Server Error'
-              });
+              // check for specific codes to provide feedback to ui
+              let errObj = err.toJSON();
+              let code = errObj.code;
+              let errmsg = errObj.errmsg;
+
+              // user already exists
+              if (code === 11000 && false) {
+                // TODO implement email-password login and registration
+                // confirmation emails. Otherwise usernames could be enumerated
+                // with this endpoint. Until then send back generic error
+                // message
+                deferred.reject({
+                  code: 500, 
+                  error: 'Username is taken'
+                });
+              } else {
+                logger.error('Creating User Error', err.errmsg);
+                deferred.reject({
+                  code: 500,
+                  error: 'Internal Server Error'
+                });
+              }
+
             }
           } else {
             logger.info('User created: ' + newUser.username);

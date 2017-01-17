@@ -6,6 +6,9 @@
   "roles": ["user"],
   "subitems": [
   {
+    "template": "<img width=\"100px\" class=\"img-thumbnail\" src=\"/api/users/587e8d54e263f817930bb0c5/picture/a5eae490-dcfd-11e6-9cb4-ab66ddd71f70\">"
+  },
+  {
     "template": "Edit",
     "outlet": "profile",
 
