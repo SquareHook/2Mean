@@ -186,7 +186,7 @@ function authenticationModule(logger) {
                   .then((data) => {
                     data.remove();
                   }, (err) => {
-                    logger.error('Error finding old key to remove', err);
+                    logger.error('Error finding old key to remove', err.errmsg);
                   });
               }
     

@@ -1,7 +1,25 @@
 import { Directive, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { AbstractControl, NG_VALIDATORS, Validator, ValidatorFn, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  NG_VALIDATORS,
+  Validator,
+  ValidatorFn,
+  Validators
+} from '@angular/forms';
 
+/* factory for validator function
+ * @param {RegExp} emailRe - valid emails should match
+ * @returns {VaidatorFn}
+ */
 export function emailValidator(emailRe : RegExp) : ValidatorFn {
+  /*
+   * validator function generator
+   * @param {AbstractControl} control - the HTML input element being validated
+   * @returns a function which returns an object with key value pairs
+   *
+   * example return object:
+   *  { 'validEmail': 'guest@abc.xyz' }
+   */
   return (control: AbstractControl) : {[key: string]: any} => {
     const email = control.value;
     // if the pattern is not matched then the password is invalid
@@ -10,6 +28,10 @@ export function emailValidator(emailRe : RegExp) : ValidatorFn {
   };
 }
 
+/*
+ * validEmail directive
+ * used to validate password strength
+ */
 @Directive({
   selector: '[validEmail]',
   providers: [

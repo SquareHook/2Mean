@@ -248,7 +248,7 @@ function userController(logger) {
         .then((modifiedUser) => {
           // findOne will resolve to null (no error) if no document found
           if (modifiedUser) {
-            var keys = Object.keys(existingUser._doc);
+            var keys = Object.keys(Users.schema.obj);
 
             for (var i in keys) {
               if (existingUser[keys[i]]) {
@@ -536,10 +536,8 @@ function userController(logger) {
         if (!isStrongPassword(newPassword)) {
           deferred.reject({
             code: 400,
-            // TODO more generic message? its probably fine because the user
-            // is already authenticated and it does not reveal any information
-            // besides the input was bad
-            error: { message: 'Invalid password' }
+            error: { message: 'Invalid password: ' + 
+                     config.auth.invalidPasswordMessage }
           });
         } else {
           // generate new hash
@@ -675,7 +673,7 @@ function userController(logger) {
   }
 
   /*
-   * checks the file is valid for upload
+   * checks the file is valid
    *  fileSize is handled by multer using limits property of config
    *  object.
    *  type is handled here
@@ -695,7 +693,7 @@ function userController(logger) {
   }
 
   /*
-   * checks the password is valid before updating it
+   * checks the password is valid
    * by default:
    *  the password contain UPPER, lower, digit, and 5ymb0l
    *  the password must be at least 8 characters long
