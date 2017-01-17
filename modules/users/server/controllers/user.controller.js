@@ -465,6 +465,7 @@ function userController(logger) {
 
   // --------------------------- Private Function Definitions ----------------------------
 
+
   function extractMongooseErrors(error) {
     var errors = [];
 
@@ -504,6 +505,7 @@ function userController(logger) {
 
     return false;
   }
+
 
   /*
    * Maps the post request representation of a user to a mongoose User model.
