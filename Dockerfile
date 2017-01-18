@@ -9,5 +9,9 @@ RUN npm install
 
 ADD . /usr/src/app
 
+RUN ls -l
+RUN npm run gen-cert --unsafe-perm
+
+
 EXPOSE 3080 3443
 CMD ["npm", "start"]
