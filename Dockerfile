@@ -9,7 +9,8 @@ RUN npm install
 
 ADD . /usr/src/app
 
-RUN ls -l
+# This is run by post install but the script it uses is not there until the
+# the previous step
 RUN npm run gen-cert --unsafe-perm
 
 
