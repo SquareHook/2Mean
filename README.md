@@ -4,7 +4,9 @@
 An angular2 MEAN stack. Using webpack
 
 ## Install
-To install clone the repo and npm install it. Wow that is simple.
+Make sure you are using node ~7 to install.
+
+To install clone the repo and npm install it. 
 
 ```bash
 $ git clone <repo addr>
