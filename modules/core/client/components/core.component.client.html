@@ -1,28 +1,33 @@
-<nav class="navbar navbar-dark navbar-full bg-primary main-nav">
-    <a class="navbar-brand" routerLink="/" routerLinkActive="active"><span class="icon fa-social-angular-outline"></span></a>
-    <ul class="nav navbar-nav">
-        <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
-            <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
-            <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
-                <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
-                <div class="dropdown-menu">
-                    <span *ngFor="let subitem of item.subitems">
-                    <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> </button>
-                   
-                    <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
+<nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary fixed-top">
+    <a class="navbar-brand" routerLink="/" routerLinkActive="active">
+        <span class="icon fa-social-angular-outline"></span>
+    </a>
+    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktop-header-nav" aria-controls="desktop-header-nav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <div id="desktop-header-nav" class="collapse navbar-collapse">
+        <ul class="nav navbar-nav">
+            <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
+                <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
+                <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
+                    <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
+                    <div class="dropdown-menu">
+                        <span *ngFor="let subitem of item.subitems">
+                        <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> </button>
+                       
+                        <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
 
-                    </button>
-                    </span>
+                        </button>
+                        </span>
+                    </div>
                 </div>
-            </div>
-        </li>
-    </ul>
-    <div class="auth float-xs-right">
-        <div *ngIf="!loggedIn">
+            </li>
+        </ul>
+        <div *ngIf="!loggedIn" class="auth my-2 my-lg-0">
             <a routerLink="/signin" routerLinkActive="active">Signin</a>
             <a routerLink="/signup" routerLinkActive="active">SignUp</a>
         </div>
-        <div *ngIf="loggedIn">
+        <div *ngIf="loggedIn" class="auth float-xs-right">
             <a routerLink="/profile"> {{userdisplayName? user.displayName : user.username}} </a> |
             <a routerLink="/signout">SignOut</a>
         </div>
