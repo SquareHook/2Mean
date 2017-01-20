@@ -1,7 +1,9 @@
+
 /**
  * Database handle.
  */
 var mongoose = require('mongoose');
+var ObjectId = mongoose.Schema.ObjectId;
 
 /**
  * User model.
@@ -54,6 +56,11 @@ var path = require('path');
 var fs = require('fs');
 
 /*
+ * argon2 password hashing algorithm
+ */
+var argon2 = require('argon2');
+
+/*
  * application config
  */
 var config = require(path.resolve('config/config'));
@@ -85,34 +92,41 @@ function userController(logger) {
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.roles = [ 'user' ];
 
-    newUser.save((err, data) => {
-      if (err) {
-        let errors = extractMongooseErrors(err.errors);
-        let validation = _.find(errors, (o) => {
-          return (o.name === 'ValidatorError'); 
-        });
+    // get password and salt
+    argon2.generateSalt().then(salt => {
+      argon2.hash(newUser.password, salt).then(hash => {
+        newUser.password = hash;
+    
+        // save the user
+        newUser.save((err, data) => {
+          if (err) {
+            let errors = extractMongooseErrors(err.errors);
+            let validation = _.find(errors, (o) => {
+              return (o.name === 'ValidatorError'); 
+            });
 
-        if (validation) {
-          logger.error('Validation error on registering a new user', validation);
-          deferred.reject({
-            code: 400,
-            error: validation.message
-          });
-        } else {
-          logger.error('Creating User Error', err.errors);
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        }
-      } else {
-        logger.info('User created: ' + newUser.username);
-        deferred.resolve({
-          code: 201,
-          data: data
+            if (validation) {
+              logger.error('Validation error on registering a new user', validation);
+              deferred.reject({
+                code: 400,
+                error: validation.message
+              });
+            } else {
+              logger.error('Creating User Error', err.errors);
+              deferred.reject({
+                code: 500,
+                error: 'Internal Server Error'
+              });
+            }
+          } else {
+            logger.info('User created: ' + newUser.username);
+            deferred.resolve({
+              code: 201,
+              data: data
+            });
+          }
         });
-      }
-
+      });
     });
 
     return deferred.promise
@@ -230,36 +244,45 @@ function userController(logger) {
         error: 'Malformed request.  Email needed.'
       });
     } else {
-
-      findUserByEmail(existingUser.email)
+      Users.findById(existingUser._id)
         .then((modifiedUser) => {
-          var keys = Object.keys(existingUser._doc);
+          // findOne will resolve to null (no error) if no document found
+          if (modifiedUser) {
+            var keys = Object.keys(Users.schema.obj);
 
-          for (var i in keys) {
-            if (existingUser[keys[i]]) {
-              // save to existing user's id
-              if (keys[i] !== '_id') {
-                modifiedUser[keys[i]] = existingUser[keys[i]];
+            for (var i in keys) {
+              if (existingUser[keys[i]]) {
+                // save to existing user's id
+                if (keys[i] !== '_id') {
+                  modifiedUser[keys[i]] = existingUser[keys[i]];
+                }
               }
             }
+            modifiedUser.updated = new Date();
+
+            modifiedUser.save((err, data) => {
+              if (err) {
+                logger.error('Error updating user', err);
+
+                deferred.reject({
+                  code: 500,
+                  error: 'Internal Server Error'
+                });
+              } else {
+                deferred.resolve({
+                  code: 200,
+                  data: data
+                });
+              }
+            });
+          } else {
+            logger.error('Error updating user, user does not exist');
+            // trying to change a non existent user
+            deferred.reject({
+              code: 500,
+              error: { message: 'Internal Server Error' }
+            });
           }
-          modifiedUser.updated = new Date();
-
-          modifiedUser.save((err, data) => {
-            if (err) {
-              logger.error('Error updating user', err);
-
-              deferred.reject({
-                code: 500,
-                error: 'Internal Server Error'
-              });
-            } else {
-              deferred.resolve({
-                code: 200,
-                data: data
-              });
-            }
-          });
         }, (err) => {
           logger.error('Error looking up user in User collection: ', err);
 
@@ -314,14 +337,13 @@ function userController(logger) {
    * @return {void}
    */
   function changeProfilePicture(req, res, next) {
+    // get user from request
     var user = req.user;
-    //TODO only allow images of a certain size
-    var profileUploadFileFilter = undefined;
 
     // save old image uri so it can be removed if save works
     var re = /\/[^\/]*$/;
     var start = user.profileImageURL.search(re);
-    // start 1 after to remove slash
+    // start 1 after to remove slash from file name
     var oldFileName = user.profileImageURL.slice(start+1);
 
     if (oldFileName.length === 0) {
@@ -350,8 +372,12 @@ function userController(logger) {
           key: function (req, file, cb) {
             cb(null, fileName);
           }
-        })
+        }),
+        fileFilter: profilePictureFileFilter,
+        limits: config.uploads.profilePicture.s3.limits
       }).single('file');
+
+      // s3 file acessed directly from aws
       url = config.uploads.profilePicture.s3.dest + fileName;
     } else if (config.uploads.profilePicture.use == 'local') {
       upload = multer({
@@ -362,8 +388,12 @@ function userController(logger) {
           filename: function (req, file, cb) {
             cb(null, fileName);
           }
-        })
+        }),
+        fileFilter: profilePictureFileFilter,
+        limits: config.uploads.profilePicture.local.limits
       }).single('file');
+
+      // local files accessed through api
       url = '/api/users/' + user._id + '/picture/' + fileName;
     } else {
       logger.error('Upload strategy unknown', config.uploads.profilePicture.use);
@@ -371,14 +401,19 @@ function userController(logger) {
       res.status(400).send('Server Configuration Error: Upload strategy unknown');
     }
 
+    //TODO pretty sure this is hitting a stub
     if (isAuthorized(user, 'update')) {
-      upload(req, res, function (uploadError) {
-        if (uploadError) {
-          logger.error(uploadError);
+      // use the multer upload object
+      upload(req, res, function (err) {
+        if (err) {
+          logger.error(err);
+
           return res.status(400).send({
             message: 'Error occurred while uploading profile picture'
           });
         } else {
+          // on successful upload we should change the user's imageUrl in
+          // the database
           user.profileImageURL = url;
 
           user.save((err, data) => {
@@ -391,18 +426,25 @@ function userController(logger) {
               });
             } else {
               if (config.uploads.profilePicture.use == 'local') {
+                // fs uses unlink to delete files
                 // delete old profile picture
                 fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
                   () => {
                     logger.debug('Old profile picture deleted');
                   });
               } else if (config.uploads.profilePicture.use === 's3') {
+                // s3 sdk sends a delete request to the aws-s3 api
                 var params = {
                   Bucket: config.uploads.profilePicture.s3.bucket,
                   Key: oldFileName
                 };
+
                 s3.deleteObject(params, function(err, data) {
                   if (err) {
+                    // this will need to be logged and resolved to prevent
+                    // cluttering of s3 resources
+                    // AKA use elasticsearch/kibana logger config
+                    // to stay aware of this kind of event and fix it
                     logger.error('Error while deleting object on s3', err);
                   } else {
                     logger.debug('Old profile picture deleted');
@@ -463,6 +505,106 @@ function userController(logger) {
       });
   }
 
+  /**
+   * changes a user's password if the password sent is verified with their old
+   * hash
+   *
+   * @param {Request}   req   The Express request object
+   *                    req.body.newPassword
+   * @param {Response}  res   The Express response object
+   * @param {Next}      next  The Express next (middleware) function
+   *
+   * @returns {void}
+   */
+  function changePassword(req, res, next) {
+    // set up deferred promise
+    var deferred = q.defer();
+
+    // this is the user injected by the auth middleware
+    var user = req.user;
+    
+    // this is the old password the user has entered
+    let oldPassword = req.body.oldPassword;
+
+    // this is the password the user wants to change to
+    let newPassword = req.body.newPassword;
+
+    // check user's password is correct
+    argon2.verify(user.password, oldPassword).then(match => {
+      if (match) {
+        // check password strength
+        if (!isStrongPassword(newPassword)) {
+          deferred.reject({
+            code: 400,
+            error: { message: 'Invalid password: ' + 
+                     config.auth.invalidPasswordMessage }
+          });
+        } else {
+          // generate new hash
+          argon2.generateSalt().then(salt => {
+            argon2.hash(newPassword, salt).then(hash => {
+              user.password = hash;
+
+              user.save((err, data) => {
+                if (err) {
+                  let errors = extractMongooseErrors(err.errors);
+                  let validation = _.fild(errors, (o) => {
+                    return (o.name === 'ValidatorError');
+                  });
+
+                  if (validation) {
+                    // Mongoose error
+                    logger.error('Validation error on changing user password', validation);
+                    deferred.reject({
+                      code: 400,
+                      error: { message: validation.message }
+                    });
+                  } else {
+                    // unknown error. log it
+                    logger.error('Changing password Error', err.errors);
+                    deferred.reject({
+                      code: 500,
+                      error: { message: 'Internal Server Error' }
+                    });
+                  }
+                } else {
+                  // Sucess
+                  logger.debug('User password changed ' + user.username);
+                  deferred.resolve({
+                    code: 201,
+                    data: data
+                  });
+                }
+              });
+            });
+          });
+        }
+      } else {
+        // Passwords do not match
+        logger.info('Invalid password used change password', { username: user.username, _id: user._id.toString() });
+        deferred.reject({
+          code: 401,
+          error: { message: 'Incorrect Username/Password' }
+        });
+      }
+    }).catch(err => {
+      // Error from argon.verify
+      logger.error(err);
+      deferred.reject({
+        code: 500,
+        error: { message: 'Internal Server error' }
+      });
+    });
+    
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
 
@@ -516,19 +658,56 @@ function userController(logger) {
    */
   function mapUser(body) {
     var user = new Users();
+    var schemaFields = Users.schema.obj;
     var index;
 
-    for(index in Object.keys(user._doc)) {
-      let realIndex = Object.keys(user._doc)[index];
+    for(index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
       if (body[realIndex]) {
         user[realIndex] = body[realIndex];
       }
     }
 
+    user._id = body.id;
     user.updated = new Date();
     user.created = new Date();
 
     return user;
+  }
+
+  /*
+   * checks the file is valid
+   *  fileSize is handled by multer using limits property of config
+   *  object.
+   *  type is handled here
+   */
+  function profilePictureFileFilter (req, file, cb) {
+    // get config
+    var allowedTypes = config.uploads.profilePicture.allowedTypes;
+    var fileType = file.mimetype;
+
+    if (!allowedTypes.includes(fileType)) {
+      logger.debug('file uploaded is invalid');
+      cb(null, false);
+    } else {
+      logger.debug('file uploaded is valid');
+      cb(null, true);
+    }
+  }
+
+  /*
+   * checks the password is valid
+   * by default:
+   *  the password contain UPPER, lower, digit, and 5ymb0l
+   *  the password must be at least 8 characters long
+   * theses validation settings can be changed in the configuration
+   */
+  function isStrongPassword(password) {
+    // get config (/config/config.js)
+    var strengthRe = config.auth.passwordStrengthRe;
+
+    // apply the re
+    return strengthRe.test(password);
   }
 
   // --------------------------- Revealing Module Section ----------------------------
@@ -540,7 +719,8 @@ function userController(logger) {
     deleteUser            : deleteUser,
     register              : register,
     changeProfilePicture  : changeProfilePicture,
-    getProfilePicture     : getProfilePicture
+    getProfilePicture     : getProfilePicture,
+    changePassword        : changePassword
   };
 }
 

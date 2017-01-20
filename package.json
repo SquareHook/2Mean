@@ -37,6 +37,7 @@
     "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.15",
     "@types/node": "^6.0.54",
     "angular2-template-loader": "^0.6.0",
+    "argon2": "^0.15.0",
     "aws": "0.0.3-2",
     "aws-sdk": "^2.7.21",
     "body-parser": "^1.15.2",

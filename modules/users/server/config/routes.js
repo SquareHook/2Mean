@@ -40,5 +40,11 @@ module.exports = [
     type: 'GET',
     method: 'getProfilePicture',
     secure: true
+  },
+  {
+    route: '/users/changePassword',
+    type: 'PUT',
+    method: 'changePassword',
+    secure: true
   }
 ];

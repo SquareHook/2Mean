@@ -1,0 +1,16 @@
+version: '2'
+services:
+  web:
+    build: .
+    image: too-mean
+    ports:
+      - "3080:3080"
+      - "3443:3443"
+    links:
+      - mongo
+    volumes:
+      - ./modules:/usr/src/app/modules/
+    environment:
+      - TOOMEAN_MONGO_HOST=mongo
+  mongo:
+    image: "mongo"

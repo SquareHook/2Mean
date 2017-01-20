@@ -4,53 +4,53 @@ import {
   NG_VALIDATORS,
   Validator,
   ValidatorFn,
-  Validators 
+  Validators
 } from '@angular/forms';
 
 /* factory for validator function
- * @param {RegExp} passwordRe - valid passwords should match
+ * @param {RegExp} emailRe - valid emails should match
  * @returns {VaidatorFn}
  */
-export function strongPasswordValidator(passwordRe : RegExp) : ValidatorFn {
+export function emailValidator(emailRe : RegExp) : ValidatorFn {
   /*
    * validator function generator
    * @param {AbstractControl} control - the HTML input element being validated
    * @returns a function which returns an object with key value pairs
    *
    * example return object:
-   *  { 'strongPassword': '123' }
+   *  { 'validEmail': 'guest@abc.xyz' }
    */
   return (control: AbstractControl) : {[key: string]: any} => {
-    const password = control.value;
+    const email = control.value;
     // if the pattern is not matched then the password is invalid
-    const yes = !passwordRe.test(password);
-    return yes ? { 'strongPassword': {password}} : null;
+    const yes = !emailRe.test(email);
+    return yes ? { 'validEmail': {email}} : null;
   };
 }
 
 /*
- * strongPassword directive
+ * validEmail directive
  * used to validate password strength
  */
 @Directive({
-  selector: '[strongPassword]',
+  selector: '[validEmail]',
   providers: [
     { 
       provide: NG_VALIDATORS, 
-      useExisting: StrongPasswordValidatorDirective, multi: true 
+      useExisting: ValidEmailValidatorDirective, multi: true 
     }
   ]
 })
-export class StrongPasswordValidatorDirective implements Validator, OnChanges {
-  @Input() strongPassword: string;
+export class ValidEmailValidatorDirective implements Validator, OnChanges {
+  @Input() validEmail: string;
   private valFn = Validators.nullValidator;
 
   ngOnChanges(changes: SimpleChanges) : void {
-    const change = changes['strongPassword'];
+    const change = changes['validEmail'];
     if (change) {
       const val: string | RegExp = change.currentValue;
       const re = val instanceof RegExp ? val : new RegExp(val, 'i');
-      this.valFn = strongPasswordValidator(re);
+      this.valFn = emailValidator(re);
     } else {
       this.valFn = Validators.nullValidator;
     }

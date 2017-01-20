@@ -2,6 +2,11 @@
 import { NgModule }				                from '@angular/core';
 import { RouterModule, Routes }           from '@angular/router';
 
+/* Guards */
+import {
+  AuthGuard
+} from './../services/auth-guard.service';
+
 /* Components */
 import {
   SigninComponent
@@ -50,6 +55,7 @@ const usersRoutes: Routes = [
   { 
     path: 'profile',
     component: ProfileComponent,
+    canActivate: [ AuthGuard ],
     children: [
       { 
         path: 'change-password',
