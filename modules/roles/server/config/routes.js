@@ -1,6 +1,6 @@
 module.exports = [
   {
-    route: '/articles',
+    route: '/roles',
     type: 'POST',
     method: 'create',
     secure: false

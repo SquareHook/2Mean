@@ -1,10 +1,11 @@
-/* this is the class we'll use to generate Article forms with */
-export class Article {
-	id: string
-	userId: string
+/* this is the class we'll use to generate role forms with */
+export class Role {
 	constructor(
-		public title: string,
-		public content: string,
-		public created: Date
+		public _id: string,
+		public parent: string,
+		public parentForDescendants : Array<string>
 	) { }
 }
+
+
+

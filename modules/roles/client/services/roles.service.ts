@@ -1,5 +1,7 @@
+/*
+
 import { Injectable } from '@angular/core';
-import { Article } from '../models/article.client.model';
+import { Role } from '../../models/Role';
 
 import {
   Http,
@@ -53,3 +55,4 @@ export class ArticleService {
 		return body;
 	}
 }
+*/
