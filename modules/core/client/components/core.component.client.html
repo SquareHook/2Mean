@@ -27,8 +27,8 @@
             <a routerLink="/signin" routerLinkActive="active">Signin</a>
             <a routerLink="/signup" routerLinkActive="active">SignUp</a>
         </div>
-        <div *ngIf="loggedIn" class="navbar-nav">
-          <div class="nav-item">
+        <ul *ngIf="loggedIn" class="nav auth float-xs-right">
+          <li class="nav-item">
             <div ngbDropdown routerLinkActive="active">
               <button class="btn btn-outline-primary" ngbDropdownToggle>
               <!--TODO height/width inherit from navbar-->
@@ -51,12 +51,12 @@
                         [routerLink]="[ '/profile', { outlets: { 'profile': ['manage-social'] }} ]">
                   Manage Social
                 </button>
-                </div>
+              </div>
             </div>
-          </div>
-          <div class="nav-item">
+          </li>
+          <li class="nav-item">
             <a class="nav-link" routerLink="/signout">SignOut</a>
-          </div>
-        </div>
+          </li>
+        </ul>
     </div>
 </nav>
