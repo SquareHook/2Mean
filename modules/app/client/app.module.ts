@@ -14,8 +14,9 @@ import { CoreModule }            from '../../core/client/core.module';
 import { UsersModule }           from '../../users/client/users.module';
 import { ArticleModule }        from '../../articles/client/articles.module';
 import { AppRoutingModule }      from './app-routing.module';
-
-
+import { RoleModule } from '../../roles/client/roles.module';
+ 
+  
 @NgModule({
   imports:      [
     BrowserModule,
@@ -25,7 +26,8 @@ import { AppRoutingModule }      from './app-routing.module';
     CoreModule,
     UsersModule,
     ArticleModule,
-    AppRoutingModule
+    AppRoutingModule,
+    RoleModule
   ],
   providers: [ UserService, AuthService ],
   declarations: [
