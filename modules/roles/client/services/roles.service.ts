@@ -33,6 +33,7 @@ export class RoleService {
 	}
 	
 	private extractData(res: Response | any) {
+		console.log(res);
 		let body = res.json();
 		return body;
 	}

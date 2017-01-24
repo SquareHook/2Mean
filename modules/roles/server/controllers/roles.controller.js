@@ -57,11 +57,21 @@ function roleModule(logger, userModule) {
         role.canModify = role.canModify || false;
         role.parentForDescendants = role.parentForDescendants || [];
 
+        console.log(roleExists(addedRole.parent));
+        //check to make sure the parent exists
+        if(addedRole.parent === null || !roleExists(addedRole.parent))
+        {
+          res.status(500).send("Parent must be a valid role");
+          return;
+        }
+
+
         //save will fail if _id isn't unique
         addedRole.save((err, data) => {
           if(err)
           {
             res.status(500).send("There is already a role with that name");
+            return;
           }
           else
           {
@@ -69,6 +79,7 @@ function roleModule(logger, userModule) {
             //now we need to update the parent of the direct descendants
             //if there are any
 
+            logger.info("80");
             if(role.parentForDescendants && role.parentForDescendants.length > 0)
             {
               //in this case we are inserting a role above one or more existing roles
@@ -87,6 +98,7 @@ function roleModule(logger, userModule) {
      else
      {
       res.status(500).send("Validtion does not pass");
+      return;
      }
    }
 
@@ -113,6 +125,7 @@ function roleModule(logger, userModule) {
       }
     })
    }
+
 
    /*
    * Recursive function to get the subroles of a role
@@ -148,6 +161,22 @@ function roleModule(logger, userModule) {
       return subroles; 
    }
 
+
+   function roleExists(roleName)
+   {
+    var deferred = q.defer();
+    var roleCount = Roles.count({_id: roleName}, (err, count) =>{
+
+      if(err)
+      {
+        return deferred.resolve(false);
+      }
+      return deferred.resolve(count > 0);
+    });
+
+    return deferred.promise;
+  
+   }
    /*
    * Updates a role's parent
    *
