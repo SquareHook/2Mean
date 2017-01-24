@@ -44,9 +44,16 @@ export class SignupComponent implements AfterViewChecked {
     this.userService.register(newUser)
       .subscribe(
         user => {
-          this.router.navigate(['/login']);
+          this.router.navigate(['/signin']);
         },
         error => {
+          // TODO the server won't send this response until login by email
+          // and email registration is enabled
+          // this is to prevent username enumeration being used to
+          // try to compromise accounts
+          if (error._body === 'Username is taken') {
+            
+          }
           this.errorMessage = error._body;
         });
   }
@@ -97,6 +104,7 @@ export class SignupComponent implements AfterViewChecked {
 
   validationMessages = {
     'username': {
+      'unique': 'Username is taken',
       'required': 'Username is required'
     },
     'email': {
