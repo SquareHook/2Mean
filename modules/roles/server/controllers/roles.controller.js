@@ -59,10 +59,9 @@ function roleModule(logger, userModule) {
 
         //save will fail if _id isn't unique
         addedRole.save((err, data) => {
-          
           if(err)
           {
-            res.status(500).send("Internal server error");
+            res.status(500).send("There is already a role with that name");
           }
           else
           {
@@ -70,18 +69,18 @@ function roleModule(logger, userModule) {
             //now we need to update the parent of the direct descendants
             //if there are any
 
-            if(role.parentFordescendants && role.parentFordescendants.length > 0)
+            if(role.parentForDescendants && role.parentForDescendants.length > 0)
             {
               //in this case we are inserting a role above one or more existing roles
-              _.forEach(role.parentFordescendants, function(node)
+              _.forEach(role.parentForDescendants, function(node)
               {
                   //we set that descendant's parent to this role._id
-                  updateParentForRole(node._id, role._id);
-              })
+                  updateParentForRole(node, role._id);
+              });
             }
 
             var subroles = getSubroles(role.parent);
-            res.status(201).send("Inserted role");
+            res.status(201).send("Inserted role\n");
           }
         });
      }
@@ -100,6 +99,7 @@ function roleModule(logger, userModule) {
   */
    function getSubroles(roleName)
    {
+    logger.info("Getting the subroles");
       //pull all roles
      Roles.find({}, (err, data) => {
       if (err) {
@@ -114,30 +114,48 @@ function roleModule(logger, userModule) {
     })
    }
 
-
+   /*
+   * Recursive function to get the subroles of a role
+   *
+   * @param {parentRoleName}  The role name to find subroles for
+   * @param {data} The list of roles currently in the database
+   * @param {subroles} the list of subroles
+   */
    function getRolesByParent(parentRoleName, data, subroles)
    {
-      var directDescendants = _.find(data, {parent: parentRoleName});
+      var directDescendants = [];
+
+      if(data && data.length > 0)
+      {
+        _.forEach(data, function(role){
+          if(role.parent == parentRoleName)
+          {
+            directDescendants.push(role);
+          }
+        });
+      }
+
       if(directDescendants && directDescendants.length > 0)
       {
         _.forEach(directDescendants, function(descendant)
         {
           subroles.push(descendant._id);
-          getRolesByParent(descendant, data, subroles);
+
+          getRolesByParent(descendant._id, data, subroles);
         })
       }
-      else
-      {
-        return subroles;
-      }
+
+      return subroles; 
    }
 
    /*
    * Updates a role's parent
+   *
+   * @param {rolelName} The name of the role to update
+   * @param {roleParentName} The new parent name for the role
    */
    function updateParentForRole(roleName, roleParentName)
    {  
-      //TODO add mongoose query for update
       Roles.update({_id: roleName}, { $set: {parent: roleParentName}}, 
       (err, data) =>
         {
