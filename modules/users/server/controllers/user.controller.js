@@ -118,6 +118,7 @@ function userController(logger) {
               let errmsg = errObj.errmsg;
 
               // user already exists
+              // 11000 code is from mongoose
               if (code === 11000 && false) {
                 // TODO implement email-password login and registration
                 // confirmation emails. Otherwise usernames could be enumerated
