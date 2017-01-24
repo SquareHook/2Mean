@@ -1,5 +1,5 @@
 var Roles = require('./models/Roles');
-var RolesController = require('./controllers/roles.controller.js');
+var RolesController = require('./controllers/roles.controller');
 var path = require("path");
 var Users = path.resolve("modules/users/server/models/Users");
 

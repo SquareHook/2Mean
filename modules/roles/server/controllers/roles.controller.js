@@ -78,7 +78,6 @@ function roleModule(logger, userModule) {
             //the role was inserted into the roles collection
             //now we need to update the parent of the direct descendants
             //if there are any
-
             logger.info("80");
             if(role.parentForDescendants && role.parentForDescendants.length > 0)
             {
@@ -91,6 +90,7 @@ function roleModule(logger, userModule) {
             }
 
             var subroles = getSubroles(role.parent);
+            flushSubroles(role._id, subroles );
             res.status(201).send("Inserted role\n");
           }
         });
