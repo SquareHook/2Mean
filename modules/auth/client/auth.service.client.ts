@@ -170,6 +170,7 @@ export class AuthService {
   setUser(user : User) : void {
     this.user = user;
     this.saveUser();
+    this.authChanged(true);
   }
 
   // emit data to subscribers
