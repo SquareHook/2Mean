@@ -1,0 +1,33 @@
+[
+{
+  "template": "Profile",
+  "state": "#",
+  "position": "3",
+  "roles": ["user"],
+  "subitems": [
+  {
+    "template": "Edit",
+    "outlet": "profile",
+
+    "state": "edit",
+    "roles": ["user"]
+  },
+  {
+    "template": "Change Picture",
+    "outlet": "profile",
+    "state": "change-profile-picture",
+    "roles": ["user"]
+  },
+  {
+    "template": "Change Password",
+    "outlet": "profile",
+    "state": "change-password",
+    "roles": ["user"]
+  },
+  {
+    "template": "Manage Social",
+    "outlet": "profile",
+    "state": "manage-social",
+    "roles": ["user"]
+  }]
+}]

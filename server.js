@@ -1,13 +1,11 @@
 // Load global configuration
 var config = require('./config/config');
-console.log(config);
 
 var path = require('path');
 var fs = require('fs');
 
-// Initialize the Application logger.
-var logger = require('./app-server/logger.js');
-logger.info('Application Bootstrapping...');
+// This is assuming the application was executed at the root dir.
+config.basedir = path.resolve('.');
 
 var express = require('express');
 var bodyParser = require('body-parser');
@@ -24,35 +22,61 @@ mongoose.connect(config.mongo.uri);
  *
  * TODO: This should be done somewhere else.
  */
-var authModule = require('./app-server/auth/');
-var auth = new authModule(logger);
+var coreModule = require('./modules/core/server/');
+var core = new coreModule(config, app);
 
-var userModule = require('./app-server/user/');
-var user = new userModule(logger);
+var logger = core.moduleLoader.get('logger');
+
+var auth = core.moduleLoader.get('auth');
+var user = core.moduleLoader.get('users');
+
 
 var http = require('http');
 var https = require('https');
 
 var https_options = {
-    key: fs.readFileSync('./config/private/key.pem'),
-    cert: fs.readFileSync('./config/private/cacert.pem')
+  key: fs.readFileSync('./config/private/key.pem'),
+  cert: fs.readFileSync('./config/private/cacert.pem')
 };
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(cookieParser());
 
 /*
  * Express setup.
  */
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 app.use(cookieParser());
+
+
 // Impromptu logger.
 app.use((req, res, next) => {
   logger.info('Endpoint ' + req.path);
   next();
 });
+
+// redirect all requests to https
+if (config.app.force_https) {
+  app.use(function(req, res, next) {
+    if (!req.secure) {
+      let redirect = 'https://' + req.hostname +
+        (config.app.port_https === '443' ? '' : ':' + config.app.port_https) +
+        req.url;
+      res.redirect(redirect);
+      console.log(redirect);
+    }
+
+    next();
+  });
+}
+core.routes.loadRoutes();
+
 
 /*
  * Endpoint Definitions.
@@ -60,19 +84,12 @@ app.use((req, res, next) => {
  * TODO: This should be done somewhere else.
  */
 app.get('/api/test',
-    auth.validateAPIKey,
-    (req, res) => {
-      res.send({
-        user: req.auth
-      });
+  auth.validateAPIKey,
+  (req, res) => {
+    res.send({
+      user: req.auth
     });
-
-app.post('/api/login', auth.login);
-
-app.get('/api/users/:userId', auth.validateAPIKey, user.read);
-app.post('/api/users', auth.validateAPIKey, user.create);
-app.put('/api/users', auth.validateAPIKey, user.update);
-app.delete('/api/users/:userId', auth.validateAPIKey, user.deleteUser);
+  });
 
 /*
  * Routes that can be accessed only by authenticated users.
@@ -91,9 +108,10 @@ app.use(express.static(path.resolve('dist')));
 /**
  * Sends angular app back for all other requests
  */
-app.get('*', function (req, res) {
+app.get('*', function(req, res) {
   res.sendFile(path.join(__dirname, 'dist/index.html'));
 });
+
 
 http.createServer(app).listen(config.app.port_http, () => {
   console.log('Application started and listening on port' + config.app.port_http);
