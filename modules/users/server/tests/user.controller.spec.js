@@ -1,5 +1,6 @@
 process.env.NODE_ENV = 'test';
-process.env.TOOMEAN_LOG_LEVEL = 'error';
+process.env.TOOMEAN_LOG_LEVEL = 'crit';
+process.env.TOOMEAN_APP_HOST = '127.0.0.1';
 
 /* Test Bench */
 var path = require('path');
@@ -12,7 +13,6 @@ chai.use(chaiHttp);
 /* TODO set up serverside testing to instantiate only UUT and inject
  * mocked dependencies
  */
-/* Unit Under Test */
 var server = require(path.resolve('server'));;
 
 /* Dependencies */
@@ -31,7 +31,10 @@ var mockLogger = logger;
  * Test the crud/user cred endpoints
  */
 describe('UserController', () => {
-  var creds, user;
+  /* Useful objects to many tests
+   * retain the logged in agent so cookie will stay set
+   */
+  var creds, user, agent;
 
   before((done) => {
     done();
@@ -71,7 +74,7 @@ describe('UserController', () => {
             done(err);
           } else {
             // log the created user in
-            var agent = chai.request.agent(server);
+            agent = chai.request.agent(server);
             agent
               .post('/api/login')
               .send(creds)
@@ -95,14 +98,15 @@ describe('UserController', () => {
     it('should be secure', (done) => {
       /* log the user out (invalidate serverside key and try to 
        * get the user which exists)
+       * do not use the logged in agent for this request
        */
       Keys.remove({}, (err) => {
-          chai.request(server)
-            .get('/api/users/' + user._id)
-            .end((err, res) => {
-              res.should.have.status(400);
-              res.text.should.equal('Unauthorized');
-              done();
+        chai.request(server)
+          .get('/api/users/' + user._id)
+          .end((err, res) => {
+            res.should.have.status(400);
+            res.text.should.equal('Unauthorized');
+            done();
           });
       });
     });
@@ -111,7 +115,7 @@ describe('UserController', () => {
       /* send a request to the correct endpoint with an id that is in
        * the database
        */
-      chai.request(server)
+      agent
         .get('/api/users/' + user._id)
         .end((err, res) => {
           res.should.have.status(200);
@@ -122,11 +126,34 @@ describe('UserController', () => {
     it('should return an error if the user does not exist', (done) => {
       /* send a request to th correct endpoint but with an id that
        * is not in the database
+       * There should only be one user in the database. Generate an id
+       * that is different from that user
+       * NOTE: this id is a valid ObjectId
+       *         (satisfies [0-9a-zA-Z]{24})
+       *       but does not exist in the database. The behavior of mongoose
+       *       is different for a valid id vs invalid id
        */
-      chai.request(server)
-        .get('/api/users/1')
+      const doesntExistId = (user._id[0] === '0' ? '1' : '0') + 
+                            user._id.toString().slice(1);
+
+      agent
+        .get('/api/users/' + doesntExistId)
         .end((err, res) => {
           res.should.have.status(500);
+        });
+    });
+
+    it('should return an error if the user is not valid', (done) => {
+      /* send a request to the correct endpoint but with an id that
+       * is not valid (does not satisfy [0-9a-zA-Z]{24})
+       */
+      const invalidId = '1';
+
+      agent
+        .get('/api/users/' + invalidId)
+        .end((err, res) => {
+          res.should.have.status(500);
+          done();
         });
     });
   });
@@ -156,12 +183,62 @@ describe('UserController', () => {
 
     it('should have a user in the body and create a User and return that User',
       (done) => {
-        assert.equal('not', 'implemented');
+        /* valid user with valid creds
+         */
+        const validCreds = {
+          username: 'valid',
+          password: 'abcABC---123'
+        };
+
+        const validUser = {
+          _id: null,
+          firstName: 'valid',
+          lastName: 'user',
+          displayName: 'valid user',
+          email: 'valid.user@example.com',
+          username: validCreds.username,
+          password: validCreds.password,
+          roles: ['user']
+        };
+
+        agent
+          .post('/api/users/')
+          .send(validUser)
+          .end((err, res) => {
+            res.should.have.status(201);
+            
+            // Extract returned object
+            let resObj = JSON.parse(res.text);
+
+            // check the returned object is the one sent
+            resObj.username.should.equal(validCreds.username);
+            done();
+          });
       }
     );
 
     it('should return an error if the User is invalid', (done) => {
-      assert.equal('not', 'implemented');
+      const invalidCreds = {
+        username: 'invalid',
+        password: 'abcABC---123'
+      };
+
+      // this user has no email
+      const invalidUser = {
+        _id: null,
+        firstName: 'invalid',
+        lastName: 'user',
+        username: invalidCreds.username,
+        password: invalidCreds.password,
+        roles: ['user']
+      };
+
+      agent
+        .post('/api/users/')
+        .send(invalidUser)
+        .end((err, res) => {
+          res.should.have.status(500);
+        });
     });
   });
   

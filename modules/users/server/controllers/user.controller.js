@@ -186,7 +186,6 @@ function userController(logger) {
         .then((user) => {
           res.status(201).send(user);
         }, (error) => {
-          w
           logger.error('User Module Error: Reading User from Database', error);
           res.status(500).send('Error retrieving user information');
         });
@@ -653,7 +652,12 @@ function userController(logger) {
    * Checks if the request is to the requestors data.
    */
   function isSelf(user, id) {
-    if (user._id === id) {
+    /* user._id is an ObjectID
+     *  user._id.contructor.name -> ObjectID
+     * so equals should be used (non strict equivalence operator could also be
+     * used but this expresses that they are different types more effectivly)
+     */
+    if (user._id.equals(id)) {
       return true;
     }
     return false;
@@ -665,7 +669,10 @@ function userController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.roles, 'admin')) {
+    /* indexOf should not be used because it will return 0 if the admin
+     * role is the first role
+     */
+    if (user.roles.includes('admin')) {
       return true;
     }
 
@@ -691,7 +698,10 @@ function userController(logger) {
       }
     }
 
-    user._id = body.id;
+    if (!body._id && body.id) {
+      user._id = body.id;
+    }
+
     user.updated = new Date();
     user.created = new Date();
 
