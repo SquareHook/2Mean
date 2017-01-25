@@ -120,3 +120,5 @@ http.createServer(app).listen(config.app.port_http, () => {
 https.createServer(https_options, app).listen(config.app.port_https, () => {
   console.log('Application started and listening on port' + config.app.port_https);
 });
+
+module.exports = app;
