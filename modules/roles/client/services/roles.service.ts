@@ -31,6 +31,11 @@ export class RoleService {
 			.post('api/roles', formData)
 			.map(this.extractData);		
 	}
+
+	removeRole(id: string): Observable<Role> {
+		return this.http.delete('api/roles/' + id)
+			.map((r: Response) => r.json().data);
+	}
 	
 	private extractData(res: Response | any) {
 		console.log(res);

@@ -57,7 +57,6 @@ function roleModule(logger, userModule) {
         role.canModify = role.canModify || false;
         role.parentForDescendants = role.parentForDescendants || [];
 
-        console.log(roleExists(addedRole.parent));
         //check to make sure the parent exists
         if(addedRole.parent === null || !roleExists(addedRole.parent))
         {
@@ -136,17 +135,7 @@ function roleModule(logger, userModule) {
    */
    function getRolesByParent(parentRoleName, data, subroles)
    {
-      var directDescendants = [];
-
-      if(data && data.length > 0)
-      {
-        _.forEach(data, function(role){
-          if(role.parent == parentRoleName)
-          {
-            directDescendants.push(role);
-          }
-        });
-      }
+      var directDescendants = getDirectDescendants(parentRoleName, data);
 
       if(directDescendants && directDescendants.length > 0)
       {
@@ -161,12 +150,29 @@ function roleModule(logger, userModule) {
       return subroles; 
    }
 
+   function getDirectDescendants(parentRoleName, data)
+   {
+      var directDescendants = [];
+
+      if(data && data.length > 0)
+      {
+        _.forEach(data, function(role){
+          if(role.parent == parentRoleName)
+          {
+            directDescendants.push(role);
+          }
+        });
+      }
+
+      return directDescendants;
+   }
 
    function roleExists(roleName)
    {
     var deferred = q.defer();
     var roleCount = Roles.count({_id: roleName}, (err, count) =>{
 
+      logger.info(count);
       if(err)
       {
         return deferred.resolve(false);
@@ -212,12 +218,84 @@ function roleModule(logger, userModule) {
 
    }
 
+   /*
+   * Removes a role from the database and updates any roles
+   * that have this role as a parent to this role's parent
+   *
+   * @param {req}  The Express HTTP request with the role in the body
+   * @param {res} The Express HTTP response object
+   * @param {next} The Express HTTP next function
+   *
+   * @returns {void}
+   */
+  function removeRole(req, res, next) {
+
+    var deferred = q.defer();
+
+    if(req.params.id === null)
+    {
+      deferred.reject({
+        code: 500,
+        error: "Role cannot be null"
+      });
+    }
+    else
+    {
+      Roles.findById(req.params.id).then((role) => {
+
+        role.remove((err, data) => {
+          if(err)
+          {
+            deferred.reject({
+              code: 500,
+              error: err
+            });
+          }
+          else
+          {
+            deferred.resolve({
+              code: 201,
+              error: "Removed role\n"
+            });
+          }
+        });
+
+        Roles.find({}).then((data) => {
+            //need to update the parent of the direct descendants
+            //if there were any
+            var descendants = getDirectDescendants(role._id, data)
+
+            if(descendants && descendants.length > 0)
+            {
+              //the role was a parent role, update the children's parent to the
+              //role's parent
+              _.forEach(descendants, function(child) 
+              {
+                child.parent = role.parent;
+                updateParentForRole(child, role.parent);
+              });
+            }
+
+            var subroles = getRolesByParent(role.parent, data, []);
+            flushSubroles(role._id, subroles );
+        });
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
 
 
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    create: addRole
+    create: addRole,
+    delete: removeRole
   }
 }
 

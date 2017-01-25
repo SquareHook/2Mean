@@ -9,6 +9,7 @@ import { FormsModule } from '@angular/forms';
 
 
 import { RoleCreateComponent } from './components/role-create.component';
+import { RoleDeleteComponent } from './components/role-delete.component';
 
 @NgModule({
   imports: [
@@ -22,7 +23,7 @@ import { RoleCreateComponent } from './components/role-create.component';
   /*components available inside of this module */
   declarations: [
     RoleCreateComponent,
-
+    RoleDeleteComponent
   ],
   /*components available to other modules */
   exports: [],
