@@ -10,6 +10,7 @@ module.exports = {
   logger: {
     level: process.env.TOOMEAN_LOG_LEVEL || 'debug',
     es: {
+      level: process.env.TOOMEAN_LOG_LEVEL || 'info',
       host: process.env.TOOMEAN_ES_HOST || undefined,
       port: process.env.TOOMEAN_ES_PORT || undefined,
       apiVersion: process.env.TOOMEAN_ES_APIVERSION || '5.0',
