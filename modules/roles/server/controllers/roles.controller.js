@@ -88,9 +88,22 @@ function roleModule(logger, userModule) {
               });
             }
 
-            var subroles = getSubroles(role.parent);
-            flushSubroles(role._id, subroles );
-            res.status(201).send("Inserted role\n");
+            Roles.find({}).then((data) => {
+
+              //update the parent roles' subroles
+              var parent = _.find(data, '_id', role.parent);
+
+              while(parent.parent !== null)
+              {
+                var subroles = getRolesByParent(parent._id, data, []);
+                flushSubroles(parent._id, subroles );
+                parent = _.find(data, '_id', parent.parent);
+                logger.info("parent in loop: " + parent);
+              }
+
+              res.status(201).send("Inserted role\n");
+              return;
+            });
           }
         });
      }
@@ -101,31 +114,6 @@ function roleModule(logger, userModule) {
      }
    }
 
-  /*
-  * This function will get the subroles of a given role
-  * 
-  * @param {roleName}  The name of the role
-  *
-  * @return [string] a list of subroles
-  */
-   function getSubroles(roleName)
-   {
-    logger.info("Getting the subroles");
-      //pull all roles
-     Roles.find({}, (err, data) => {
-      if (err) {
-        logger.error('Error getting roles', err);
-        throw "Role collection empty";
-      }
-      else
-      {
-        //data contains a list of role objects
-        return getRolesByParent(roleName, data, [])
-      }
-    })
-   }
-
-
    /*
    * Recursive function to get the subroles of a role
    *
@@ -135,7 +123,7 @@ function roleModule(logger, userModule) {
    */
    function getRolesByParent(parentRoleName, data, subroles)
    {
-      var directDescendants = getDirectDescendants(parentRoleName, data);
+      var directDescendants = _.filter(data, 'parent', parentRoleName);
 
       if(directDescendants && directDescendants.length > 0)
       {
@@ -148,23 +136,6 @@ function roleModule(logger, userModule) {
       }
 
       return subroles; 
-   }
-
-   function getDirectDescendants(parentRoleName, data)
-   {
-      var directDescendants = [];
-
-      if(data && data.length > 0)
-      {
-        _.forEach(data, function(role){
-          if(role.parent == parentRoleName)
-          {
-            directDescendants.push(role);
-          }
-        });
-      }
-
-      return directDescendants;
    }
 
    function roleExists(roleName)
@@ -257,13 +228,14 @@ function roleModule(logger, userModule) {
               code: 201,
               error: "Removed role\n"
             });
+            logger.info("removed role: " + role._id);
           }
         });
 
         Roles.find({}).then((data) => {
             //need to update the parent of the direct descendants
             //if there were any
-            var descendants = getDirectDescendants(role._id, data)
+            var descendants = _.filter(data, 'parent', role._id);
 
             if(descendants && descendants.length > 0)
             {
@@ -276,8 +248,16 @@ function roleModule(logger, userModule) {
               });
             }
 
-            var subroles = getRolesByParent(role.parent, data, []);
-            flushSubroles(role._id, subroles );
+            //update the parent roles' subroles
+            var parent = _.find(data, '_id', role.parent);
+
+            while(parent.parent !== null)
+            {
+              var subroles = getRolesByParent(parent._id, data, []);
+              flushSubroles(parent._id, subroles );
+              parent = _.find(data, '_id', parent.parent);
+              logger.info("parent in loop: " + parent);
+            }
         });
       });
     }
@@ -289,7 +269,6 @@ function roleModule(logger, userModule) {
         res.status(error.code).send(error.error);
       });
   }
-
 
   // --------------------------- Revealing Module Section ----------------------------
 
