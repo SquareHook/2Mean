@@ -345,6 +345,23 @@ function userController(logger) {
     }
   }
 
+  /*
+   * updates any users with parentRole as their role
+   * to put subroles as their subroles
+   */
+   function flushSubroles(parentRole, subroles)
+   {
+      logger.info("Updating user subroles");
+      Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
+      {
+          if(err)
+          {
+            logger.error("error updating subroles for affected users", err.errmsg)
+          }
+      });
+
+   }
+
   /**
    * Handle post requests with multer picture
    *  should respond with the updated user model (including new picture url)
@@ -739,7 +756,8 @@ function userController(logger) {
     register              : register,
     changeProfilePicture  : changeProfilePicture,
     getProfilePicture     : getProfilePicture,
-    changePassword        : changePassword
+    changePassword        : changePassword,
+    flushSubroles         : flushSubroles
   };
 }
 

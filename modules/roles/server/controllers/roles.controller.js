@@ -2,13 +2,10 @@ var mongoose = require('mongoose');
 
 var Roles = mongoose.model('Roles');
 
-
 var q = require('q');
 var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
-
-var Users = mongoose.model('User');
 
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule) {
@@ -96,7 +93,7 @@ function roleModule(logger, userModule) {
               while(parent.parent !== null)
               {
                 var subroles = getRolesByParent(parent._id, data, []);
-                flushSubroles(parent._id, subroles );
+                userModule.flushSubroles(parent._id, subroles );
                 parent = _.find(data, '_id', parent.parent);
                 logger.info("parent in loop: " + parent);
               }
@@ -172,23 +169,6 @@ function roleModule(logger, userModule) {
       });
    }
 
-
-   /*
-   * updates any users with parentRole as their role
-   * to put subroles as their subroles
-   */
-   function flushSubroles(parentRole, subroles)
-   {
-      Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
-      {
-          if(err)
-          {
-            logger.error("error updating subroles for affected users", err.errmsg)
-          }
-      });
-
-   }
-
    /*
    * Removes a role from the database and updates any roles
    * that have this role as a parent to this role's parent
@@ -254,7 +234,7 @@ function roleModule(logger, userModule) {
             while(parent.parent !== null)
             {
               var subroles = getRolesByParent(parent._id, data, []);
-              flushSubroles(parent._id, subroles );
+              userModule.flushSubroles(parent._id, subroles );
               parent = _.find(data, '_id', parent.parent);
               logger.info("parent in loop: " + parent);
             }
