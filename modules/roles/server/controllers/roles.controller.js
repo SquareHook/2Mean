@@ -74,7 +74,6 @@ function roleModule(logger, userModule) {
             //the role was inserted into the roles collection
             //now we need to update the parent of the direct descendants
             //if there are any
-            logger.info("80");
             if(role.parentForDescendants && role.parentForDescendants.length > 0)
             {
               //in this case we are inserting a role above one or more existing roles
@@ -89,10 +88,12 @@ function roleModule(logger, userModule) {
 
               //update the parent roles' subroles
               var parent = _.find(data, '_id', role.parent);
+              logger.info("parent before loop: " + parent);
 
-              while(parent.parent !== null)
+              while(parent !== null)
               {
                 var subroles = getRolesByParent(parent._id, data, []);
+                logger.info("subroles: " + subroles);
                 userModule.flushSubroles(parent._id, subroles );
                 parent = _.find(data, '_id', parent.parent);
                 logger.info("parent in loop: " + parent);
@@ -106,12 +107,12 @@ function roleModule(logger, userModule) {
      }
      else
      {
-      res.status(500).send("Validtion does not pass");
+      res.status(500).send("Validation does not pass");
       return;
      }
    }
 
-     /*
+  /*
   * Roles can be added to the role tree at any level other than root.
   * When a role is added, the tree is traversed, and for each 'parent'
   * the role has, any users with role equal to that parent role will 
@@ -155,53 +156,57 @@ function roleModule(logger, userModule) {
           }
           else
           {
+
+            Roles.find({}).then((allRoles) => {
+                //need to update the parent of the direct descendants
+                //if there were any
+
+                _.forEach(allRoles, function(item){
+
+                  if(item.parent === addedRole._id)
+                  {
+                    item.parent = oldParent;
+                    updateParentForRole(item._id, oldParent);
+                  }
+                });
+
+                var descendants = addedRole.parentForDescendants;
+
+                if(descendants && descendants.length > 0)
+                {
+                  //the role was a parent role, update the children's parent to the
+                  //role's parent
+                  _.forEach(descendants, function(child) 
+                  {
+                    var index = _.findIndex(allRoles, '_id', child);
+                    allRoles[index].parent = addedRole._id;
+                    updateParentForRole(child, addedRole._id);
+                  });
+                }
+
+                var oldparsub = getRolesByParent(oldParent, allRoles, []);
+                userModule.flushSubroles(oldParent, oldparsub);
+
+                //update the parent roles' subroles
+                var parent = addedRole;
+                logger.info("parent before loop: " + parent);
+
+                while(parent !== null)
+                {
+                  var subroles = getRolesByParent(parent._id, allRoles, []);
+                  logger.info("subroles: " + subroles);
+                  userModule.flushSubroles(parent._id, subroles );
+                  parent = _.find(allRoles, '_id', parent.parent);
+                  logger.info("parent in loop: " + parent);
+                }
+            });
+
             deferred.resolve({
               code: 201,
               error: "Saved Role\n"
             });
             logger.info("saved role: " + role._id);
           }
-        });
-
-        Roles.find({}).then((data) => {
-            //need to update the parent of the direct descendants
-            //if there were any
-            var curDescendants = _.filter(data, 'parent', addedRole._id);
-
-            if(curDescendants && curDescendants.length > 0)
-            {
-              //the role was a parent role, update the children's parent to the
-              //role's parent
-              _.forEach(curDescendants, function(child) 
-              {
-                child.parent = oldParent;
-                updateParentForRole(child, oldParent);
-              });
-            }
-
-            var descendants = addedRole.parentForDescendants;
-
-            if(descendants && descendants.length > 0)
-            {
-              //the role was a parent role, update the children's parent to the
-              //role's parent
-              _.forEach(descendants, function(child) 
-              {
-                child.parent = addedRole._id;
-                updateParentForRole(child, addedRole._id);
-              });
-            }
-
-            //update the parent roles' subroles
-            var parent = _.find(data, '_id', addedRole.parent);
-
-            while(parent.parent !== null)
-            {
-              var subroles = getRolesByParent(parent._id, data, []);
-              userModule.flushSubroles(parent._id, subroles );
-              parent = _.find(data, '_id', parent.parent);
-              logger.info("parent in loop: " + parent);
-            }
         });
       });
     }
@@ -275,10 +280,12 @@ function roleModule(logger, userModule) {
 
             //update the parent roles' subroles
             var parent = _.find(data, '_id', role.parent);
+            logger.info("parent before loop: " + parent);
 
-            while(parent.parent !== null)
+            while(parent !== null)
             {
               var subroles = getRolesByParent(parent._id, data, []);
+              logger.info("subroles: " + subroles);
               userModule.flushSubroles(parent._id, subroles );
               parent = _.find(data, '_id', parent.parent);
               logger.info("parent in loop: " + parent);
@@ -337,6 +344,7 @@ function roleModule(logger, userModule) {
     return deferred.promise;
   
    }
+
    /*
    * Updates a role's parent
    *
