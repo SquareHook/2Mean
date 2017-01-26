@@ -5,6 +5,12 @@ module.exports = [
     method: 'create',
     secure: false
   },
+  {
+    route: '/roles',
+    type: 'PUT',
+    method: 'update',
+    secure: false
+  },
     {
     route: '/roles/:id',
     type: 'DELETE',

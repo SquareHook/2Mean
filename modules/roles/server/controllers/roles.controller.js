@@ -111,65 +111,110 @@ function roleModule(logger, userModule) {
      }
    }
 
-   /*
-   * Recursive function to get the subroles of a role
-   *
-   * @param {parentRoleName}  The role name to find subroles for
-   * @param {data} The list of roles currently in the database
-   * @param {subroles} the list of subroles
-   */
-   function getRolesByParent(parentRoleName, data, subroles)
-   {
-      var directDescendants = _.filter(data, 'parent', parentRoleName);
+     /*
+  * Roles can be added to the role tree at any level other than root.
+  * When a role is added, the tree is traversed, and for each 'parent'
+  * the role has, any users with role equal to that parent role will 
+  * get the new role in their subroles array.
+  * 
+  * @param {req}  The Express HTTP request with the role in the body
+  * @param {res} The Express HTTP response object
+  * @param {next} The Express HTTP next function
+  *
+  * @return {bool} whether or not the role was added
+  */
+  function updateRole(req, res, next) {
 
-      if(directDescendants && directDescendants.length > 0)
-      {
-        _.forEach(directDescendants, function(descendant)
-        {
-          subroles.push(descendant._id);
-
-          getRolesByParent(descendant._id, data, subroles);
-        })
-      }
-
-      return subroles; 
-   }
-
-   function roleExists(roleName)
-   {
     var deferred = q.defer();
-    var roleCount = Roles.count({_id: roleName}, (err, count) =>{
 
-      logger.info(count);
-      if(err)
-      {
-        return deferred.resolve(false);
-      }
-      return deferred.resolve(count > 0);
-    });
+    var addedRole = new Roles();
+    addedRole._id = req.body._id;
+    addedRole.parent = req.body.parent || null;
+    addedRole.parentForDescendants = req.body.parentForDescendants || [];
 
-    return deferred.promise;
-  
-   }
-   /*
-   * Updates a role's parent
-   *
-   * @param {rolelName} The name of the role to update
-   * @param {roleParentName} The new parent name for the role
-   */
-   function updateParentForRole(roleName, roleParentName)
-   {  
-      Roles.update({_id: roleName}, { $set: {parent: roleParentName}}, 
-      (err, data) =>
-        {
-          if(err)
-         {
-           logger.error("error updating parent for role", err.errmsg);
-         }  
+    if(addedRole._id === null ||addedRole.parent === null)
+    {
+      deferred.reject({
+        code: 500,
+        error: "Role/parent cannot be null"
       });
-   }
+    }
+    else
+    {
+      Roles.findById(addedRole._id).then((role) => {
 
-   /*
+        var oldParent = role.parent;
+        role.parent = addedRole.parent;
+        role.save((err, data) => {
+          if(err)
+          {
+            deferred.reject({
+              code: 500,
+              error: err
+            });
+          }
+          else
+          {
+            deferred.resolve({
+              code: 201,
+              error: "Saved Role\n"
+            });
+            logger.info("saved role: " + role._id);
+          }
+        });
+
+        Roles.find({}).then((data) => {
+            //need to update the parent of the direct descendants
+            //if there were any
+            var curDescendants = _.filter(data, 'parent', addedRole._id);
+
+            if(curDescendants && curDescendants.length > 0)
+            {
+              //the role was a parent role, update the children's parent to the
+              //role's parent
+              _.forEach(curDescendants, function(child) 
+              {
+                child.parent = oldParent;
+                updateParentForRole(child, oldParent);
+              });
+            }
+
+            var descendants = addedRole.parentForDescendants;
+
+            if(descendants && descendants.length > 0)
+            {
+              //the role was a parent role, update the children's parent to the
+              //role's parent
+              _.forEach(descendants, function(child) 
+              {
+                child.parent = addedRole._id;
+                updateParentForRole(child, addedRole._id);
+              });
+            }
+
+            //update the parent roles' subroles
+            var parent = _.find(data, '_id', addedRole.parent);
+
+            while(parent.parent !== null)
+            {
+              var subroles = getRolesByParent(parent._id, data, []);
+              userModule.flushSubroles(parent._id, subroles );
+              parent = _.find(data, '_id', parent.parent);
+              logger.info("parent in loop: " + parent);
+            }
+        });
+      });
+    }
+
+    return deferred.promise
+      .then((data) => {
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
+  }
+
+  /*
    * Removes a role from the database and updates any roles
    * that have this role as a parent to this role's parent
    *
@@ -250,10 +295,71 @@ function roleModule(logger, userModule) {
       });
   }
 
+  // --------------------------- Private Function Definitions ----------------------------
+
+   /*
+   * Recursive function to get the subroles of a role
+   *
+   * @param {parentRoleName}  The role name to find subroles for
+   * @param {data} The list of roles currently in the database
+   * @param {subroles} the list of subroles
+   */
+   function getRolesByParent(parentRoleName, data, subroles)
+   {
+      var directDescendants = _.filter(data, 'parent', parentRoleName);
+
+      if(directDescendants && directDescendants.length > 0)
+      {
+        _.forEach(directDescendants, function(descendant)
+        {
+          subroles.push(descendant._id);
+
+          getRolesByParent(descendant._id, data, subroles);
+        })
+      }
+
+      return subroles; 
+   }
+
+   function roleExists(roleName)
+   {
+    var deferred = q.defer();
+    var roleCount = Roles.count({_id: roleName}, (err, count) =>{
+
+      logger.info(count);
+      if(err)
+      {
+        return deferred.resolve(false);
+      }
+      return deferred.resolve(count > 0);
+    });
+
+    return deferred.promise;
+  
+   }
+   /*
+   * Updates a role's parent
+   *
+   * @param {rolelName} The name of the role to update
+   * @param {roleParentName} The new parent name for the role
+   */
+   function updateParentForRole(roleName, roleParentName)
+   {  
+      Roles.update({_id: roleName}, { $set: {parent: roleParentName, lastUpdated: new Date() }}, 
+      (err, data) =>
+        {
+          if(err)
+         {
+           logger.error("error updating parent for role", err.errmsg);
+         }  
+      });
+   }
+
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
     create: addRole,
+    update: updateRole,
     delete: removeRole
   }
 }
