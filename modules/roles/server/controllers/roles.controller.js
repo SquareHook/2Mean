@@ -111,28 +111,38 @@ function roleModule(logger, userModule) {
   */
    function getSubroles(roleName)
    {
-    logger.info("Getting the subroles");
-      //pull all roles
-     Roles.find({}, (err, data) => {
-      if (err) {
-        logger.error('Error getting roles', err);
-        throw "Role collection empty";
-      }
-      else
-      {
-        //data contains a list of role objects
-        return getRolesByParent(roleName, data, [])
-      }
-    })
+    var allRoles = getAllRoles();
+
+    //data contains a list of role objects
+    return getRolesByParent(roleName, allRoles, [])
+   
    }
 
+   /*
+   * Returns an undordered list of all the role objects
+   * in the role collection 
+   */
+   function getAllRoles()
+   {
+      var deferred = q.defer();
+      Roles.find({}, (err, data) => {
+        if(err)
+        {
+          return deferred.resolve(false);
+        }
+        return deferred.resolve(count > 0);
+    });
+
+    return deferred.promise;
+    }
 
    /*
    * Recursive function to get the subroles of a role
-   *
+   * 
    * @param {parentRoleName}  The role name to find subroles for
    * @param {data} The list of roles currently in the database
    * @param {subroles} the list of subroles
+   * @return [string] an unordered list of subroles
    */
    function getRolesByParent(parentRoleName, data, subroles)
    {
@@ -162,6 +172,10 @@ function roleModule(logger, userModule) {
    }
 
 
+   /*
+   * Checks to see if a role exists
+   * @param {roleName} the name of the role to check
+   */
    function roleExists(roleName)
    {
     var deferred = q.defer();
@@ -204,20 +218,42 @@ function roleModule(logger, userModule) {
    {
       Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
       {
-          if(err)
-          {
-            logger.error("error updating subroles for affected users", err.errmsg)
-          }
+        if(err)
+        {
+          logger.error("error updating subroles for affected users", err.errmsg)
+        }
       });
 
    }
 
+   /*
+   * Returns an object representing the role tree beginning with the startingRole
+   */
+   function getRoleTree(startingRole)
+   {
+     var rootId = startingRole || 'admin';
+     var roleTree = {
+       _id: rootId,
+       children: [
+
+       ]
+     };
+   }
+
+   function getDirectDescendants(roleId, allRoles)
+   {
+     return _.filter(allRoles, function(value)
+     {
+        return value._id === roleId;
+     })
+   }
 
 
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    create: addRole
+    create: addRole,
+    getRoleTree: getRoleTree
   }
 }
 
