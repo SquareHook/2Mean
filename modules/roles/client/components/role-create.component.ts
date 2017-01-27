@@ -22,7 +22,6 @@ import {
 
 @Component({
 	selector: 'create-role',
-	providers: [RoleService],
 	templateUrl: '../views/role-create.html'
 })
 

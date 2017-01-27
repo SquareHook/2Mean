@@ -31,7 +31,7 @@ export class RoleService {
   }
 
   removeRole(id: string): Observable<Role> {
-  return this.http.delete('api/roles/' + id)
+    return this.http.delete('api/roles/' + id)
       .map((r: Response) => r.json().data);
   }
 

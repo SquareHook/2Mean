@@ -9,6 +9,7 @@ import { PageNotFoundComponent } from './components/not-found.component';
 
 import { UserService }           from '../../users/client/services/user.service';
 import { AuthService }           from '../../auth/client/auth.service.client';
+import { RoleService }           from '../../roles/client/services/roles.service';
 import { AuthModule }            from '../../auth/client/auth.module';
 import { CoreModule }            from '../../core/client/core.module';
 import { UsersModule }           from '../../users/client/users.module';
@@ -29,7 +30,7 @@ import { RoleModule } from '../../roles/client/roles.module';
     AppRoutingModule,
     RoleModule
   ],
-  providers: [ UserService, AuthService ],
+  providers: [ UserService, AuthService, RoleService ],
   declarations: [
     AppComponent,
     PageNotFoundComponent

@@ -21,7 +21,6 @@ import {
 
 @Component({
   selector: 'delete-role',
-  providers: [RoleService],
   templateUrl: '../views/role-delete.html'
 })
 

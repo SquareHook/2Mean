@@ -11,7 +11,7 @@ module.exports = [
     method: 'update',
     secure: true
   },
-    {
+  {
     route: '/roles/:id',
     type: 'DELETE',
     method: 'delete',
