@@ -43,5 +43,4 @@ export class RoleDeleteComponent implements OnInit {
 			console.log(data);
 		});
 	}
-
 }
