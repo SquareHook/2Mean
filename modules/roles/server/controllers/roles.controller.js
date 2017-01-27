@@ -242,8 +242,10 @@ function roleModule(logger, userModule) {
 
    function getDirectDescendants(roleId, allRoles)
    {
+
      return _.filter(allRoles, function(value)
      {
+        var x = 32;
         return value._id === roleId;
      })
    }
