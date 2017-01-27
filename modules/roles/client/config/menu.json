@@ -10,6 +10,11 @@
     "roles": ["admin"]
   },
   {
+    "template": "Delete",
+    "state": "/roles/delete",
+    "roles": ["admin"]
+  },
+  {
     "template": "List",
     "state": "/roles",
     "roles": ["admin", "user"]
