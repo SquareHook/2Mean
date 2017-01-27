@@ -39,8 +39,9 @@ export class RoleDeleteComponent implements OnInit {
 
 	submit(): void {
 		this.roleService.removeRole(this.Role._id)
-			.subscribe((data: any) => {
-				console.log(data);
-			});
+		.subscribe((data: any) => {
+			console.log(data);
+		});
 	}
+
 }
