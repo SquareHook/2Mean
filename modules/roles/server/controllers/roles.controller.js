@@ -303,12 +303,14 @@ function roleModule(logger, userModule) {
 
   // --------------------------- Private Function Definitions ----------------------------
 
+
    /*
    * Recursive function to get the subroles of a role
-   *
+   * 
    * @param {parentRoleName}  The role name to find subroles for
    * @param {data} The list of roles currently in the database
    * @param {subroles} the list of subroles
+   * @return [string] an unordered list of subroles
    */
    function getRolesByParent(parentRoleName, data, subroles)
    {
@@ -326,6 +328,13 @@ function roleModule(logger, userModule) {
 
       return subroles; 
    }
+
+
+
+   /*
+   * Checks to see if a role exists
+   * @param {roleName} the name of the role to check
+   */
 
    function roleExists(roleName)
    {
@@ -361,12 +370,56 @@ function roleModule(logger, userModule) {
       });
    }
 
+
+   /*
+   * updates any users with parentRole as their role
+   * to put subroles as their subroles
+   */
+   function flushSubroles(parentRole, subroles)
+   {
+      Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
+      {
+        if(err)
+        {
+          logger.error("error updating subroles for affected users", err.errmsg)
+        }
+      });
+
+   }
+
+   /*
+   * Returns an object representing the role tree beginning with the startingRole
+   */
+   function getRoleTree(startingRole)
+   {
+     var rootId = startingRole || 'admin';
+     var roleTree = {
+       _id: rootId,
+       children: [
+
+       ]
+     };
+   }
+
+   function getDirectDescendants(roleId, allRoles)
+   {
+
+     return _.filter(allRoles, function(value)
+     {
+        var x = 32;
+        return value._id === roleId;
+     })
+   }
+
+
+
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
     create: addRole,
     update: updateRole,
-    delete: removeRole
+    delete: removeRole,
+    getRoleTree: getRoleTree
   }
 }
 
