@@ -1,8 +1,7 @@
 import {
 	Component,
 	OnInit
-}
-	from '@angular/core';
+} from '@angular/core';
 
 import {
 	Role
@@ -44,5 +43,4 @@ export class RoleDeleteComponent implements OnInit {
 				console.log(data);
 			});
 	}
-
 }
