@@ -354,12 +354,11 @@ function userController(logger) {
       logger.info("Updating user subroles");
       Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
       {
-          if(err)
-          {
-            logger.error("error updating subroles for affected users", err.errmsg)
-          }
+        if(err)
+        {
+          logger.error("error updating subroles for affected users", err.errmsg)
+        }
       });
-
    }
 
   /**
