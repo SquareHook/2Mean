@@ -3,6 +3,7 @@ var mongoose = require('mongoose');
 var Roles = mongoose.model('Roles');
 
 var q = require('q');
+var Promise = require("bluebird");
 var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
@@ -28,6 +29,10 @@ function roleModule(logger, userModule) {
       });
     }
   });
+
+
+
+  
 
 
   /*
@@ -301,6 +306,43 @@ function roleModule(logger, userModule) {
       });
   }
 
+  /*
+  * Returns an unordered list of subroles for a given role
+  * 
+  * @param {targetRole} the role to get subroles for
+  * @return [Role] a list of subroles (if any)
+  */
+  function getSubroles(req, req, next)
+  {
+
+    var deferred = q.defer();
+    var targetRole = req.params.targetRole;
+    //check param
+    if(!targetRole)
+    {
+      deferred.reject({
+        code: 500,
+        error: { message: 'Error: supply a target role' }
+      });
+    }
+    //make sure role exists
+    roleExists()
+    .then( (result) => {
+      if(!result)
+      {
+        deferred.reject({
+        code: 500,
+        error: { message: 'Error: no such role' }
+        });
+      }
+      
+    });
+
+    
+
+  }
+
+
   // --------------------------- Private Function Definitions ----------------------------
 
 
@@ -384,32 +426,27 @@ function roleModule(logger, userModule) {
           logger.error("error updating subroles for affected users", err.errmsg)
         }
       });
-
    }
+
+
 
    /*
-   * Returns an object representing the role tree beginning with the startingRole
+   * Returns an undordered list of all the role objects
+   * in the role collection 
    */
-   function getRoleTree(startingRole)
+   function getAllRoles()
    {
-     var rootId = startingRole || 'admin';
-     var roleTree = {
-       _id: rootId,
-       children: [
+      var deferred = q.defer();
+      Roles.find({}, (err, data) => {
+        if(err)
+        {
+          return deferred.resolve(false);
+        }
+        return deferred.resolve(count > 0);
+    });
 
-       ]
-     };
-   }
-
-   function getDirectDescendants(roleId, allRoles)
-   {
-
-     return _.filter(allRoles, function(value)
-     {
-        var x = 32;
-        return value._id === roleId;
-     })
-   }
+    return deferred.promise;
+    }
 
 
 
@@ -419,7 +456,8 @@ function roleModule(logger, userModule) {
     create: addRole,
     update: updateRole,
     delete: removeRole,
-    getRoleTree: getRoleTree
+    subroles: getSubroles,
+    getTree: getRoleTree
   }
 }
 
