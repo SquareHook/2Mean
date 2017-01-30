@@ -1,7 +1,7 @@
 
 
 import { Injectable } from '@angular/core';
-import { Role } from '../models/Role';
+import { Role } from '../models/role';
 
 import {
   Http,
