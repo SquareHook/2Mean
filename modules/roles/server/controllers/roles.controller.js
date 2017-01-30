@@ -109,7 +109,7 @@ function roleModule(logger, userModule) {
       return;
     }
   }
-  
+
   /*
    * Returns an unordered list of subroles for a given role
    * 
@@ -127,9 +127,9 @@ function roleModule(logger, userModule) {
       var list = getRolesByParent(req.params.id, data, []);
       req.status(200).send(list);
     })
-    .catch(err)
+    .catch((err) =>
     {
-      logger.error("error updating parent for role", err);
+      logger.error("error updating parent for role", err.errmsg);
       req.status(500).send("Internal Server Error");
     });
   }
