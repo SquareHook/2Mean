@@ -52,6 +52,7 @@ function roleModule(logger, userModule) {
    * @return {bool} whether or not the role was added
    */
   function addRole(req, res, next) {
+
     var role = req.body;
     //make sure the role is valid
     if (role._id != null) {
@@ -71,7 +72,7 @@ function roleModule(logger, userModule) {
       //save will fail if _id isn't unique
       addedRole.save((err, data) => {
         if (err) {
-          res.status(500).send("There is already a role with that name");
+          res.status(500).send({ mesage: "Internal Server Error", error: err.errmsg});
           return;
         } else {
           //the role was inserted into the roles collection

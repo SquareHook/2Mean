@@ -19,6 +19,10 @@ import {
 	RoleService
 } from '../services/roles.service';
 
+import {
+  NotificationsService
+}
+  from 'angular2-notifications';
 
 @Component({
 	selector: 'create-role',
@@ -29,18 +33,43 @@ import {
 export class RoleCreateComponent implements OnInit {
 
 	Role: Role
-	constructor(private roleService: RoleService) {
-		this.Role = new Role('not set', null, []);
+	IsValid: Boolean
+	constructor(private roleService: RoleService, private notificationsService: NotificationsService) {
+		this.Role = new Role();
 	}
 
 	ngOnInit(): void {
-
+		this.notificationsService.success(
+			'Some Title',
+			'Some Content',
+			{
+				timeOut: 1000,
+				showProgressBar: true,
+				pauseOnHover: false,
+				clickToClose: false,
+				maxLength: 10
+			}
+		);
 	}
 
 	submit(): void {
 		this.roleService.createRole(this.Role)
 			.subscribe((data: any) => {
-				console.log(data);
+				alert("HERE");
+				this.notificationsService.success(
+					'Some Title',
+					'Some Content',
+					{
+						timeOut: 500000,
+						showProgressBar: true,
+						pauseOnHover: false,
+						clickToClose: false,
+						maxLength: 10
+					}
+				);
+			},
+			error => {
+				console.log("crap");
 			});
 	}
 

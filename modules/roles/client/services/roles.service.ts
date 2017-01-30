@@ -27,7 +27,7 @@ export class RoleService {
   {
     return this.http
       .post('api/roles', formData)
-      .map(this.extractData);		
+      .map(this.formatCreateResponse);		
   }
 
   removeRole(id: string): Observable<Role> {
@@ -35,9 +35,15 @@ export class RoleService {
       .map((r: Response) => r.json().data);
   }
 
-  private extractData(res: Response | any) {
-    console.log(res);
+
+
+  private formatCreateResponse(res: Response | any) {
     let body = res.json();
+    if(body.error && body.message.indexOf("dup key") > 0)
+    {
+      body.message = "A role with that name already exists";
+    }
+    console.log(body);
     return body;
   }
 }

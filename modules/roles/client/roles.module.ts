@@ -7,7 +7,6 @@ import { AppModule } from '../../app/client/app.module';
 import { RolesRoutingModule } from './config/roles-routing.module';
 import { FormsModule } from '@angular/forms';
 
-
 import { RoleCreateComponent } from './components/role-create.component';
 import { RoleDeleteComponent } from './components/role-delete.component';
 
@@ -18,7 +17,6 @@ import { RoleDeleteComponent } from './components/role-delete.component';
     HttpModule,
     RolesRoutingModule,
     FormsModule
-
   ],
   /*components available inside of this module */
   declarations: [

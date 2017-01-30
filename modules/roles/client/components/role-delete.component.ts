@@ -29,7 +29,7 @@ export class RoleDeleteComponent implements OnInit {
 
   Role: Role
   constructor(private roleService: RoleService) {
-    this.Role = new Role('not set', null, []);
+    this.Role = new Role();
   }
 
   ngOnInit(): void {
