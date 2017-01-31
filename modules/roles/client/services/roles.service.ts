@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Role } from '../models/Role';
+import { Role } from '../models/role';
 
 import {
   Http,
@@ -27,7 +27,7 @@ export class RoleService {
   {
     return this.http
       .post('api/roles', formData)
-      .map(this.extractData);		
+      .map(this.formatCreateResponse);
   }
 
   removeRole(id: string): Observable<Role> {
@@ -35,9 +35,11 @@ export class RoleService {
       .map((r: Response) => r.json().data);
   }
 
-  private extractData(res: Response | any) {
-    console.log(res);
+
+
+  private formatCreateResponse(res: Response | any) {
     let body = res.json();
+
     return body;
   }
 }

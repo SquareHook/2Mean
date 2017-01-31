@@ -1,3 +1,4 @@
+
 <div class="container">
     <form (ngSubmit)="submit()">
         <h2>New Role</h2>
@@ -8,6 +9,9 @@
         <div class="form-group">
             <label for="parent">Parent</label>
             <input type="text" class="form-control" id="parent" required [(ngModel)]="Role.parent" name="parent">
+            <div [hidden]="NoErrors" class="alert alert-danger" role="alert">
+                <strong>Oh snap!</strong> An error occurred while creating your role. More detailed info under development.
+            </div>
         </div>
         <button type="submit" class="btn btn-primary">Submit</button>
     </form>

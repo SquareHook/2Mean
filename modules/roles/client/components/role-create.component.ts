@@ -4,9 +4,7 @@ import {
 }
 	from '@angular/core';
 
-import {
-	Role
-} from '../models/role';
+import { Role } from '../models/role';
 
 import {
 	Router,
@@ -15,34 +13,44 @@ import {
 } from '@angular/router';
 
 /* Import role service */
-import {
-	RoleService
-} from '../services/roles.service';
+import { RoleService } from '../services/roles.service';
 
+import { NotificationsService } from 'angular2-notifications';
 
 @Component({
 	selector: 'create-role',
 	templateUrl: '../views/role-create.html'
 })
 
-
 export class RoleCreateComponent implements OnInit {
 
-	Role: Role
-	constructor(private roleService: RoleService) {
-		this.Role = new Role('not set', null, []);
-	}
+  Role: Role
+  IsValid: Boolean
+  NoErrors: Boolean
+  constructor(private roleService: RoleService, private notificationsService: NotificationsService) {
+    this.Role = new Role();
+    this.NoErrors = true;
+  }
 
-	ngOnInit(): void {
+  ngOnInit(): void {
+  }
 
-	}
-
-	submit(): void {
-		this.roleService.createRole(this.Role)
-			.subscribe((data: any) => {
-				console.log(data);
-			});
-	}
-
+  submit(): void {
+    this.roleService.createRole(this.Role)
+      .subscribe((data: any) => {
+        this.NoErrors = true;
+        this.notificationsService.success('Role Created','Your role has been created', 
+        {
+            timeOut: 3000,
+            showProgressBar: true,
+            pauseOnHover: false,
+            clickToClose: true,
+            maxLength: 50
+          }
+        );
+      },
+      error => {
+        this.NoErrors = false;
+      });
+  }
 }
-
