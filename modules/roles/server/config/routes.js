@@ -24,7 +24,7 @@ module.exports = [
   secure: false
 },
 {
-  route: '/roles/subroles',
+  route: '/roles/subroles/:id',
   type: 'GET',
   method: 'subroles',
   secure: false

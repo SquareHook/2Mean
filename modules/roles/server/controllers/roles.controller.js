@@ -67,6 +67,7 @@ function roleModule(logger, userModule) {
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
    
+    //chain it up yo
     role.save()
     .then(data =>
     {
@@ -95,7 +96,7 @@ function roleModule(logger, userModule) {
    return new Promise((resolve, reject) =>{
     _.forEach(role.parentForDescendants, (child) =>
      {
-       updateParentForRole(node, role._id);
+       updateParentForRole(node, role._id)
      });
      resolve(true);
    });
@@ -106,21 +107,16 @@ function roleModule(logger, userModule) {
  * Updates a role's parent
  */
 function updateParentForRole(roleName, roleParentName) {
-  Roles.update({
+
+  return Roles.update({
       _id: roleName
     }, {
       $set: {
         parent: roleParentName,
         lastUpdated: new Date()
       }
-    },
-    (err, data) => {
-      if (err) {
-        logger.error("error updating parent for role", err.errmsg);
-      }
     });
 }
-
 
 function updateSubroles(data, role) {
     return new Promise((resolve, reject) => {
@@ -160,20 +156,20 @@ function getRolesByParent(parentRoleName, data, subroles) {
   function getSubroles(req, res, next) {
     if(!req.params.id)
     {
-      req.status(500).send("No role id provided");
+      res.status(500).send({success: false, message: "No role id provided"});
+      return;
     }  
-
     getAllRoles()
     .then((data) => {
       var list = getRolesByParent(req.params.id, data, []);
-      req.status(200).send(list);
+      res.status(200).send(list);
     })
     .catch((err) =>
     {
-      logger.error("error updating parent for role", err.errmsg);
-      req.status(500).send("Internal Server Error");
+      res.status(500).send({success: false, message: "Internal Server Error"});
     });
   }
+
   /*
    * Roles can be added to the role tree at any level other than root.
    * When a role is added, the tree is traversed, and for each 'parent'
@@ -205,71 +201,56 @@ function getRolesByParent(parentRoleName, data, subroles) {
 
         var oldParent = role.parent;
         role.parent = addedRole.parent;
-        role.save((err, data) => {
-          if (err) {
-            deferred.reject({
-              code: 500,
-              error: err
+        
+        getAllRoles()
+        .then( allRoles =>
+        {
+          return new Promise((resolve, reject) => {
+            _.forEach(allRoles, function(item) {
+
+              if (item.parent === addedRole._id) {
+                item.parent = oldParent;
+                updateParentForRole(item._id, oldParent);
+              }
             });
-          } else {
-            getAllRoles.then((allRoles) => {
-              //need to update the parent of the direct descendants
-              //if there were any
-
-              _.forEach(allRoles, function(item) {
-
-                if (item.parent === addedRole._id) {
-                  item.parent = oldParent;
-                  updateParentForRole(item._id, oldParent);
-                }
-              });
 
               var descendants = addedRole.parentForDescendants;
-
               if (descendants && descendants.length > 0) {
-                //the role was a parent role, update the children's parent to the
-                //role's parent
-                _.forEach(descendants, function(child) {
-                  var index = _.findIndex(allRoles, '_id', child);
-                  allRoles[index].parent = addedRole._id;
-                  updateParentForRole(child, addedRole._id);
-                });
-              }
+              //the role was a parent role, update the children's parent to the
+              //role's parent
+              _.forEach(descendants, function(child) {
+                var index = _.findIndex(allRoles, '_id', child);
+                allRoles[index].parent = addedRole._id;
+                updateParentForRole(child, addedRole._id);
+              });
+            }
 
-              var oldparsub = getRolesByParent(oldParent, allRoles, []);
-              userModule.flushSubroles(oldParent, oldparsub);
+            var oldparsub = getRolesByParent(oldParent, allRoles, []);
+            userModule.flushSubroles(oldParent, oldparsub);
 
-              //update the parent roles' subroles
-              var parent = addedRole;
-              logger.info("parent before loop: " + parent);
-
-              while (parent !== null) {
-                var subroles = getRolesByParent(parent._id, allRoles, []);
-                logger.info("subroles: " + subroles);
-                userModule.flushSubroles(parent._id, subroles);
-                parent = _.find(allRoles, '_id', parent.parent);
-                logger.info("parent in loop: " + parent);
-              }
-            });
-
-            deferred.resolve({
-              code: 201,
-              error: "Saved Role\n"
-            });
-
-            logger.info("saved role: " + role._id);
+            //update the parent roles' subroles
+            var parent = addedRole;
+            while (parent !== null) {
+              var subroles = getRolesByParent(parent._id, allRoles, []);
+              userModule.flushSubroles(parent._id, subroles);
+              parent = _.find(allRoles, '_id', parent.parent);
+            }
+            resolve("updated parent roles and children");
           }
-        });
-      });
-    }
+        })
+        })
+        .save()
+        .then(
+          return new Promise((resolve, reject) => {
+          res.status(201).send({success: true, message: "updated role"}
+          )
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
-  }
+        .catch(err =>
+        {
+          res.status(500).send({success: false, message: err})
+         
+        });
+
 
   /*
    * Removes a role from the database and updates any roles
@@ -406,12 +387,6 @@ function getRolesByParent(parentRoleName, data, subroles) {
     });
     return formatted;
   }
-
-
-
-
-
-
 
   function sendServerError(errorMessage, res)
   {
