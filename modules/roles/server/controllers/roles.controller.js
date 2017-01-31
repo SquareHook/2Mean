@@ -16,6 +16,7 @@ var Roles = mongoose.model('Roles');
 var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
+var Promise = q.promise;
 
 
 // ---------------------------- Module Definition ----------------------------
@@ -39,7 +40,7 @@ function roleModule(logger, userModule)
       {
         if (err)
         {
-          logger.error("Failed to create default admin role", err);
+          logger.log('crit',"Failed to create default admin role");
         }
       });
     }
@@ -63,7 +64,7 @@ function roleModule(logger, userModule)
     //validation check
     if (!req.body._id || !req.body.parent)
     {
-      return sendServerError(res, "required role fields not set");
+      return sendServerError(res, "required role fields not set", 400);
     }
     //map request body params to a role
     var role = new Roles();
@@ -197,7 +198,7 @@ function roleModule(logger, userModule)
   {
     if (!req.params.id)
     {
-      sendServerError(res, "no role id provided");
+      sendServerError(res, "no role id provided", 400);
     }
     getAllRoles()
       .then((data) =>
@@ -232,7 +233,7 @@ function roleModule(logger, userModule)
 
     if (addedRole._id === null || addedRole.parent === null)
     {
-      return sendServerError(res,'missing required prameters, must supply role id and parent id');
+      return sendServerError(res,'missing required prameters, must supply role id and parent id', 400);
     }
     Roles.findById(addedRole._id)
     .then(role =>
@@ -312,7 +313,7 @@ function roleModule(logger, userModule)
   {
     if (!req.params.id)
     {
-      return sendServerError(res, "missing role id param");
+      return sendServerError(res, "missing role id param", 400);
     }
 
     Roles.findOneAndRemove({_id: req.params.id}).exec()
@@ -442,10 +443,11 @@ function roleModule(logger, userModule)
     return formatted;
   }
 
-  function sendServerError(res, error)
+  function sendServerError(res, error, code)
   {
+    code = code || 500;
     logger.error(error);
-    res.status(500).send(
+    res.status(code).send(
     {
       success: false,
       error: error

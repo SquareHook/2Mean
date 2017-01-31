@@ -4,32 +4,23 @@ import {
 }
 	from '@angular/core';
 
-import {
-	Role
-} from '../models/role';
+import { Role } from '../models/role';
 
 import {
 	Router,
 	ActivatedRoute,
-	Params 
+	Params
 } from '@angular/router';
 
 /* Import role service */
-import {
-	RoleService
-} from '../services/roles.service';
+import { RoleService } from '../services/roles.service';
 
-import {
-  NotificationsService
-}
-  from 'angular2-notifications';
+import { NotificationsService } from 'angular2-notifications';
 
 @Component({
 	selector: 'create-role',
 	templateUrl: '../views/role-create.html'
 })
-
-
 
 export class RoleCreateComponent implements OnInit {
 
