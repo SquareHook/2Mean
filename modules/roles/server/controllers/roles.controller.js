@@ -67,7 +67,7 @@ function roleModule(logger, userModule) {
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
    
-    //chain it up yo
+    //chain it up yo. 
     role.save()
     .then(data =>
     {
@@ -82,7 +82,7 @@ function roleModule(logger, userModule) {
       return updateSubroles(data, role)
     })
     .then(data => {
-      res.status(201).send({success: true, message: "Inserted Role"});
+      res.status(201).send({success: true, data: data});
     })
     .catch(error =>{
       sendServerError(res, error);
@@ -236,15 +236,12 @@ function getRolesByParent(parentRoleName, data, subroles) {
               parent = _.find(allRoles, '_id', parent.parent);
             }
             resolve("updated parent roles and children");
-          }
-        })
+            }
+          })
         })
         .save()
         .then(
-          return new Promise((resolve, reject) => {
-          res.status(201).send({success: true, message: "updated role"}
-          )
-
+          res.status(201).send({success: true, message: "updated role"});
         .catch(err =>
         {
           res.status(500).send({success: false, message: err})
@@ -343,9 +340,6 @@ function getRolesByParent(parentRoleName, data, subroles) {
       })
   }
  
-
-
-
   // --------------------------- Private Function Definitions ----------------------------
 
 
