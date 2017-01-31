@@ -39,11 +39,7 @@ export class RoleService {
 
   private formatCreateResponse(res: Response | any) {
     let body = res.json();
-    if(body.error && body.message.indexOf("dup key") > 0)
-    {
-      body.message = "A role with that name already exists";
-    }
-    console.log(body);
+
     return body;
   }
 }
