@@ -11,7 +11,7 @@ import {
 import {
 	Router,
 	ActivatedRoute,
-	Params
+	Params 
 } from '@angular/router';
 
 /* Import role service */
@@ -28,6 +28,7 @@ import {
 	selector: 'create-role',
 	templateUrl: '../views/role-create.html'
 })
+
 
 
 export class RoleCreateComponent implements OnInit {
