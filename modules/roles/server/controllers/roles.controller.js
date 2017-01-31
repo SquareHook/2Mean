@@ -76,8 +76,6 @@ function roleModule(logger, userModule)
     Roles.count({_id: req.body.parent}).exec()
     .then( count =>
     {
-        console.log(count);
-        console.log("COUNT*******");
         if(count < 1)
         {
           return new Promise((resolve, reject) =>
