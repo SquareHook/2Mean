@@ -1,3 +1,7 @@
+/* promise.done(onSuccess, onError)
+ simply allows you to process resolved value. An additional benefit is that does not imply any error swallowing (as it is the case with promise.then()), it guarantees that any involved exception would be exposed. It also effectively ends the chain and does not return any further promise.
+
+
 /*
  * Roles Controller
  * Provices andvanced role functionality and API endpoints
@@ -17,10 +21,8 @@ var _ = require('lodash');
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule) {
 
-  /*
-   * check to make sure there exists an admin role with parent set to null
-   * if one doesn't exist, create it.
-   */
+   // check to make sure there exists an admin role with parent set to null
+   //if one doesn't exist, create it.
   var adminCount = Roles.count({
     _id: 'admin',
     parent: null
@@ -52,64 +54,102 @@ function roleModule(logger, userModule) {
    * @return {bool} whether or not the role was added
    */
   function addRole(req, res, next) {
-
-    var role = req.body;
-    //make sure the role is valid
-    if (role._id != null) {
-      var addedRole = new Roles();
-      addedRole._id = role._id;
-      addedRole.parent = role.parent || null;
-      role.canModify = role.canModify || false;
-      role.parentForDescendants = role.parentForDescendants || [];
-
-      //check to make sure the parent exists
-      if (addedRole.parent === null || !roleExists(addedRole.parent)) {
-        res.status(500).send("Parent must be a valid role");
-        return;
-      }
-
-
-      //save will fail if _id isn't unique
-      addedRole.save((err, data) => {
-        if (err) {
-          res.status(500).send({ mesage: "Internal Server Error", error: err.errmsg});
-          return;
-        } else {
-          //the role was inserted into the roles collection
-          //now we need to update the parent of the direct descendants
-          //if there are any
-          if (role.parentForDescendants && role.parentForDescendants.length > 0) {
-            //in this case we are inserting a role above one or more existing roles
-            _.forEach(role.parentForDescendants, function(node) {
-              //we set that descendant's parent to this role._id
-              updateParentForRole(node, role._id);
-            });
-          }
-
-          Roles.find({}).then((data) => {
-
-            //update the parent roles' subroles
-            var parent = _.find(data, '_id', role.parent);
-            logger.info("parent before loop: " + parent);
-
-            while (parent !== null) {
-              var subroles = getRolesByParent(parent._id, data, []);
-              logger.info("subroles: " + subroles);
-              userModule.flushSubroles(parent._id, subroles);
-              parent = _.find(data, '_id', parent.parent);
-              logger.info("parent in loop: " + parent);
-            }
-
-            res.status(201).send("Inserted role\n");
-            return;
-          });
-        }
-      });
-    } else {
-      res.status(500).send("Validation does not pass");
-      return;
+ 
+    //validation check
+    if(!req.body._id || !req.body.parent)
+    {
+      return sendServerError(res, "required role fields not set");
     }
+    //map request body params to a role
+    var role = new Roles();
+    role._id = req.body._id;
+    role.parent = req.body.parent;
+    role.canModify = req.body.canModify || false;
+    role.parentForDescendants = req.body.parentForDescendants || [];
+   
+    role.save()
+    .then(data =>
+    {
+      return updateDirectDescendants(role);
+    })
+    .then(ok =>
+    {
+      return getAllRoles();
+    })
+    .then(data =>
+    {
+      return updateSubroles(data, role)
+    })
+    .then(data => {
+      res.status(201).send({success: true, message: "Inserted Role"});
+    })
+    .catch(error =>{
+      sendServerError(res, error);
+    })  
   }
+
+ function updateDirectDescendants(role)
+ {
+   //in this case we are inserting a role above one or more existing roles
+    //update the parent of any direct descendants
+   return new Promise((resolve, reject) =>{
+    _.forEach(role.parentForDescendants, (child) =>
+     {
+       updateParentForRole(node, role._id);
+     });
+     resolve(true);
+   });
+ }
+
+
+ /*
+ * Updates a role's parent
+ */
+function updateParentForRole(roleName, roleParentName) {
+  Roles.update({
+      _id: roleName
+    }, {
+      $set: {
+        parent: roleParentName,
+        lastUpdated: new Date()
+      }
+    },
+    (err, data) => {
+      if (err) {
+        logger.error("error updating parent for role", err.errmsg);
+      }
+    });
+}
+
+
+function updateSubroles(data, role) {
+    return new Promise((resolve, reject) => {
+       //update the parent roles' subroles
+      let parent = _.find(data, '_id', role.parent);
+      while (parent) {
+        var subroles = getRolesByParent(parent._id, data, []);
+        userModule.flushSubroles(parent._id, subroles);
+        parent = _.find(data, '_id', parent.parent);
+      }
+      resolve("roles updated");
+    });
+}
+
+/*
+ * Recursive function to get the subroles of a role
+ */
+function getRolesByParent(parentRoleName, data, subroles) {
+  var directDescendants = _.filter(data, 'parent', parentRoleName);
+  if (directDescendants && directDescendants.length > 0) {
+    _.forEach(directDescendants, function(descendant) {
+      subroles.push(descendant._id);
+      getRolesByParent(descendant._id, data, subroles);
+    })
+  }
+  return subroles;
+}
+
+
 
   /*
    * Returns an unordered list of subroles for a given role
@@ -172,7 +212,7 @@ function roleModule(logger, userModule) {
               error: err
             });
           } else {
-            Roles.find({}).then((allRoles) => {
+            getAllRoles.then((allRoles) => {
               //need to update the parent of the direct descendants
               //if there were any
 
@@ -369,68 +409,14 @@ function roleModule(logger, userModule) {
 
 
 
-  /*
-   * Recursive function to get the subroles of a role
-   * 
-   * @param {parentRoleName}  The role name to find subroles for
-   * @param {data} The list of roles currently in the database
-   * @param {subroles} the list of subroles
-   * @return [string] an unordered list of subroles
-   */
-  function getRolesByParent(parentRoleName, data, subroles) {
-    var directDescendants = _.filter(data, 'parent', parentRoleName);
-    if (directDescendants && directDescendants.length > 0) {
-      _.forEach(directDescendants, function(descendant) {
-        subroles.push(descendant._id);
-        getRolesByParent(descendant._id, data, subroles);
-      })
-    }
-    return subroles;
+
+
+
+
+  function sendServerError(errorMessage, res)
+  {
+    res.status(500).send({success: false, message: "Internal Server Error: " + errorMessage});
   }
-
-
-  /*
-   * Checks to see if a role exists
-   * @param {roleName} the name of the role to check
-   */
-  function roleExists(roleName) {
-    var deferred = q.defer();
-    var roleCount = Roles.count({
-      _id: roleName
-    }, (err, count) => {
-
-      logger.info(count);
-      if (err) {
-        return deferred.resolve(false);
-      }
-      return deferred.resolve(count > 0);
-    });
-
-    return deferred.promise;
-  }
-
-  /*
-   * Updates a role's parent
-   *
-   * @param {rolelName} The name of the role to update
-   * @param {roleParentName} The new parent name for the role
-   */
-  function updateParentForRole(roleName, roleParentName) {
-    Roles.update({
-        _id: roleName
-      }, {
-        $set: {
-          parent: roleParentName,
-          lastUpdated: new Date()
-        }
-      },
-      (err, data) => {
-        if (err) {
-          logger.error("error updating parent for role", err.errmsg);
-        }
-      });
-  }
-
 
 
   // --------------------------- Revealing Module Section ----------------------------
