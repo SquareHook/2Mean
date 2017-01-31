@@ -1,0 +1,10 @@
+<div class="container">
+    <form (ngSubmit)="submit()">
+        <h2>Remove Role</h2>
+        <div class="form-group">
+            <label for="_id">Role Name</label>
+            <input type="text" class="form-control" id="_id" required [(ngModel)]="Role._id" name="_id">
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </form>
+</div>
