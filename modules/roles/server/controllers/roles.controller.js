@@ -72,31 +72,53 @@ function roleModule(logger, userModule)
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
 
-    role.save()
-      .then(data =>
-      {
-        return updateDirectDescendants(role);
-      })
-      .then(ok =>
-      {
-        return getAllRoles();
-      })
-      .then(data =>
-      {
-        return updateSubroles(data, role)
-      })
-      .then(data =>
-      {
-        res.status(201).send(
+  
+    Roles.count({_id: req.body.parent}).exec()
+    .then( count =>
+    {
+        console.log(count);
+        console.log("COUNT*******");
+        if(count < 1)
         {
-          success: true,
-          data: data
-        });
-      })
-      .catch(error =>
+          return new Promise((resolve, reject) =>
+          {
+            reject("parent not found");
+          });
+        }
+        else
+        {
+          return new Promise((resolve, reject) => {
+            resolve("ok");
+          });
+        }
+    })
+    .then(ok => {
+      return role.save();
+    })
+    .then(data =>
+    {
+      return updateDirectDescendants(role);
+    })
+    .then(ok =>
+    {
+      return getAllRoles();
+    })
+    .then(data =>
+    {
+      return updateSubroles(data, role)
+    })
+    .then(data =>
+    {
+      res.status(201).send(
       {
-        sendServerError(res, error);
-      })
+        success: true,
+        data: data
+      });
+    })
+    .catch(error =>
+    {
+      sendServerError(res, error);
+    })
   }
 
   function updateDirectDescendants(role)
@@ -177,12 +199,7 @@ function roleModule(logger, userModule)
   {
     if (!req.params.id)
     {
-      res.status(500).send(
-      {
-        success: false,
-        message: "No role id provided"
-      });
-      return;
+      sendServerError(res, "no role id provided");
     }
     getAllRoles()
       .then((data) =>
@@ -192,11 +209,7 @@ function roleModule(logger, userModule)
       })
       .catch((err) =>
       {
-        res.status(500).send(
-        {
-          success: false,
-          message: "Internal Server Error"
-        });
+        sendServerError(res, "error getting subroles");
       });
   }
 
@@ -221,7 +234,7 @@ function roleModule(logger, userModule)
 
     if (addedRole._id === null || addedRole.parent === null)
     {
-      return sendServerError('missing required prameters, must supply role id and parent id');
+      return sendServerError(res,'missing required prameters, must supply role id and parent id');
     }
     Roles.findById(addedRole._id)
     .then(role =>
@@ -283,7 +296,7 @@ function roleModule(logger, userModule)
       })
       .catch(error)
       {
-        return sendServerError(error);
+        return sendServerError(res,error);
       }
   }
 
@@ -311,12 +324,10 @@ function roleModule(logger, userModule)
       {
         if (data)
         {
-          logger.info("removed role : " + data._id);
           resolve(true);
         }
         else
         {
-          logger.info("failed to remove role");
           reject("failed to remove role");
         }
       }
@@ -346,12 +357,10 @@ function roleModule(logger, userModule)
 
         //update the parent roles' subroles
         var parent = _.find(data, '_id', role.parent);
-        logger.info("parent before loop: " + parent);
 
         while (parent !== null)
         {
           var subroles = getRolesByParent(parent._id, data, []);
-          logger.info("subroles: " + subroles);
           userModule.flushSubroles(parent._id, subroles);
           parent = _.find(data, '_id', parent.parent);
         }
@@ -385,7 +394,7 @@ function roleModule(logger, userModule)
     })
     .catch((error) =>
     {
-      return sendServerError("could not get role tree");
+      return sendServerError(res,"could not get role tree");
     });
   }
 
@@ -435,12 +444,13 @@ function roleModule(logger, userModule)
     return formatted;
   }
 
-  function sendServerError(errorMessage, res)
+  function sendServerError(res, error)
   {
+    logger.error(error);
     res.status(500).send(
     {
       success: false,
-      message: "Internal Server Error: " + errorMessage
+      error: error
     });
   }
 
