@@ -196,19 +196,25 @@ function roleModule(logger, userModule)
   /*
    * Returns an unordered list of subroles for a given role
    * 
-   * @param {targetRole} the role to get subroles for
+   * @param {targetRole} optional. the role to get subroles for
    * @return [Role] a list of subroles (if any)
    */
   function getSubroles(req, res, next)
   {
-    if (!req.params.id)
-    {
-      sendServerError(res, "no role id provided", 400);
-    }
     getAllRoles()
       .then((data) =>
       {
-        var list = getRolesByParent(req.params.id, data, []);
+        let list = [];
+        if(req.params.id)
+        {
+          list = getRolesByParent(req.params.id, data, []);
+        }
+        else
+        {
+          _.forEach(data, function(role){
+            list.push(role._id);
+          });
+        }
         res.status(200).send(list);
       })
       .catch((err) =>

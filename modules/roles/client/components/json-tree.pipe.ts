@@ -11,6 +11,9 @@ export class JsonTreePipe implements PipeTransform {
 
 
   transform(json: string): string {
-		return json.replace("(\"|\{|\})", "");
+  		console.log(json);
+  		let part1 = json.replace(/{|}|\[|\]|\"|\,|_id|children|:/gm, "");
+  		let formatted = part1.replace(/^\s*\n|/gm, "");
+		return formatted.replace(/^\s*admin/, "admin\n ---------------------------");
   }
 }
