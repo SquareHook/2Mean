@@ -9,11 +9,9 @@ import { Pipe, PipeTransform } from '@angular/core';
 @Pipe({name: 'jsonTree'})
 export class JsonTreePipe implements PipeTransform {
 
-
   transform(json: string): string {
-  		console.log(json);
-  		let part1 = json.replace(/{|}|\[|\]|\"|\,|_id|children|:/gm, "");
-  		let formatted = part1.replace(/^\s*\n|/gm, "");
-		return formatted.replace(/^\s*admin/, "admin\n ---------------------------");
+    let part1 = json.replace(/{|}|\[|\]|\"|\,|_id|children|:/gm, "");
+    let formatted = part1.replace(/^\s*\n|/gm, "");
+    return formatted.replace(/^\s*admin/, "admin\n ---------------------------");
   }
 }
