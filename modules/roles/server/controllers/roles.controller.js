@@ -1,3 +1,4 @@
+
 /* promise.done(onSuccess, onError)
  simply allows you to process resolved value. An additional benefit is that does not imply any error swallowing (as it is the case with promise.then()), it guarantees that any involved exception would be exposed. It also effectively ends the chain and does not return any further promise.
 
@@ -116,6 +117,10 @@ function roleModule(logger, userModule)
     })
     .catch(error =>
     {
+      if(error.code && error.code === 11000)
+      {
+        sendServerError(res, error, 400);
+      } 
       sendServerError(res, error);
     })
   }

@@ -16,15 +16,22 @@ export class RoleService {
   constructor(private http: Http){}
 
 
-  getRoles(): Observable<Role[]>
+  getRoles(): Observable<any>
   {
     return this.http
-      .get('api/roles')
-      .map((r: Response) => r.json().data);
+      .get('api/roles/subroles/' + 'admin')
+      .map((r: Response) => r.json());
+  }
+  getTree(): Observable<any>
+  {
+    return this.http
+      .get('api/roles/tree')
+      .map((r: Response) => r.json());
   }
 
   createRole(formData: Role): Observable<any>
   {
+   
     return this.http
       .post('api/roles', formData)
       .map(this.formatCreateResponse);

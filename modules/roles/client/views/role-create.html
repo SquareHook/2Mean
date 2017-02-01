@@ -1,18 +1,33 @@
-
 <div class="container">
-    <form (ngSubmit)="submit()">
-        <h2>New Role</h2>
-        <div class="form-group">
-            <label for="_id">Role Name</label>
-            <input type="text" class="form-control" id="_id" required [(ngModel)]="Role._id" name="_id">
+    <div class="row">
+        <div class="col-md-6">
+            <form (ngSubmit)="submit()">
+                <h2>New Role</h2>
+                <div class="form-group">
+                    <label for="_id">Role Name</label>
+                    <input type="text" class="form-control" id="_id" required [(ngModel)]="Role._id" name="_id">
+                    <small class="form-text text-muted">Enter a unique name for the role</small>
+                </div>
+                <div class="form-group">
+                    <label for="parent">Parent</label>
+                    <small class="form-text text-muted">Choose a parent role </small>
+                    <select name="parent" [(ngModel)]="Role.parent" class="input-large">
+                        <option *ngFor="let parent of Parents;" [value]="parent">
+                            {{parent}}
+                        </option>
+                    </select>
+                    <div [hidden]="NoErrors" class="alert alert-danger" role="alert">
+                        <strong>Oh snap!</strong> An error occurred while creating your role. More detailed info under development.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
         </div>
-        <div class="form-group">
-            <label for="parent">Parent</label>
-            <input type="text" class="form-control" id="parent" required [(ngModel)]="Role.parent" name="parent">
-            <div [hidden]="NoErrors" class="alert alert-danger" role="alert">
-                <strong>Oh snap!</strong> An error occurred while creating your role. More detailed info under development.
-            </div>
+        <div class="col-md-4">
+            <h3>Role Tree </h3>
+            <pre>
+            {{Tree | json | jsonTree}}
+            </pre>
         </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </form>
+    </div>
 </div>
