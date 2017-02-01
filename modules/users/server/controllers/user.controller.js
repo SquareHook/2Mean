@@ -113,7 +113,7 @@ function userController(logger) {
               });
             } else {
               // check for specific codes to provide feedback to ui
-              if (err.toJSON) {
+              if (err.name === 'MongoError') {
                 let errObj = err.toJSON();
                 let code = errObj.code;
                 let errmsg = errObj.errmsg;
@@ -657,6 +657,7 @@ function userController(logger) {
      * so equals should be used (non strict equivalence operator could also be
      * used but this expresses that they are different types more effectivly)
      */
+    console.log(user._id);
     if (user._id.equals(id)) {
       return true;
     }
