@@ -13,7 +13,10 @@ import {Subscription} from 'rxjs/Subscription';
 
 @Component({
   selector: 'create-role', 
-  templateUrl: '../views/role-create.html'
+  templateUrl: '../views/role-create.html',
+  styles: [
+    require('../css/style.css').toString()
+  ]
 })
 
 export class RoleCreateComponent implements OnInit {
@@ -54,7 +57,6 @@ export class RoleCreateComponent implements OnInit {
   }
  
   submit(): void {
-
     this.roleService.createRole(this.Role)
       .subscribe((data: any) => {
           this.NoErrors = true;
