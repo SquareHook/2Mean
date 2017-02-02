@@ -118,13 +118,3 @@ main role's position in the role tree.
 
 TODO: continue documentation once endpoints are dynamic and we have a 
 UI for managing what roles a user is in.
-
-
-
-
-
-
-
-
-
-
