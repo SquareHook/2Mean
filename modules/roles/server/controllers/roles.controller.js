@@ -207,8 +207,6 @@ function roleModule(logger, userModule)
       while (parent)
       {
         var subroles = getRolesByParent(parent._id, data, []);
-        console.log('updating parent');
-        console.log(parent._id);
         userModule.flushSubroles(parent._id, subroles);
         parent = _.find(data, '_id', parent.parent);
       }
@@ -398,7 +396,6 @@ function roleModule(logger, userModule)
         //get descendant roles and remove them
         var descendants = _.filter(data, 'parent', req.params.id);
         let list = getRolesByParent(req.params.id, data, []);
-        console.log(list);
         _.forEach(list, (descendant) =>
           {   
             logger.info("removing   " + descendant);
