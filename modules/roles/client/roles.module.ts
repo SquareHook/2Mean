@@ -9,7 +9,7 @@ import { FormsModule } from '@angular/forms';
 
 import { RoleCreateComponent } from './components/role-create.component';
 import { RoleDeleteComponent } from './components/role-delete.component';
-
+import { JsonTreePipe } from './components/json-tree.pipe';
 @NgModule({
   imports: [
     BrowserModule,
@@ -21,7 +21,8 @@ import { RoleDeleteComponent } from './components/role-delete.component';
   /*components available inside of this module */
   declarations: [
     RoleCreateComponent,
-    RoleDeleteComponent
+    RoleDeleteComponent,
+    JsonTreePipe
   ],
   /*components available to other modules */
   exports: [],

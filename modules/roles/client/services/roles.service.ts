@@ -8,38 +8,64 @@ import {
 
 import { Observable } from 'rxjs'; 
 import 'rxjs/add/operator/map';
+import { Subject } from 'rxjs/Subject';
 
 
 @Injectable()
-export class RoleService {
+export class RoleService{
+
+  // Observable sources
+  private roleTreeChangedSource = new Subject<any>();
+ private rolesChangedSource = new Subject<any>();
+
+  // Observable streams
+  roleTreeChanged$ = this.roleTreeChangedSource.asObservable();
+  rolesChanged$ = this.rolesChangedSource.asObservable();
 
   constructor(private http: Http){}
 
 
-  getRoles(): Observable<Role[]>
+  getRoles(): Observable<any>
   {
     return this.http
-      .get('api/roles')
-      .map((r: Response) => r.json().data);
+      .get('api/roles/subroles')
+      .map((r: Response) => r.json());
   }
+
+  
+  getTree(): Observable<any>
+  {
+    return this.http
+      .get('api/roles/tree')
+      .map((r: Response) => r.json());
+  }
+
 
   createRole(formData: Role): Observable<any>
   {
-    return this.http
+      return this.http
       .post('api/roles', formData)
-      .map(this.formatCreateResponse);
+      .map((r: Response) => {
+        this.roleTreeChangedSource.next(true);
+        this.rolesChangedSource.next(true);
+        let formatted = r.json();
+        return formatted;
+      });
   }
+
+
 
   removeRole(id: string): Observable<Role> {
     return this.http.delete('api/roles/' + id)
-      .map((r: Response) => r.json().data);
+          .map((r: Response) => {
+        this.roleTreeChangedSource.next(true);
+        this.rolesChangedSource.next(true);
+        let formatted = r.json();
+        return formatted;
+      });
   }
 
 
 
-  private formatCreateResponse(res: Response | any) {
-    let body = res.json();
 
-    return body;
-  }
 }

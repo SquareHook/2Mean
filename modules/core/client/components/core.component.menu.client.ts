@@ -97,7 +97,18 @@ export class CoreMenuComponent {
   private authorized(item: any): boolean {
     //if the item has one or more roles assigned, check authorization
     if (item.roles && item.roles.length > 0) {
-      return this.loggedIn;
+
+        if(this.user)
+        {
+         let intersection = item.roles.filter((n:string) => {return this.user.subroles.indexOf(n) != -1});
+         //return authorized if the user's role or on of their subroles is contained in the menu item's roles
+         return item.roles.indexOf(this.user.role) > -1 || intersection.length > 0;
+        }
+        else
+        {
+          return false;
+        }
+
     }
     return true;
   }

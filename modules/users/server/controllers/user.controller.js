@@ -90,7 +90,7 @@ function userController(logger) {
     let newUser = mapUser(body);
 
     // Overwrite any roles set or make sure they get set appropriately.
-    newUser.roles = [ 'user' ];
+    newUser.role = 'user';
 
     // get password and salt
     argon2.generateSalt().then(salt => {
@@ -352,7 +352,10 @@ function userController(logger) {
    function flushSubroles(parentRole, subroles)
    {
       logger.info("Updating user subroles");
-      Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
+      logger.info(parentRole);
+      logger.info(["banana", "pajama"]);
+      logger.info(subroles);
+      Users.update({role: parentRole}, {$set: {subroles: subroles}},{multi: true}, (err, data) =>
       {
         if(err)
         {

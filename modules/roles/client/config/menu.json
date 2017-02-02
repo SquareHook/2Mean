@@ -2,7 +2,7 @@
   "template": "Roles",
   "state": "/roles",
   "position": 3,
-  "roles": ["admin", "user"],
+  "roles": ["admin"],
   "subitems": [
   {
     "template": "New",
