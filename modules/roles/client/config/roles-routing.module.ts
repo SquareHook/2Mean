@@ -3,18 +3,14 @@ import { RouterModule, Routes } from '@angular/router';
 
 /* import the components this module uses */
 
-import { RoleCreateComponent } from '../components/role-create.component';
-import { RoleDeleteComponent } from '../components/role-delete.component';
+import { RoleComponent } from '../components/role.component';
+
 
 /* register the routes to these components  */
 const rolesRoutes: Routes = [
   {
-    path: 'roles/new',
-    component: RoleCreateComponent
-  },
-  {
-    path: 'roles/delete',
-    component: RoleDeleteComponent
+    path: 'roles',
+    component: RoleComponent
   }
 ];
 

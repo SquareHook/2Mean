@@ -367,21 +367,23 @@ function roleModule(logger, userModule)
     {
       return sendServerError(res, "missing role id param", 400);
     }
-
+    var role = null;
     Roles.findOneAndRemove({_id: req.params.id}).exec()
     .then(data =>
     {
-      return new Promise(resolve, reject)
+      return new Promise((resolve, reject) =>
       {
         if (data)
         {
           resolve(true);
+
+          role = data;
         }
         else
         {
           reject("failed to remove role");
         }
-      }
+      });
     })
     .then(ok =>
     {
@@ -389,11 +391,11 @@ function roleModule(logger, userModule)
     })
     .then(data =>
     {
-      return new Promise(resolve, reject)
+      return new Promise((resolve, reject)=>
       {
         //need to update the parent of the direct descendants
         //if there were any
-        var descendants = _.filter(data, 'parent', role._id);
+        var descendants = _.filter(data, 'parent', req.params.id);
 
         if (descendants && descendants.length > 0)
         {
@@ -409,14 +411,22 @@ function roleModule(logger, userModule)
         //update the parent roles' subroles
         var parent = _.find(data, '_id', role.parent);
 
-        while (parent !== null)
+        if(parent)
         {
-          var subroles = getRolesByParent(parent._id, data, []);
-          userModule.flushSubroles(parent._id, subroles);
-          parent = _.find(data, '_id', parent.parent);
+          while (parent)
+          {
+            let subroles = getRolesByParent(parent._id, data, []);
+            if(subroles.length > 0)
+            {
+              userModule.flushSubroles(parent._id, subroles);
+            }
+            parent = _.find(data, '_id', parent.parent);
+          }
         }
+
+
         resolve(true);
-      }
+      })
     })
     .then(ok =>
     {

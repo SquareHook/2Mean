@@ -16,30 +16,35 @@ const menuJson = require('./../config/menus.json');
   templateUrl: 'core.component.client.html'
 })
 
-export class CoreMenuComponent {
+export class CoreMenuComponent implements onInit{
   menu: Array<any>;
   loggedIn: boolean;
   user: any;
 
   constructor(private router: Router, private authService: AuthService) {
     this.menu = [];
-    // Determine if logged in
-    this.loggedIn = this.authService.loggedIn;
-    this.setup();
-    this.user = authService.getUser();
 
-    //update the menu when auth changes
-    authService.authChanged$.subscribe(
+    
+    }
+
+    ngOnInit(): void
+    {
+      // Determine if logged in
+      this.loggedIn = this.authService.loggedIn;
+
+      this.user = this.authService.getUser();
+      this.setup();
+      //update the menu when auth changes
+      this.authService.authChanged$.subscribe(
       data => {
         this.loggedIn = data;
-        if(!this.loggedIn)
-        {
-          this.router.navigateByUrl('/signin');
-        }
-        this.user = authService.getUser();
+        this.user = this.authService.getUser();
         this.setup();
       });
-  }
+      
+    }
+    
+  
 
   /*
   * Adds items to the menu from the config file

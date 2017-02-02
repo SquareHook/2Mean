@@ -210,7 +210,7 @@ function authenticationModule(logger) {
               //determine its roles
               let keyRoles = [];
               keyRoles.push(user.role);
-              keyRoles.concat(user.subroles);
+              keyRoles = keyRoles.concat(user.subroles);
               key.roles = keyRoles;
     
               key.save((err, data) => {

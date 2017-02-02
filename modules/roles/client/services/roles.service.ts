@@ -57,7 +57,7 @@ export class RoleService{
 
   removeRole(id: string): Observable<Role> {
     return this.http.delete('api/roles/' + id)
-          .map((r: Response) => {
+        .map((r: Response) => {
         this.roleTreeChangedSource.next(true);
         this.rolesChangedSource.next(true);
         let formatted = r.json();

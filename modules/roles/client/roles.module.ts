@@ -7,8 +7,8 @@ import { AppModule } from '../../app/client/app.module';
 import { RolesRoutingModule } from './config/roles-routing.module';
 import { FormsModule } from '@angular/forms';
 
-import { RoleCreateComponent } from './components/role-create.component';
-import { RoleDeleteComponent } from './components/role-delete.component';
+import { RoleComponent } from './components/role.component';
+
 import { JsonTreePipe } from './components/json-tree.pipe';
 @NgModule({
   imports: [
@@ -20,12 +20,11 @@ import { JsonTreePipe } from './components/json-tree.pipe';
   ],
   /*components available inside of this module */
   declarations: [
-    RoleCreateComponent,
-    RoleDeleteComponent,
+    RoleComponent,
     JsonTreePipe
   ],
   /*components available to other modules */
-  exports: [],
+  exports: [RoleComponent],
 
   /* which components to load when starting this module */
   bootstrap: []

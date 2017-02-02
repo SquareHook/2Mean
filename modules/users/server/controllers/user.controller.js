@@ -352,9 +352,6 @@ function userController(logger) {
    function flushSubroles(parentRole, subroles)
    {
       logger.info("Updating user subroles");
-      logger.info(parentRole);
-      logger.info(["banana", "pajama"]);
-      logger.info(subroles);
       Users.update({role: parentRole}, {$set: {subroles: subroles}},{multi: true}, (err, data) =>
       {
         if(err)
