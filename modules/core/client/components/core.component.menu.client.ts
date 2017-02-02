@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../../auth/client/auth.service.client';
@@ -16,7 +16,7 @@ const menuJson = require('./../config/menus.json');
   templateUrl: 'core.component.client.html'
 })
 
-export class CoreMenuComponent implements onInit{
+export class CoreMenuComponent implements OnInit{
   menu: Array<any>;
   loggedIn: boolean;
   user: any;
@@ -105,6 +105,7 @@ export class CoreMenuComponent implements onInit{
 
         if(this.user)
         {
+          console.log(this.user);
          let intersection = item.roles.filter((n:string) => {return this.user.subroles.indexOf(n) != -1});
          //return authorized if the user's role or on of their subroles is contained in the menu item's roles
          return item.roles.indexOf(this.user.role) > -1 || intersection.length > 0;

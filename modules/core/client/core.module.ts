@@ -4,7 +4,7 @@ import { HttpModule }     from '@angular/http';
 import { NgbModule }      from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }     from '@angular/router';
 import { CoreMenuComponent }  from './components/core.component.menu.client';
-import { RoleModule }      from '../roles/roles.module';
+import { RoleModule } from '../../roles/client/roles.module';
 import { AppModule }      from '../../app/client/app.module';
 import { AppRoutingModule }      from '../../app/client/app-routing.module';
 

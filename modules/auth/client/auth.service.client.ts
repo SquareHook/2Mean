@@ -163,7 +163,6 @@ export class AuthService {
 
 
   getUser(): User {
-
     return JSON.parse(localStorage.getItem('user'));
   }
 
