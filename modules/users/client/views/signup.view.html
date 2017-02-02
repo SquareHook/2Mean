@@ -15,7 +15,7 @@
       <input type="text" class="form-control" id="email" 
              required [validEmail]="validEmailRe"
              [(ngModel)]="model.email" name="email">
-      <div *ngIf="formErrors.email" class="alert alert-danger">
+      <div *ngIf="formErrors.email && model.email" class="alert alert-danger">
         {{ formErrors.email }}
       </div>
     </div>
@@ -24,7 +24,7 @@
       <input type="password" class="form-control" id="password" 
              required  [strongPassword]="strongPasswordRe"
              [(ngModel)]="model.password" name="password">
-      <div *ngIf="formErrors.password" class="alert  alert-danger">
+      <div *ngIf="formErrors.password && model.password" class="alert  alert-danger">
         {{ formErrors.password }}
       </div>
     </div>
