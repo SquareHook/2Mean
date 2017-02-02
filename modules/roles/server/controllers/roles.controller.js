@@ -1,3 +1,4 @@
+
 /* promise.done(onSuccess, onError)
  simply allows you to process resolved value. An additional benefit is that does not imply any error swallowing (as it is the case with promise.then()), it guarantees that any involved exception would be exposed. It also effectively ends the chain and does not return any further promise.
 
@@ -25,26 +26,53 @@ function roleModule(logger, userModule)
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
-  var adminCount = Roles.count(
-  {
-    _id: 'admin',
-    parent: null
-  }, (err, count) =>
-  {
+  var adminCount = Roles.count({_id: 'admin', parent: null}).exec()
+  .then(count => {
     if (count < 1)
     {
-      var role = new Roles();
-      role._id = 'admin';
-      role.parent = null;
-      role.save((err, data) =>
+      let adminRole = new Roles();
+      adminRole._id = 'admin';
+      adminRole.parent = null;
+      adminRole.subrles = ['user'];
+      adminRole.save()
+      .then(data => {
+        logger.info('created admin role');
+      })
+      .catch(err =>
       {
-        if (err)
-        {
-          logger.log('crit',"Failed to create default admin role");
-        }
+        logger.log('crit',"Failed to create default admin role");
       });
     }
+  })
+  .catch(err =>
+  {
+    logger.log('crit', 'Unable to determine if an admin role is present');
   });
+    
+  // check to make sure there exists an user role 
+  //if one doesn't exist, create it.
+  var userCount = Roles.count({_id: 'user', parent: 'admin'}).exec()
+  .then(count => {
+    if (count < 1)
+    {
+      let userRole = new Roles();
+      userRole._id = 'user';
+      userRole.parent = 'admin';
+      userRole.save()
+      .then(data => {
+        logger.info('created user role');
+      })
+      .catch(err =>
+      {
+        logger.log('crit',"Failed to create default user role");
+      });
+    }
+  })
+  .catch(err =>
+  {
+    logger.log('crit', 'Unable to determine if a user role is present');
+  });
+    
 
 
   /*
@@ -87,7 +115,7 @@ function roleModule(logger, userModule)
         else
         {
           return new Promise((resolve, reject) => {
-            resolve("ok");
+            resolve(true);
           });
         }
     })
@@ -96,7 +124,18 @@ function roleModule(logger, userModule)
     })
     .then(data =>
     {
-      return updateDirectDescendants(role);
+      if(role.parentForDescendants.length > 0)
+      {
+        return updateDirectDescendants(role);
+      }
+      else
+      {
+        return new Promise((resolve, reject) =>
+        {
+          resolve(true);
+        });
+      }
+      
     })
     .then(ok =>
     {
@@ -116,6 +155,10 @@ function roleModule(logger, userModule)
     })
     .catch(error =>
     {
+      if(error.code && error.code === 11000)
+      {
+        sendServerError(res, error, 400);
+      } 
       sendServerError(res, error);
     })
   }
@@ -158,6 +201,7 @@ function roleModule(logger, userModule)
   {
     return new Promise((resolve, reject) =>
     {
+
       //update the parent roles' subroles
       let parent = _.find(data, '_id', role.parent);
       while (parent)
@@ -191,19 +235,25 @@ function roleModule(logger, userModule)
   /*
    * Returns an unordered list of subroles for a given role
    * 
-   * @param {targetRole} the role to get subroles for
+   * @param {targetRole} optional. the role to get subroles for
    * @return [Role] a list of subroles (if any)
    */
   function getSubroles(req, res, next)
   {
-    if (!req.params.id)
-    {
-      sendServerError(res, "no role id provided", 400);
-    }
     getAllRoles()
       .then((data) =>
       {
-        var list = getRolesByParent(req.params.id, data, []);
+        let list = [];
+        if(req.params.id)
+        {
+          list = getRolesByParent(req.params.id, data, []);
+        }
+        else
+        {
+          _.forEach(data, function(role){
+            list.push(role._id);
+          });
+        }
         res.status(200).send(list);
       })
       .catch((err) =>
@@ -211,6 +261,8 @@ function roleModule(logger, userModule)
         sendServerError(res, "error getting subroles");
       });
   }
+
+
 
   /*
    * Roles can be added to the role tree at any level other than root.
@@ -315,21 +367,23 @@ function roleModule(logger, userModule)
     {
       return sendServerError(res, "missing role id param", 400);
     }
-
+    var role = null;
     Roles.findOneAndRemove({_id: req.params.id}).exec()
     .then(data =>
     {
-      return new Promise(resolve, reject)
+      return new Promise((resolve, reject) =>
       {
         if (data)
         {
           resolve(true);
+
+          role = data;
         }
         else
         {
           reject("failed to remove role");
         }
-      }
+      });
     })
     .then(ok =>
     {
@@ -337,34 +391,25 @@ function roleModule(logger, userModule)
     })
     .then(data =>
     {
-      return new Promise(resolve, reject)
+      return new Promise((resolve, reject)=>
       {
-        //need to update the parent of the direct descendants
-        //if there were any
-        var descendants = _.filter(data, 'parent', role._id);
+        //get descendant roles and remove them
+        var descendants = _.filter(data, 'parent', req.params.id);
+        let list = getRolesByParent(req.params.id, data, []);
+        _.forEach(list, (descendant) =>
+          {   
+            logger.info("removing   " + descendant);
+            Roles.findOneAndRemove({_id: descendant}).exec()
+            .then(data => {})
+            .catch(error => logger.info("error deleting"));
 
-        if (descendants && descendants.length > 0)
-        {
-          //the role was a parent role, update the children's parent to the
-          //role's parent
-          _.forEach(descendants, function(child)
-          {
-            child.parent = role.parent;
-            updateParentForRole(child, role.parent);
           });
-        }
-
-        //update the parent roles' subroles
-        var parent = _.find(data, '_id', role.parent);
-
-        while (parent !== null)
-        {
-          var subroles = getRolesByParent(parent._id, data, []);
-          userModule.flushSubroles(parent._id, subroles);
-          parent = _.find(data, '_id', parent.parent);
-        }
+        //make sure the deleted role is removed from subroles as well
+        list.push(req.params.id);
+        userModule.removeSubroles(list);
+        
         resolve(true);
-      }
+      })
     })
     .then(ok =>
     {

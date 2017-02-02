@@ -90,7 +90,7 @@ function userController(logger) {
     let newUser = mapUser(body);
 
     // Overwrite any roles set or make sure they get set appropriately.
-    newUser.roles = [ 'user' ];
+    newUser.role = 'user';
 
     // get password and salt
     argon2.generateSalt().then(salt => {
@@ -346,19 +346,35 @@ function userController(logger) {
   }
 
   /*
-   * updates any users with parentRole as their role
-   * to put subroles as their subroles
+   * sets a users subroles 
    */
    function flushSubroles(parentRole, subroles)
    {
       logger.info("Updating user subroles");
-      Users.update({role: parentRole}, {$set: {subroles: subroles}}, (err, data) =>
+      Users.update({role: parentRole}, {$set: {subroles: subroles}},{multi: true}, (err, data) =>
       {
         if(err)
         {
           logger.error("error updating subroles for affected users", err.errmsg)
         }
       });
+   }
+
+   function removeSubroles(subroles)
+   {
+      logger.info("removing subroles " + subroles);
+      logger.info(subroles);
+      for(let i = 0; i < subroles.length; i++)
+      {
+        Users.update({subroles: subroles[i]}, {$pull: {subroles: subroles[i]}}, {multi: true}, function(err, data)
+        {
+          if(err)
+          {
+            console.log("removeSubroles failed");
+          }
+        });
+      }
+     
    }
 
   /**
@@ -756,7 +772,8 @@ function userController(logger) {
     changeProfilePicture  : changeProfilePicture,
     getProfilePicture     : getProfilePicture,
     changePassword        : changePassword,
-    flushSubroles         : flushSubroles
+    flushSubroles         : flushSubroles,
+    removeSubroles        : removeSubroles
   };
 }
 

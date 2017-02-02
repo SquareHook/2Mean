@@ -1,0 +1,51 @@
+<div class="container">
+    <div class="row">
+
+        <div class="col-md-12">
+            <h2>User Roles </h2>
+            <pre>
+{{Tree | json | jsonTree}}  <!--supposed to be indented weird like this -->
+            </pre>
+        </div>
+    </div>
+
+    <div class="row justify-content-between">
+        <div class="col-md-5">
+            <form (ngSubmit)="submit()">
+                <h2>New Role</h2>
+                <div class="form-group">
+                    <label for="_id">Role Name</label>
+                    <input type="text" class="form-control" id="_id" required [(ngModel)]="Role._id" name="_id">
+                    <small class="form-text text-muted">Enter a unique name for the role</small>
+                </div>
+                <div class="form-group">
+                    <label for="parent">Parent</label>
+                    <small class="form-text text-muted">Choose a parent role </small>
+                    <select name="parent" [(ngModel)]="Role.parent" class="form-control">
+                        <option *ngFor="let parent of Parents;" [value]="parent">
+                            {{parent}}
+                        </option>
+                    </select>
+                    <div [hidden]="NoErrors" class="alert alert-danger" role="alert">
+                        <strong>Oh snap!</strong> An error occurred while creating your role. More detailed info under development.
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit</button>
+            </form>
+        </div>
+
+        <div class="col-md-5">
+            <form (ngSubmit)="delete()">
+                <h2>Remove Role</h2>
+                <div class="form-group">
+                <select name="parent" [(ngModel)]="SelectedRole" class="form-control">
+                    <option *ngFor="let role of OkToRemove;" [value]="role">
+                        {{role}}
+                    </option>
+                </select>
+                </div>
+                <button class="form-control" type="submit" class="btn btn-danger">Submit</button>
+            </form>
+        </div>
+    </div>
+</div>

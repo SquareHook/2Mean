@@ -99,8 +99,8 @@ export class AuthService {
         this.user.email = body.user.email;
         this.user.username = body.user.username;
         this.user.profileImageURL = body.user.profileImageURL;
-        this.user.roles = body.user.roles;
-
+        this.user.role = body.user.role;
+        this.user.subroles = body.user.subroles;
         this.saveUser();
         this.loggedIn = true;
 
@@ -163,7 +163,6 @@ export class AuthService {
 
 
   getUser(): User {
-
     return JSON.parse(localStorage.getItem('user'));
   }
 
