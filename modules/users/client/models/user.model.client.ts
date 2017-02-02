@@ -7,5 +7,6 @@ export class User {
   username: string = null;
   password: string = null;
   profileImageURL: string = null;
-  roles: Array<string> = null;
+  subroles: Array<string> = null;
+  role:string = null;
 }
