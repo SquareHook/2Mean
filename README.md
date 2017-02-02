@@ -81,4 +81,50 @@ Optionally you can also enable the following environment variables:
 
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
-//TODO: ADD FORMATTING OPTIONS
+below is an example menu object for the articles module
+```
+[{
+  "template": "Articles",
+  "state": "/articles",
+  "position": 2,
+  "roles": [],
+  "subitems": [
+  {
+    "template": "New",
+    "state": "/articles/new",
+    "roles": ["user"]
+  },
+  {
+    "template": "List",
+    "state": "/articles",
+    "roles": ["user"]
+  }]
+}]
+
+```
+* template is the name of the menu item
+* state is the routerLink
+* roles is an array of user roles who the menu item will render for
+* subitems will appear in a dropdown below the main menu item
+
+## Role Manager
+Admin users can configure roles in a tree structure to simplify
+granting permissions to certain resources. For example, creating a
+role called 'roleA' with parent 'user' would mean that the user role
+has access to everything roleA can access as well. 
+
+Users have one main role and an array of subroles depending on their
+main role's position in the role tree. 
+
+TODO: continue documentation once endpoints are dynamic and we have a 
+UI for managing what roles a user is in.
+
+
+
+
+
+
+
+
+
+

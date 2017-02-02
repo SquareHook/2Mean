@@ -264,6 +264,8 @@ function roleModule(logger, userModule)
       });
   }
 
+
+
   /*
    * Roles can be added to the role tree at any level other than root.
    * When a role is added, the tree is traversed, and for each 'parent'
@@ -393,38 +395,22 @@ function roleModule(logger, userModule)
     {
       return new Promise((resolve, reject)=>
       {
-        //need to update the parent of the direct descendants
-        //if there were any
+        //get descendant roles and remove them
         var descendants = _.filter(data, 'parent', req.params.id);
+        let list = getRolesByParent(req.params.id, data, []);
+        console.log(list);
+        _.forEach(list, (descendant) =>
+          {   
+            logger.info("removing   " + descendant);
+            Roles.findOneAndRemove({_id: descendant}).exec()
+            .then(data => {})
+            .catch(error => logger.info("error deleting"));
 
-        if (descendants && descendants.length > 0)
-        {
-          //the role was a parent role, update the children's parent to the
-          //role's parent
-          _.forEach(descendants, function(child)
-          {
-            child.parent = role.parent;
-            updateParentForRole(child, role.parent);
           });
-        }
-
-        //update the parent roles' subroles
-        var parent = _.find(data, '_id', role.parent);
-
-        if(parent)
-        {
-          while (parent)
-          {
-            let subroles = getRolesByParent(parent._id, data, []);
-            if(subroles.length > 0)
-            {
-              userModule.flushSubroles(parent._id, subroles);
-            }
-            parent = _.find(data, '_id', parent.parent);
-          }
-        }
-
-
+        //make sure the deleted role is removed from subroles as well
+        list.push(req.params.id);
+        userModule.removeSubroles(list);
+        
         resolve(true);
       })
     })

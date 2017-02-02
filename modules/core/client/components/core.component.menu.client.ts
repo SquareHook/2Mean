@@ -105,7 +105,6 @@ export class CoreMenuComponent implements OnInit{
 
         if(this.user)
         {
-          console.log(this.user);
          let intersection = item.roles.filter((n:string) => {return this.user.subroles.indexOf(n) != -1});
          //return authorized if the user's role or on of their subroles is contained in the menu item's roles
          return item.roles.indexOf(this.user.role) > -1 || intersection.length > 0;

@@ -346,8 +346,7 @@ function userController(logger) {
   }
 
   /*
-   * updates any users with parentRole as their role
-   * to put subroles as their subroles
+   * sets a users subroles 
    */
    function flushSubroles(parentRole, subroles)
    {
@@ -359,6 +358,23 @@ function userController(logger) {
           logger.error("error updating subroles for affected users", err.errmsg)
         }
       });
+   }
+
+   function removeSubroles(subroles)
+   {
+      logger.info("removing subroles " + subroles);
+      logger.info(subroles);
+      for(let i = 0; i < subroles.length; i++)
+      {
+        Users.update({subroles: subroles[i]}, {$pull: {subroles: subroles[i]}}, {multi: true}, function(err, data)
+        {
+          if(err)
+          {
+            console.log("removeSubroles failed");
+          }
+        });
+      }
+     
    }
 
   /**
@@ -756,7 +772,8 @@ function userController(logger) {
     changeProfilePicture  : changeProfilePicture,
     getProfilePicture     : getProfilePicture,
     changePassword        : changePassword,
-    flushSubroles         : flushSubroles
+    flushSubroles         : flushSubroles,
+    removeSubroles        : removeSubroles
   };
 }
 
