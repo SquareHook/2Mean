@@ -159,6 +159,7 @@ export class AuthService {
     this.apikey = null;
     this.loggedIn = false;
     this.authChanged(false);
+    localStorage.setItem('user', {});
   }
 
 

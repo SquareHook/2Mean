@@ -40,7 +40,6 @@ export class RoleService{
       .map((r: Response) => r.json());
   }
 
-
   createRole(formData: Role): Observable<any>
   {
       return this.http
@@ -52,8 +51,6 @@ export class RoleService{
         return formatted;
       });
   }
-
-
 
   removeRole(id: string): Observable<Role> {
     return this.http.delete('api/roles/' + id)
