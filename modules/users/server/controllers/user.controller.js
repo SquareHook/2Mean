@@ -719,7 +719,10 @@ function userController(logger) {
       }
     }
 
-    user._id = body.id;
+    if (body._id) {
+      user._id = body._id;
+    }
+
     user.updated = new Date();
     user.created = new Date();
 

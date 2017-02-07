@@ -53,7 +53,7 @@ export class ArticleDetailComponent implements OnInit {
   }
 
   private userIsOwner(): boolean {
-    return this.article && this.article.userId == this.authService.getUser().id;
+    return this.article && this.article.userId == this.authService.getUser()._id;
   }
 
   ngOnInit(): void {
