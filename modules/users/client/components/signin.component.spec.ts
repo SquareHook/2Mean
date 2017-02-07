@@ -73,7 +73,8 @@ describe('SigninComponent', () => {
     lastName: 'User',
     password: 'null',
     profileImageURL: 'modules/users/client/img/profile/default.png',
-    roles: [ 'admin', 'user' ],
+    role: 'admin',
+    subroles: [ 'admin', 'user' ],
     username: 'squarehook'
   };
 
