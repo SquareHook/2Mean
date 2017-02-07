@@ -25,6 +25,7 @@ import {
   Headers
 } from '@angular/http';
 
+
 import { Observable } from 'rxjs/Rx';
 
 /*
@@ -159,6 +160,7 @@ export class AuthService {
     this.apikey = null;
     this.loggedIn = false;
     this.authChanged(false);
+    localStorage.setItem('user', JSON.stringify(null));
   }
 
 
