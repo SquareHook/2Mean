@@ -7,6 +7,12 @@ module.exports = [
   },
   {
     route: '/users',
+    type: 'GET',
+    method: 'list',
+    secure: true
+  },
+  {
+    route: '/users',
     type: 'POST',
     method: 'create',
     secure: true

@@ -72,6 +72,11 @@ export class UserService {
       .map(this.extractData);
   }
 
+  list(page: number, search: string) : Observable<Array<User>>
+  {
+    return this.http.get('api/users?page='+page)
+    .map(this.extractData);
+  }
   create(newUser: User) : Observable<User> {
     return this.http.post('api/users', newUser)
       .map(this.extractData);
