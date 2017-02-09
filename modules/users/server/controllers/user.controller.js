@@ -87,6 +87,8 @@ function userController(logger) {
 
     var deferred = q.defer();
 
+    const SANTIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
+
     let newUser = mapUser(body);
 
     // Overwrite any roles set or make sure they get set appropriately.
@@ -750,14 +752,14 @@ function userController(logger) {
    */
   function getListOfUsers(userIdList) {
     return new Promise((resolve, reject) => {
-      Users.find({
-        '_id': { '$in': userIdList }
-      }).then((data) => {
-        resolve(data);
-      },
-      (error) => {
-        reject(error);
-      });
+      Users.find({ '_id': { '$in': userIdList } })
+        .select(SANTIZED_SELECTION)
+        .then((data) => {
+          resolve(data);
+        },
+        (error) => {
+          reject(error);
+        });
     });
   }
 
@@ -892,7 +894,8 @@ function userController(logger) {
     changePassword        : changePassword,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
-    list                  :list
+    readList              : readList,
+    list                  : list
   };
 }
 
