@@ -817,7 +817,8 @@ function userController(logger) {
     getProfilePicture     : getProfilePicture,
     changePassword        : changePassword,
     flushSubroles         : flushSubroles,
-    removeSubroles        : removeSubroles
+    removeSubroles        : removeSubroles,
+    readList              : readList
   };
 }
 
