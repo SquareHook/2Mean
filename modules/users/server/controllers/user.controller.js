@@ -199,7 +199,7 @@ function userController(logger) {
   *
   * @return {void}
   */
-  function list(req, res, next)
+  function list(req, res)
   {
     let page = req.params.page || 1;
     let search = req.params.search || "";
@@ -230,7 +230,6 @@ function userController(logger) {
         {
           sanitized.push(sanitizeUser(users[i]));
         }
-        console.log(sanitized);
         deferred.resolve({
           code: 200,
           data: sanitized
@@ -804,7 +803,7 @@ function userController(logger) {
 
   function sanitizeUser(user) {
     return {
-      id: user._id,
+      _id: user._id,
       created: user.created,
       displayName: user.displayName,
       email: user.email,
