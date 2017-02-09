@@ -324,7 +324,7 @@ function authenticationModule(logger) {
    */
   function sanitizeUser(user) {
     return {
-      id: user._id,
+      _id: user._id,
       apikey: user.apikey,
       created: user.created,
       displayName: user.displayName,

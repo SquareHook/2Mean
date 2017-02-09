@@ -93,7 +93,7 @@ export class AuthService {
 
         this.user = new User();
         // Save the user information for use later.
-        this.user.id = body.user.id;
+        this.user._id = body.user._id;
         this.user.firstName = body.user.firstName;
         this.user.lastName = body.user.lastName;
         this.user.displayName = body.user.displayName;

@@ -385,6 +385,28 @@ function userController(logger) {
   /**
    * Main function to handle delete for the users collection.
    *
+   * The request should be a comma separated list of id's in a GET request (per the routes config).
+   *
+   * @param {Request}  req  The Express request object.
+   * @param {Response} res  The Express response object.
+   *
+   * @return {void}
+   */
+  function readList(req, res) {
+    var userList = req.params.userList.split(',');
+
+    getListOfUsers(userList)
+      .then((data) => {
+        res.status(200).send(data);
+      },
+      (error) => {
+        res.status(500).send('Internal Server Error');
+      });
+  }
+
+  /**
+   * Main function to handle delete for the users collection.
+   *
    * @param {Request} req   The Express request object.
    * @param {Response} res  The Express response object.
    * @param {Next} next     The Express next (middleware) function.
@@ -720,6 +742,25 @@ function userController(logger) {
 
   // --------------------------- Private Function Definitions ----------------------------
 
+  /**
+   * Given an array of ids, this function will retrieve the user objects.
+   *
+   * @param {Array<String>} userIdList The array of ids to lookup.
+   *
+   * @return {Array<Users>}
+   */
+  function getListOfUsers(userIdList) {
+    return new Promise((resolve, reject) => {
+      Users.find({
+        '_id': { '$in': userIdList }
+      }).then((data) => {
+        resolve(data);
+      },
+      (error) => {
+        reject(error);
+      });
+    });
+  }
 
   function extractMongooseErrors(error) {
     var errors = [];
@@ -794,7 +835,10 @@ function userController(logger) {
       }
     }
 
-    user._id = body.id;
+    if (body._id) {
+      user._id = body._id;
+    }
+
     user.updated = new Date();
     user.created = new Date();
 
