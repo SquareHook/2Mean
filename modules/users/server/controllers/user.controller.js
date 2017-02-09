@@ -750,15 +750,25 @@ function userController(logger) {
    */
   function getListOfUsers(userIdList) {
     return new Promise((resolve, reject) => {
-      Users.find({
-        '_id': { '$in': userIdList }
-      }).then((data) => {
-        resolve(data);
-      },
-      (error) => {
-        reject(error);
-      });
+      Users.find({ '_id': { '$in': userIdList } })
+        .select('created displayName email firstName lastName profileImageURL role subroles username')
+        .then((data) => {
+          resolve(data);
+        },
+        (error) => {
+          reject(error);
+        });
     });
+      _id: user._id,
+      created: user.created,
+      displayName: user.displayName,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageURL: user.profileImageURL,
+      role: user.role,
+      subroles: user.subroles,
+      username: user.username
   }
 
   function extractMongooseErrors(error) {
