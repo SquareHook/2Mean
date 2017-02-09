@@ -34,7 +34,7 @@ import {
  */
 import { FileUploader }       from 'ng2-file-upload';
 
-import { Observable }         from 'rxjs/Rx';
+import { Observable, Observer }         from 'rxjs/Rx';
 
 /*
  * Reactive library.
@@ -90,6 +90,28 @@ export class UserService {
   register(newUser: User) : Observable<User> {
     return this.http.post('api/users/register', newUser)
       .map(this.extractData);
+  }
+
+  readList(userList: Array<string>) : Observable<User> {
+    var csvList = userList.join(',');
+
+    var userFeed = Observable.create(
+      (observer: Observer<User>) => {
+        this.http.get('api/users/list'+csvList)
+          .subscribe((data) => {
+            let responseArray = data.json();
+
+            responseArray.forEach((userItem: User) => {
+              if (userItem) {
+                observer.next(userItem);
+              }
+            });
+
+            observer.complete();
+          });
+      });
+
+    return userFeed;
   }
 
   /**
