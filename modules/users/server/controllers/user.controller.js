@@ -87,7 +87,7 @@ function userController(logger) {
 
     var deferred = q.defer();
 
-    const SANTIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
+    var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
 
     let newUser = mapUser(body);
 
@@ -753,7 +753,7 @@ function userController(logger) {
   function getListOfUsers(userIdList) {
     return new Promise((resolve, reject) => {
       Users.find({ '_id': { '$in': userIdList } })
-        .select(SANTIZED_SELECTION)
+        .select(this.SANITIZED_SELECTION)
         .then((data) => {
           resolve(data);
         },
