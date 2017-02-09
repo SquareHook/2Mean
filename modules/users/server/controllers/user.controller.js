@@ -87,6 +87,8 @@ function userController(logger) {
 
     var deferred = q.defer();
 
+    const SANTIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
+
     let newUser = mapUser(body);
 
     // Overwrite any roles set or make sure they get set appropriately.
@@ -751,7 +753,7 @@ function userController(logger) {
   function getListOfUsers(userIdList) {
     return new Promise((resolve, reject) => {
       Users.find({ '_id': { '$in': userIdList } })
-        .select('created displayName email firstName lastName profileImageURL role subroles username')
+        .select(SANTIZED_SELECTION)
         .then((data) => {
           resolve(data);
         },
@@ -759,16 +761,6 @@ function userController(logger) {
           reject(error);
         });
     });
-      _id: user._id,
-      created: user.created,
-      displayName: user.displayName,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageURL: user.profileImageURL,
-      role: user.role,
-      subroles: user.subroles,
-      username: user.username
   }
 
   function extractMongooseErrors(error) {
