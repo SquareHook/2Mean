@@ -104,7 +104,7 @@ export class UserService {
 
     var userFeed = Observable.create(
       (observer: Observer<User>) => {
-        this.http.get('api/users/list'+csvList)
+        this.http.get('api/users/list/'+csvList)
           .subscribe((data) => {
             let responseArray = data.json();
 
