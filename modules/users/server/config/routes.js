@@ -1,5 +1,11 @@
 module.exports = [
   {
+    route: '/users/list/:userList',
+    type: 'GET',
+    method: 'read',
+    secure: true
+  },
+  {
     route: '/users/:userId',
     type: 'GET',
     method: 'read',
