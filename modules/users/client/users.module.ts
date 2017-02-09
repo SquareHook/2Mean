@@ -39,6 +39,7 @@ import {
 import {
   SettingsComponent
 } from './components/settings.component';
+import { AdminUsersComponent } from './components/admin-users.component';
 
 /* Services */
 import { UserService }          from './services/user.service';
@@ -77,7 +78,8 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     StrongPasswordValidatorDirective,
     AllowedTypesValidatorDirective,
     MaxSizeValidatorDirective,
-    ValidEmailValidatorDirective
+    ValidEmailValidatorDirective,
+    AdminUsersComponent
   ],
   providers: [ 
     { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },

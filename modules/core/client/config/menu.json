@@ -8,5 +8,10 @@
     "template": "Roles",
     "state": "/roles",
     "roles": ["admin"]
+  },
+  {
+    "template": "Users",
+    "state": "/users/manage",
+    "roles": ["admin"]
   }]
 }]
