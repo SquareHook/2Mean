@@ -38,7 +38,7 @@ var config = require(path.resolve('config/config'));
  */
 function authenticationModule(logger) {
   // Key, 8 hours TTL
-  var keyTTL = 1000 * 60 * 60 * 8;
+  const keyTTL = 1000 * 60 * 60 * 8;
   var defaultPassword = "12345";
 
   // Check if Database has been populated yet.  If not, inject default user.
@@ -55,7 +55,8 @@ function authenticationModule(logger) {
           newUser.email = 'support@squarehook.com';
           newUser.username = 'squarehook';
           newUser.password = hash;
-          newUser.roles = [ 'user', 'admin' ];
+          newUser.role ='admin';
+          newUser.subroles = ['user'];
 
           newUser.save((err, data) => {
             if (err) {
@@ -78,7 +79,16 @@ function authenticationModule(logger) {
     }
 
     Keys.findOne({value: req.cookies.apikey})
+
       .then((data) => {
+       
+        //if the cookie has expired remove the api key, update the user, and set the cookie
+         if(Date.now() - data.created > keyTTL)
+         {
+
+            return logout(req, res, next);
+         }
+
         // Store auth information for downstream logic.
         req.auth = data;
 
@@ -150,6 +160,9 @@ function authenticationModule(logger) {
     });
   }
 
+
+
+
   /**
    * The main login logic.
    */
@@ -206,7 +219,11 @@ function authenticationModule(logger) {
               key.value = apikey.value;
               key.created = apikey.created;
               key.user = user._id;
-              key.roles = user.roles;
+              //determine its roles
+              let keyRoles = [];
+              keyRoles.push(user.role);
+              keyRoles = keyRoles.concat(user.subroles);
+              key.roles = keyRoles;
     
               key.save((err, data) => {
                 if (err) {
@@ -307,7 +324,7 @@ function authenticationModule(logger) {
    */
   function sanitizeUser(user) {
     return {
-      id: user._id,
+      _id: user._id,
       apikey: user.apikey,
       created: user.created,
       displayName: user.displayName,
@@ -315,7 +332,8 @@ function authenticationModule(logger) {
       firstName: user.firstName,
       lastName: user.lastName,
       profileImageURL: user.profileImageURL,
-      roles: user.roles,
+      role: user.role,
+      subroles: user.subroles,
       username: user.username
     }
   }

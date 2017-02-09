@@ -46,7 +46,6 @@ div.alert {
         background-color: darken(@angular-blue, 5%);
     }
     transition: background color 0.3s;
-
     span {
         color: #ffffff;
     }
@@ -58,11 +57,11 @@ div.alert {
 }
 
 .auth {
-
     a {
         display: inline-block;
     }
 }
+
 
 /***************** core stuff ***********************/
 
@@ -100,6 +99,8 @@ footer {
     text-transform: uppercase;
     color: @inactive-link-color;
     padding: 0 20px;
+    position: fixed;
+    bottom: 0;
 }
 
 footer a {
@@ -115,6 +116,12 @@ form h2 {
     padding-bottom: 10px;
     color: lighten(black, 20%);
     font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+form select.input-large
+{
+    width:100%;
+    border-radius:0px !important;
+    line-height:1.25;
 }
 
 
@@ -155,7 +162,6 @@ nav.bg-primary {
     &:active {
         border: 0px solid @angular-blue;
     }
-
     margin-bottom:0px;
     line-height:1.45rem;
 }

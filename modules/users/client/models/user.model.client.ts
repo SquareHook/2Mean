@@ -1,5 +1,5 @@
 export class User {
-  id: string = null;
+  _id: string = null;
   firstName: string = null;
   lastName: string = null;
   displayName: string = null;
@@ -7,5 +7,6 @@ export class User {
   username: string = null;
   password: string = null;
   profileImageURL: string = null;
-  roles: Array<string> = null;
+  subroles: Array<string> = null;
+  role:string = null;
 }

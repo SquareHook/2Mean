@@ -27,9 +27,36 @@
             <a routerLink="/signin" routerLinkActive="active">Signin</a>
             <a routerLink="/signup" routerLinkActive="active">SignUp</a>
         </div>
-        <div *ngIf="loggedIn" class="auth float-xs-right">
-            <a routerLink="/profile"> {{userdisplayName? user.displayName : user.username}} </a> |
-            <a routerLink="/signout">SignOut</a>
-        </div>
+        <ul *ngIf="loggedIn" class="nav auth float-xs-right">
+          <li class="nav-item">
+            <div ngbDropdown routerLinkActive="active">
+              <button class="btn btn-outline-primary" ngbDropdownToggle>
+              <!--TODO height/width inherit from navbar-->
+                <img height="23.5px" width="23.5px" alt="profile" class="rounded-circle" [src]="user.profileImageURL">
+              </button>
+              <div class="dropdown-menu">
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['edit'] }} ]">
+                  Edit
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-profile-picture'] }} ]">
+                  Change Picture
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-password'] }} ]">
+                  Change Password
+                </button>
+                <button class="dropdown-item" 
+                        [routerLink]="[ '/profile', { outlets: { 'profile': ['manage-social'] }} ]">
+                  Manage Social
+                </button>
+              </div>
+            </div>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/signout">SignOut</a>
+          </li>
+        </ul>
     </div>
 </nav>

@@ -25,6 +25,7 @@ import {
   Headers
 } from '@angular/http';
 
+
 import { Observable } from 'rxjs/Rx';
 
 /*
@@ -92,15 +93,15 @@ export class AuthService {
 
         this.user = new User();
         // Save the user information for use later.
-        this.user.id = body.user.id;
+        this.user._id = body.user._id;
         this.user.firstName = body.user.firstName;
         this.user.lastName = body.user.lastName;
         this.user.displayName = body.user.displayName;
         this.user.email = body.user.email;
         this.user.username = body.user.username;
         this.user.profileImageURL = body.user.profileImageURL;
-        this.user.roles = body.user.roles;
-
+        this.user.role = body.user.role;
+        this.user.subroles = body.user.subroles;
         this.saveUser();
         this.loggedIn = true;
 
@@ -159,17 +160,18 @@ export class AuthService {
     this.apikey = null;
     this.loggedIn = false;
     this.authChanged(false);
+    localStorage.setItem('user', JSON.stringify(null));
   }
 
 
   getUser(): User {
-
     return JSON.parse(localStorage.getItem('user'));
   }
 
   setUser(user : User) : void {
     this.user = user;
     this.saveUser();
+    this.authChanged(true);
   }
 
   // emit data to subscribers
