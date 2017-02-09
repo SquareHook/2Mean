@@ -70,7 +70,7 @@ var config = require(path.resolve('config/config'));
  */
 function userController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
-
+  const pageLimit = 25;
   /**
    * Registers a new user with bare minimum roles.
    *
@@ -180,13 +180,74 @@ function userController(logger) {
         .then((user) => {
           res.status(201).send(user);
         }, (error) => {
-          w
+
           logger.error('User Module Error: Reading User from Database', error);
           res.status(500).send('Error retrieving user information');
         });
     } else {
       return res.status(401).send('Unauthorized');
     }
+  }
+
+  /**
+  * Returns a list of users from the database sorted by
+  * username. Page should be supplied as a url parameter
+  *
+  * @param {Request} req   The Express request object.
+  * @param {Response} res  The Express response object.
+  * @param {Next} next     The Express next (middleware) function.
+  *
+  * @return {void}
+  */
+  function list(req, res)
+  {
+    let page = req.params.page || 1;
+    let search = req.params.search || "";
+    let skip = (page - 1) * pageLimit;
+    let queryObj;
+    if (search === "") {
+      queryObj = {};
+    }
+    else {
+      queryObj = {
+        'username': new RegExp(search, 'i')
+      };
+    }
+
+    var deferred = q.defer();
+ 
+    Users.find(queryObj, (err, users) => {
+      if (err) {
+        logger.error(err);
+        deferred.reject({
+          code: 500,
+          error: 'Internal Server Error'
+        });
+      }
+      else {
+        let sanitized = [];
+        for(let i in users)
+        {
+          sanitized.push(sanitizeUser(users[i]));
+        }
+        deferred.resolve({
+          code: 200,
+          data: sanitized
+        })
+      }
+    })
+      .sort('username')
+      .skip(skip)
+      .limit(pageLimit);
+
+
+    return deferred.promise
+      .then((data) => {
+        
+        res.status(data.code).send(data.data);
+      }, (error) => {
+        res.status(error.code).send(error.error);
+      });
   }
 
   /**
@@ -733,14 +794,27 @@ function userController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.roles, 'admin')) {
+    if (_.indexOf(user.role, 'admin')) {
       return true;
     }
 
     return false;
   }
 
-
+  function sanitizeUser(user) {
+    return {
+      _id: user._id,
+      created: user.created,
+      displayName: user.displayName,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      profileImageURL: user.profileImageURL,
+      role: user.role,
+      subroles: user.subroles,
+      username: user.username
+    }
+  }
   /*
    * Maps the post request representation of a user to a mongoose User model.
    *
@@ -818,7 +892,8 @@ function userController(logger) {
     changePassword        : changePassword,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
-    readList              : readList
+    readList              : readList,
+    list                  : list
   };
 }
 
