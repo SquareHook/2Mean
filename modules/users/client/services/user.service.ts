@@ -72,6 +72,7 @@ export class UserService {
       .map(this.extractData);
   }
 
+  //list for searching and pagination
   list(page: number, search: string) : Observable<Array<User>>
   {
     return this.http.get('api/users?page='+page)
@@ -97,6 +98,7 @@ export class UserService {
       .map(this.extractData);
   }
 
+  //returns a list of users given an array of user ids
   readList(userList: Array<string>) : Observable<User> {
     var csvList = userList.join(',');
 
