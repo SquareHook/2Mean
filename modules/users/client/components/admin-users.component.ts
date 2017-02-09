@@ -23,10 +23,9 @@ export class AdminUsersComponent implements OnInit {
    
     this.userService.list(1, "").subscribe( data =>
     {
-      this.users = JSON.stringify(data);
+      this.users = data;
     }, error =>{
       console.log(error);
     });
-    
   }
 }

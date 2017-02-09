@@ -11,4 +11,10 @@ import { User }             from '../models/user.model.client';
 })
 export class UsersComponent {
   constructor () { }
+
+
+  setUser(user: any)
+  {
+    console.log(user);
+  }
 }
