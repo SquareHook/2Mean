@@ -40,11 +40,13 @@ import {
   SettingsComponent
 } from './components/settings.component';
 import { AdminUsersComponent } from './components/admin-users.component';
+import { AdminUserModal} from './components/admin-user-form.component';
 
 /* Services */
 import { UserService }          from './services/user.service';
 import { AuthService }          from './../../auth/client/auth.service.client';
 import { AuthGuard }            from './services/auth-guard.service';
+import { RoleService}           from './../../roles/client/services/roles.service';
 
 /* Directives */
 import { StrongPasswordValidatorDirective } from './directives/strong-password.directive';
@@ -54,6 +56,7 @@ import { ValidEmailValidatorDirective } from './directives/valid-email.directive
 
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
+
 
 @NgModule({
   imports:      [
@@ -79,11 +82,13 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     AllowedTypesValidatorDirective,
     MaxSizeValidatorDirective,
     ValidEmailValidatorDirective,
-    AdminUsersComponent
+    AdminUsersComponent,
+    AdminUserModal
   ],
   providers: [ 
     { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },
-    AuthGuard
+    AuthGuard,
+    RoleService
   ],
   bootstrap:    [ UsersComponent ]
 })

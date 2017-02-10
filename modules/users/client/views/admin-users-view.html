@@ -2,7 +2,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card-group user-card-group card-wrapper">
-                <div class="card" *ngFor="let user of users" (click)="setUser(user)">
+                <div class="card" *ngFor="let user of users" (click)="displayUser(user)">
                     <img class="card-img-top" src="http://placehold.it/100x200" alt="{{user.firstName}}">
                     <div class="card-block">
                         <h4 class="card-title text-center">{{user.username}}</h4>
@@ -12,5 +12,11 @@
                 </div>
             </div>
         </div>
+        <template ngbModalContainer>
+        </template>
+        <admin-user-modal [userSubject]="userSubject">
+        </admin-user-modal>
+
+
     </div>
 </div>

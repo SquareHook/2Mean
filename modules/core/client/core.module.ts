@@ -21,7 +21,7 @@ import { AppRoutingModule }      from '../../app/client/app-routing.module';
   ],
   /*components available to other modules */
   exports: [CoreMenuComponent],
-  bootstrap:    [ CoreMenuComponent ]
+  bootstrap:    [ CoreMenuComponent]
 })
 
 export class CoreModule {
