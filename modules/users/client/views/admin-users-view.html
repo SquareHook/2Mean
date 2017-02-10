@@ -1,6 +1,16 @@
 <div class="container">
     <div class="row">
         <div class="col-md-12">
+            <form class="form-inline search-box">
+              <div class="form-group mx-sm-4">
+                <label for="username" class="sr-only">UserName</label>
+                <input text="password" class="form-control"  placeholder="user321">
+                    <div class="input-group-addon">
+                        <span class="icon fa-search search-button"></span>
+                    </div>
+              </div>
+                
+            </form>
             <div class="card-group user-card-group card-wrapper">
                 <div class="card" *ngFor="let user of users" (click)="setUser(user)">
                     <img class="card-img-top" src="http://placehold.it/100x200" alt="{{user.firstName}}">
