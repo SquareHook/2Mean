@@ -22,13 +22,14 @@ export class AdminUserModal {
 
   ngOnInit()
   {
-    this.roleService.getRoles().subscribe(roles =>
+    this.roleService.getRoles().subscribe(data =>
     {
-      this.roles = roles;
+      this.roles = data;
     });
+    
+    //open modal and set member vars when user subject emits a user
     this.userSubject.subscribe(data =>{
      this.user = data;
-     console.log(data);
      this.open(this.content);
     });
   }
@@ -45,7 +46,15 @@ export class AdminUserModal {
 
   updateSubroles()
   {
-    //TODO
+    alert("HERE");
+    this.roleService.getSubroles(this.user.role).subscribe(data =>
+    {
+      this.user.subroles = [];
+      for(let i = 0; i < data.length; i++)
+      {
+        this.user.subroles.push(data[i]._id);
+      }
+    });
   }
   private getDismissReason(reason: any): string {
     if (reason === ModalDismissReasons.ESC) {

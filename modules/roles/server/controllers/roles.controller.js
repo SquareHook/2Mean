@@ -23,17 +23,20 @@ var Promise = q.promise;
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule)
 {
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
-  var adminCount = Roles.count({_id: 'admin', parent: null}).exec()
+  var adminCount = Roles.count({_id: ADMIN_ROLE_NAME, parent: null}).exec()
   .then(count => {
     if (count < 1)
     {
       let adminRole = new Roles();
-      adminRole._id = 'admin';
+      adminRole._id = ADMIN_ROLE_NAME;
       adminRole.parent = null;
-      adminRole.subrles = ['user'];
+      adminRole.canModify = false;
+      adminRole.subroles = [DEFAULT_ROLE_NAME];
       adminRole.save()
       .then(data => {
         logger.info('created admin role');
@@ -49,28 +52,29 @@ function roleModule(logger, userModule)
     logger.log('crit', 'Unable to determine if an admin role is present');
   });
     
-  // check to make sure there exists an user role 
+  // check to make sure there exists a default role
   //if one doesn't exist, create it.
-  var userCount = Roles.count({_id: 'user', parent: 'admin'}).exec()
+  var userCount = Roles.count({_id: DEFAULT_ROLE_NAME, parent: ADMIN_ROLE_NAME}).exec()
   .then(count => {
     if (count < 1)
     {
       let userRole = new Roles();
-      userRole._id = 'user';
-      userRole.parent = 'admin';
+      userRole._id = DEFAULT_ROLE_NAME;
+      userRole.parent = ADMIN_ROLE_NAME;
+      userRole.parent.canModify = false;
       userRole.save()
       .then(data => {
-        logger.info('created user role');
+        logger.info('created default role');
       })
       .catch(err =>
       {
-        logger.log('crit',"Failed to create default user role");
+        logger.log('crit',"Failed to create default default user role");
       });
     }
   })
   .catch(err =>
   {
-    logger.log('crit', 'Unable to determine if a user role is present');
+    logger.log('crit', 'Unable to determine if a default role is present');
   });
     
 
@@ -159,8 +163,71 @@ function roleModule(logger, userModule)
       {
         sendServerError(res, error, 400);
       } 
-      sendServerError(res, error);
+      else
+      {
+        sendServerError(res, error);
+      }
     })
+  }
+  
+  /**
+   * Updates the role that a user is in.
+   * Validates, determines subroles, and requests
+   * and provides role data to the userModule for
+   * the update
+   */
+  function updateUserRole (req, res)
+  {
+    let targetRole = req.body.roleId;
+    let userId = req.body.userId;
+    if(! (targetRole && userRole))
+    {
+      sendServerError(res,'Error in updateUserRole. Must supply roleId and userId', 400);
+      return;
+    }
+
+    return new Promise(resolve, reject)
+    .then(() =>
+    {
+      //make sure role exists
+      Roles.count({_id: targetRole}).exec()
+      .then(count =>
+      {
+        if(count < 1)
+        {
+          reject('role does not exist');
+        }
+        else
+        {
+          getAllRoles()
+          .then(data =>
+          {
+            resolve(data);
+          })
+          .catch(error =>
+          {
+            logger.error(error);
+            //sends exception to outer catch
+            reject('internal server error');
+          });
+        }
+      })
+    })
+    .then(allRoles =>
+    {
+      return getRolesByParent(targetRole, allRoles)
+    })
+    .then(subroles =>
+    {
+      //TODO: make flushSubroles return a promise
+      userModule.flushSubroles(targetRole, subroles);
+      res.status(201).send({success: true, message:'updated user roles'});
+    })
+    .catch(error)
+    {
+      sendServerError(res, error);
+    }
+
   }
 
   function updateDirectDescendants(role)
@@ -201,7 +268,6 @@ function roleModule(logger, userModule)
   {
     return new Promise((resolve, reject) =>
     {
-
       //update the parent roles' subroles
       let parent = _.find(data, '_id', role.parent);
       while (parent)
@@ -250,9 +316,7 @@ function roleModule(logger, userModule)
         }
         else
         {
-          _.forEach(data, function(role){
-            list.push(role._id);
-          });
+          list = getRolesByParent(ADMIN_ROLE_NAME, data, []);
         }
         res.status(200).send(list);
       })
@@ -429,7 +493,7 @@ function roleModule(logger, userModule)
    */
   function getRoleTree(req, res, next)
   {
-    rootRole = req.params.id ? req.params.id : 'admin';
+    rootRole = req.params.id? req.params.id: ADMIN_ROLE_NAME;
     getAllRoles()
     .then((data) =>
     {
@@ -442,6 +506,26 @@ function roleModule(logger, userModule)
     });
   }
 
+  /**
+   * Returns a list of all Roles
+   * 
+   * @param req {The HTTP request object}
+   * @param res {The HTTP result object}
+   * @returns roles {A list of all roles}
+   * 
+   */
+  function listAllRoles(req, res)
+  {
+    return getAllRoles()
+    .then(roles =>{
+      res.status(200).send(roles);
+    })
+    .catch(error =>
+    {
+      logger.error(error);
+      sendServerError(res, "Internal Server Error");
+    });
+  }
 
   /*
    * Returns a formatted role tree object starting from the target
@@ -504,10 +588,12 @@ function roleModule(logger, userModule)
 
   return {
     create: addRole,
+    list: listAllRoles,
     update: updateRole,
     delete: removeRole,
     subroles: getSubroles,
-    tree: getRoleTree
+    tree: getRoleTree,
+    updateUserRole: updateUserRole
   }
 }
 

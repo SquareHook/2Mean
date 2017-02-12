@@ -34,7 +34,7 @@
         <label for="user.role">Role</label>
           <select name="user.role" [(ngModel)]="user.role" class="form-control" (ngChange)="updateSubroles">
             <option *ngFor="let role of roles;" [value]="user.role" selected="user.role==role">
-                {{role}}
+                {{role._id}}
             </option>
         </select>
         <span class="form-control">

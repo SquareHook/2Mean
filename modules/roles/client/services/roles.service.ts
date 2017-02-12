@@ -28,11 +28,16 @@ export class RoleService{
   getRoles(): Observable<any>
   {
     return this.http
-      .get('api/roles/subroles')
+      .get('api/roles')
       .map((r: Response) => r.json());
   }
 
-  
+  getSubroles(parentRole: String): Observable<Array<any>>
+  {
+    return this.http
+      .get('api/roles/subroles/' + parentRole)
+      .map((r:Response) => r.json());
+  }
   getTree(): Observable<any>
   {
     return this.http
