@@ -90,7 +90,7 @@ function routeLoader(logger, modLoader, app) {
     var methodSegments = methodName.split('.');
 
     if (!mod[methodSegments[0]]) {
-      logger.crit('ERROR: Server Module defined a route that uses a undefined method.', methodName);
+      logger.error('ERROR: Server Module defined a route that uses a undefined method.', methodName);
 
       throw 'Specified Function does not exists: ' + methodName
     }
