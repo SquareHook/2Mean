@@ -99,7 +99,7 @@ function routeLoader(logger, modLoader, app) {
       return mod[methodName];
     }
 
-    return findTargetFunction(_.join(methodSegments, '.'),  mod[methodSegments[0]]);
+    return findTargetFunction(_.join(methodSegments.slice(1), '.'),  mod[methodSegments[0]]);
   }
 
   return {
