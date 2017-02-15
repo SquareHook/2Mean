@@ -1,3 +1,5 @@
+var _ = require('lodash');
+
 function routeLoader(logger, modLoader, app) {
   var routes = [];
 
