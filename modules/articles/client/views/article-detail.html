@@ -1,0 +1,39 @@
+<div *ngIf="article && detailView" class="list-group">
+    <div class="d-flex w-100 justify-content-between ">
+        <h5 class="mb-1 ">{{article.title}}</h5>
+    </div>
+    <p class="mb-1 ">{{article.content}}</p>
+    <small>By <strong>{{article.userName}}</strong> on {{article.created | date}}</small>
+</div>
+<div *ngIf="!article && detailView && !loading">
+    <div class="alert alert-danger" role="alert">
+        Whoops! no article found.
+    </div>
+</div>
+<div *ngIf="!detailView" class="row">
+    <h3 class="text-center">{{isEdit? "Edit" : "New" }} Article </h3>
+    <form (ngSubmit)="submit()">
+        <div class="form-group">
+            <label for="title">Title</label>
+            <input type="text" class="form-control" id="title" name="title" required [(ngModel)]="article.title" />
+        </div>
+        <div class="form-group">
+            <label for="content">Content</label>
+            <input type="text" class="form-control" id="content" name="content" required [(ngModel)]="article.content" />
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="col-xs-6">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+                <div class="col-xs-6" *ngIf="isEdit">
+                    <button type="button" class="btn btn-danger btn-right" (click)="deleteArticle(article.id)">Delete </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+<hr/>
+<div class="pg-bottom">
+    <button class="btn btn-default" routerLink="/articles">All Articles</button>
+</div>

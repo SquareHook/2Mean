@@ -8,11 +8,12 @@
         "suppressImplicitAnyIndexErrors": true,
         "removeComments": false,
         "sourceMap": true,
-        "target": "es6"
+        "target": "es5"
     },
     "exclude": [
         "node_modules",
         "typings/main",
-        "typings/main.d.ts"
+        "typings/main.d.ts",
+        "**/*.spec.ts"
     ]
 }

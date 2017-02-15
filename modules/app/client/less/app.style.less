@@ -1,0 +1,167 @@
+@import "~bootstrap/dist/css/bootstrap.css";
+@import "../css/themespiders.css";
+
+/******************  colors ***************************/
+
+@inactive-link-color: rgba(255, 255, 255, 0.75);
+@active-link-color: rgba(255, 255, 255, 1);
+@angular-blue: rgba(25, 118, 210, 1);
+@angular-red: rgba(221, 0, 49, 1);
+@background-midnight: #263238;
+
+/******************  boostrap fixes ******************/
+
+div.alert {
+    border-radius: 0px;
+    text-align: center;
+}
+
+.navbar {
+    padding: 0 20px;
+    padding-left: 0px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.24);
+}
+
+.navbar-nav {
+    flex-grow: 1;
+}
+
+.navbar-nav .nav-item + .nav-item {
+    margin: 0 0;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: @inactive-link-color;
+}
+
+.navbar-brand {
+    padding-top: 0.62rem;
+    padding-left: 0.7rem;
+    padding-right: 0.7rem;
+    margin: 0;
+    font-size: 1.8em;
+    &:hover,
+    &:focus,
+    &:active {
+        background-color: darken(@angular-blue, 5%);
+    }
+    transition: background color 0.3s;
+    span {
+        color: #ffffff;
+    }
+}
+
+.btn,
+.form-control {
+    border-radius: 0px;
+}
+
+.auth {
+    a {
+        display: inline-block;
+    }
+}
+
+
+/***************** core stuff ***********************/
+
+too-mean {
+    min-height: 100vh;
+    width: 100%;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-end;
+}
+
+too-mean > .container {
+    margin-top: 100px;
+    margin-bottom: 100px;
+    flex-grow: 1;
+}
+
+.pg-bottom {
+    margin-top: 100px;
+}
+
+.btn-right {
+    float: right;
+}
+
+
+/**************** footer *************************/
+
+footer {
+    flex: 0 0 auto;
+    width: 100%;
+    height: 60px;
+    line-height: 60px;
+    background-color: @background-midnight;
+    text-transform: uppercase;
+    color: @inactive-link-color;
+    padding: 0 20px;
+    position: fixed;
+    bottom: 0;
+}
+
+footer a {
+    color: @active-link-color;
+}
+
+
+/**************** forms ***************************/
+
+form h1,
+form h2 {
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 10px;
+    color: lighten(black, 20%);
+    font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+form select.input-large
+{
+    width:100%;
+    border-radius:0px !important;
+    line-height:1.25;
+}
+
+
+/***************** navigation *********************/
+
+.auth a {
+    color: @inactive-link-color;
+    text-decoration: none;
+    display: inline-block;
+}
+
+nav.bg-primary {
+    background: @angular-blue !important;
+}
+
+.navbar-nav .nav-link,
+.navbar-dark .navbar-nav .nav-link,
+.navbar .nav-item .btn,
+.auth a {
+    padding: 1rem 0.5rem;
+    text-transform: uppercase;
+    font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+    font-size: 16px;
+    letter-spacing: 0.16px;
+    margin: 0;
+    min-width: auto;
+    &:hover,
+    &:focus,
+    &:active {
+        background-color: darken(@angular-blue, 5%);
+    }
+}
+
+.navbar .nav-item .btn {
+    color: @inactive-link-color;
+    &:hover,
+    &:focus,
+    &:active {
+        border: 0px solid @angular-blue;
+    }
+    margin-bottom:0px;
+    line-height:1.45rem;
+}
