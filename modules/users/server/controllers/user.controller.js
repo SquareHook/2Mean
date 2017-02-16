@@ -71,6 +71,8 @@ var config = require(path.resolve('config/config'));
 function userController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
   /**
    * Registers a new user with bare minimum roles.
    *
@@ -312,9 +314,11 @@ function userController(logger) {
    */
   function update(req, res, next) {
     var user = req.user;
+    console.log(req);
+    console.log(req.params);
 
     var existingUser = mapUser(req.body);
-
+    
     var deferred = q.defer();
 
     // validate the body.
@@ -427,6 +431,31 @@ function userController(logger) {
       });
     }
   }
+
+  /**
+   * Handles user updates sent by an admin user
+   */
+   function adminUpdate(req, res)
+   {
+    if(!isAuthorized(req.user))
+    {
+      res.status(401).send({success: false, message: "Unauthorized"});
+      return;
+    }
+    let user = req.body;
+    let updateDef = {
+      $set: {
+         firstName: user.firstName,
+         lastName: user.lastName,
+         updated: new Date()
+       }
+    };
+    Users.update({_id: req.body._id}, updateDef, (err, data) =>
+    {
+
+    });
+  
+   }
 
   /*
    * sets a users subroles 
@@ -739,6 +768,8 @@ function userController(logger) {
       });
   }
 
+
+
   // --------------------------- Private Function Definitions ----------------------------
 
   /**
@@ -794,7 +825,7 @@ function userController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
+    if (_.indexOf(user.role, ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -885,6 +916,7 @@ function userController(logger) {
     read                  : read,
     create                : create,
     update                : update,
+    adminUpdate           :adminUpdate,
     deleteUser            : deleteUser,
     register              : register,
     changeProfilePicture  : changeProfilePicture,

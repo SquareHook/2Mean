@@ -7,7 +7,7 @@
   </div>
   <div class="modal-body">
 
-    <form>
+    <form (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="user.username">Username</label>
         <input type="text" class="form-control" disabled [(ngModel)]="user.username"  name="user.username"
@@ -32,8 +32,8 @@
       </div>
       <div class="form-group">
         <label for="user.role">Role</label>
-          <select name="user.role" [(ngModel)]="user.role" class="form-control" (ngChange)="updateSubroles">
-            <option *ngFor="let role of roles;" [value]="user.role" selected="user.role==role">
+          <select name="user.role" [(ngModel)]="user.role" class="form-control" (change)="updateSubroles($event)">
+            <option *ngFor="let role of roles;" selected="user.role==role._id">
                 {{role._id}}
             </option>
         </select>

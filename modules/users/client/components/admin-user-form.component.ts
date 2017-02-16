@@ -1,8 +1,11 @@
-import {Component, Input, ElementRef, ViewChild} from '@angular/core';
+import {Component, Input, ElementRef, ViewChild, } from '@angular/core';
+import {FormsModule} from '@angular/forms';
 
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs/Subject';
-import { RoleService}           from '.././../../roles/client/services/roles.service';
+import { RoleService}           from '../../../roles/client/services/roles.service';
+import { UserService} from '../../../users/client/services/user.service';
+import { User} from '../../../users/client/models/user.model.client';
 @Component({
   selector: 'admin-user-modal',
   templateUrl: './../views/admin-user-form.view.html'
@@ -12,11 +15,15 @@ export class AdminUserModal {
   display: boolean;
   @Input()
   userSubject:Subject<any>;
-  private user: any;
+  private user: User;
   roles: Array<any>
   @ViewChild('content') content: ElementRef
 
-  constructor(private modalService: NgbModal, private elRef: ElementRef, private roleService: RoleService) {
+  constructor(private modalService: NgbModal, 
+    private elRef: ElementRef, 
+    private roleService: RoleService,
+    private userService: UserService)
+  {
     this.elRef = elRef;
   }
 
@@ -44,16 +51,20 @@ export class AdminUserModal {
     });
   }
 
-  updateSubroles()
+  updateSubroles($event: any)
   {
-    alert("HERE");
     this.roleService.getSubroles(this.user.role).subscribe(data =>
     {
-      this.user.subroles = [];
-      for(let i = 0; i < data.length; i++)
-      {
-        this.user.subroles.push(data[i]._id);
-      }
+      this.user.subroles = data;
+    });
+  }
+
+  onSubmit()
+  {
+    alert("OK");
+    this.userService.adminUpdate(this.user).subscribe(data =>
+    {
+      console.log(data);
     });
   }
   private getDismissReason(reason: any): string {
