@@ -16,3 +16,6 @@ RUN npm run gen-cert --unsafe-perm
 
 EXPOSE 3080 3443
 CMD ["npm", "start"]
+# fix stdin is not a tty error
+RUN grep -v "mesg n" ~/.profile > /tmp/.profile; \
+    cat /tmp/.profile > ~/.profile

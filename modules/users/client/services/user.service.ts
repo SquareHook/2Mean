@@ -107,9 +107,15 @@ export class UserService {
   readList(userList: Array<string>) : Observable<User> {
     var csvList = userList.join(',');
 
-    var userFeed = Observable.create(
+    var userFeed;
+
+    if (userList.length < 1) {
+      return Observable.from([]);
+    }
+
+    userFeed = Observable.create(
       (observer: Observer<User>) => {
-        this.http.get('api/users/list'+csvList)
+        this.http.get('api/users/list/'+csvList)
           .subscribe((data) => {
             let responseArray = data.json();
 

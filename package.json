@@ -1,6 +1,6 @@
 {
   "name": "toomean",
-  "version": "0.2.1",
+  "version": "0.9.0",
   "description": "Angular 2, Nodejs, Express and Mongo stack",
   "main": "server.js",
   "repository": {
@@ -10,11 +10,11 @@
   "scripts": {
     "test": "karma start config/karma.conf.js",
     "build": "webpack --config ./config/webpack/webpack.common.js --watch",
-    "server": "if [[ ${NODE_DEBUG} == \"true\" ]]; then npm run server:debug; else npm run server:dev; fi",
+    "server": "if $NODE_DEBUG; then npm run server:debug; else npm run server:dev; fi",
     "server:dev": "node-dev ./server.js",
     "server:debug": "node-dev --inspect ./server.js",
     "watch-menus": "watch \"node watch-menus.js modules/**/client/config/menu.json > modules/core/client/config/menus.json\"",
-    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue,red\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menus\"",
+    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue,red\" \"npm run build\" \"npm run server\" \"npm run watch-menus\"",
     "postinstall": "if [ ! -e ./config/private/cacert.pem ]; then npm run gen-cert; else echo \"TLS files already exist\"; fi",
     "gen-cert": "./init-ssl.sh",
     "lint:ts": "tslint -c ./config/tslint.json ./modules/*/client/*.ts ./modules/*/client/**/*.ts"
@@ -58,6 +58,7 @@
     "json-merge-loader": "^1.1.0",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
+    "lodash": "^4.17.4",
     "md5": "^2.2.1",
     "mongoose": "^4.7.4",
     "multer": "^1.2.1",
@@ -111,5 +112,6 @@
     "typings": "^2.1.0",
     "webpack": "^1.14.0",
     "webpack-dev-server": "^1.16.2"
-  }
+  },
+  "engine": "node >= 7.5.0"
 }

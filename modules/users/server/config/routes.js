@@ -2,7 +2,7 @@ module.exports = [
   {
     route: '/users/list/:userList',
     type: 'GET',
-    method: 'read',
+    method: 'readList',
     secure: true
   },
   {
