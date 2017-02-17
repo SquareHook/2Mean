@@ -81,8 +81,10 @@
     "zone.js": "^0.7.4"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.34",
     "@types/core-js": "^0.9.35",
     "@types/jasmine": "^2.5.40",
+    "@types/sinon": "^1.16.35",
     "awesome-typescript-loader": "^3.0.0-beta.17",
     "html-webpack-plugin": "^2.24.1",
     "istanbul": "^0.4.5",

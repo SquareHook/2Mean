@@ -33,8 +33,15 @@ export class SigninComponent implements OnInit {
       // server has returned data
       if (data) {
         // is there a return url
-        let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
-        this.router.navigateByUrl(redirect);
+        // honor query param first then authService
+        this.activatedRoute.queryParams.subscribe((params) => {
+          if (params['fredirect']) {
+            //this.router.navigateByUrl(params['redirect']);
+          } else {
+            let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
+            this.router.navigateByUrl(redirect);
+          }
+        });
       }
 
       // server has returned error
