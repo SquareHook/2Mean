@@ -10,6 +10,7 @@ import {
 } from '@angular/http';
 import { ActivatedRoute, Router, NavigationExtras } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
+import { NotificationsService } from 'angular2-notifications';
 
 import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
@@ -21,7 +22,7 @@ export class AuthHttpService extends Http {
     backend: ConnectionBackend,
     options: RequestOptions,
     private router: Router,
-    route: ActivatedRoute
+    private notificationsService: NotificationsService
   ) {
     super(backend, options);
   }
@@ -33,17 +34,21 @@ export class AuthHttpService extends Http {
       return res;
     }, (res: Response) => {
       console.log(res);
-      if (res.status === 400 && res._body=== 'Not Authorized') {
+      if (res.status === 401) {
         let navigationExtras: NavigationExtras = {
-          queryParams: { 'redirect': res.url }
+          queryParams: {
+            'redirect': this.router.url,
+            'reauthenticate': true
+          }
         };
-
+        
+        this.notificationsService.alert('Unauthenticated', 'You need to log back in');
         this.router.navigate([ '/signin' ], navigationExtras);
       }
 
       return res;
     });
-
+    
     return req;
   }
 }

@@ -2,6 +2,7 @@
 import { Component, OnInit }from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router, ActivatedRoute }           from '@angular/router';
+
 /*  Angular2 Models */
 import { User }             from './../models/user.model.client';
 
@@ -35,8 +36,8 @@ export class SigninComponent implements OnInit {
         // is there a return url
         // honor query param first then authService
         this.activatedRoute.queryParams.subscribe((params) => {
-          if (params['fredirect']) {
-            //this.router.navigateByUrl(params['redirect']);
+          if (params['redirect']) {
+            this.router.navigateByUrl(params['redirect']);
           } else {
             let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
             this.router.navigateByUrl(redirect);
