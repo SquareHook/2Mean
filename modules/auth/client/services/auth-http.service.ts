@@ -31,7 +31,6 @@ export class AuthHttpService extends Http {
     let req = super.request(url, options).do((res: Response) => {
       return res;
     }, (res: Response) => {
-      console.log(res);
       if (res.status === 401) {
         let navigationExtras: NavigationExtras = {
           queryParams: {
