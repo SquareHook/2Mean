@@ -56,8 +56,7 @@ var UserSchema = new Schema({
     }
   },
   profileImageURL: {
-    type: String,
-    default: 'modules/users/client/img/profile/default.png'
+    type: String
   },
   providerData: {},
   additionalProvidersData: {},
