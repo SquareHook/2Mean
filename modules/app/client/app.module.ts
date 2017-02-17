@@ -3,7 +3,7 @@ import { BrowserModule }         from '@angular/platform-browser';
 import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 
-import { RouterModule, Routes }  from '@angular/router';
+import { RouterModule, Routes, Router }  from '@angular/router';
 
 import { AppComponent }          from './app.component';
 import { PageNotFoundComponent } from './components/not-found.component';
@@ -22,7 +22,10 @@ import { ArticleModule }        from '../../articles/client/articles.module';
 import { AppRoutingModule }      from './app-routing.module';
 import { RoleModule } from '../../roles/client/roles.module';
  
-  
+import { Http, XHRBackend, BaseRequestOptions } from '@angular/http';
+import { AuthHttpService } from './../../auth/client/services/auth-http.service';
+import { ActivatedRoute } from '@angular/router';
+
 @NgModule({
   imports:      [
     BrowserModule,
@@ -34,10 +37,22 @@ import { RoleModule } from '../../roles/client/roles.module';
     ArticleModule,
     AppRoutingModule,
     RoleModule,
-    SimpleNotificationsModule,
+    SimpleNotificationsModule.forRoot(),
     PushNotificationsModule
   ],
-  providers: [ UserService, AuthService, RoleService, NotificationsService],
+  providers: [
+    UserService,
+    AuthService,
+    RoleService,
+    NotificationsService,
+    XHRBackend,
+    BaseRequestOptions,
+    {
+      provide: Http,
+      useFactory: (backend: XHRBackend, options: BaseRequestOptions, router: Router, notificationsService: NotificationsService) => new AuthHttpService(backend, options, router, notificationsService),
+      deps: [ XHRBackend, BaseRequestOptions, Router, NotificationsService ]
+    }
+  ],
   declarations: [
     AppComponent,
     PageNotFoundComponent

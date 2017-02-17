@@ -69,7 +69,7 @@ describe('SigninComponent', () => {
     displayName: 'Squarehook',
     email: 'support@squarehook.com',
     firstName: 'Admin',
-    id: '5866b8c0f5b5613933d30a21',
+    _id: '5866b8c0f5b5613933d30a21',
     lastName: 'User',
     password: 'null',
     profileImageURL: 'modules/users/client/img/profile/default.png',
