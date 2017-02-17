@@ -56,7 +56,7 @@ module.exports = [
   {
     route: '/users/changePassword',
     type: 'PUT',
-    method: 'auth,changePassword',
+    method: 'auth.changePassword',
     secure: true
   }
 ];
