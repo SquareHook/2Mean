@@ -27,6 +27,12 @@ export class AuthHttpService extends Http {
     super(backend, options);
   }
 
+
+  /* Override http#request
+   *  pass good requests through
+   *  catch error requests and check for 401 code
+   *   handle by redirecting to login
+   */
   request (url: string|Request, options?: RequestOptionsArgs) : Observable<Response> {
     let req = super.request(url, options).do((res: Response) => {
       return res;
