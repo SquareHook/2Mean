@@ -29,8 +29,6 @@ export class AuthHttpService extends Http {
 
   request (url: string|Request, options?: RequestOptionsArgs) : Observable<Response> {
     let req = super.request(url, options).do((res: Response) => {
-      console.log(res);
-
       return res;
     }, (res: Response) => {
       console.log(res);
