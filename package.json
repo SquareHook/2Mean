@@ -1,6 +1,6 @@
 {
   "name": "toomean",
-  "version": "0.2.1",
+  "version": "0.9.0",
   "description": "Angular 2, Nodejs, Express and Mongo stack",
   "main": "server.js",
   "repository": {
@@ -58,6 +58,7 @@
     "json-merge-loader": "^1.1.0",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
+    "lodash": "^4.17.4",
     "md5": "^2.2.1",
     "mongoose": "^4.7.4",
     "multer": "^1.2.1",
@@ -113,5 +114,6 @@
     "typings": "^2.1.0",
     "webpack": "^1.14.0",
     "webpack-dev-server": "^1.16.2"
-  }
+  },
+  "engine": "node >= 7.5.0"
 }

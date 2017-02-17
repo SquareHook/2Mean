@@ -22,6 +22,7 @@ export class AppComponent {
   	private notificationService : NotificationsService) {
    }
   name = 'Too Mean';
+  
   public notificationOptions = {
     position: ["bottom", "right"],
     timeOut: 5000,

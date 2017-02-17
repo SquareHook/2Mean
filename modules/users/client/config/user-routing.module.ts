@@ -35,7 +35,7 @@ import {
 import {
   SettingsComponent
 } from './../components/settings.component';
-
+import { AdminUsersComponent } from './../components/admin-users.component';
 /* this defines the global users routes */
 const usersRoutes: Routes = [
   // Authentication
@@ -50,6 +50,11 @@ const usersRoutes: Routes = [
   {
     path: 'signout',
     component: SignoutComponent
+  },
+  //Admin manage users
+  {
+    path: 'users/manage',
+    component: AdminUsersComponent
   },
   // User profile
   { 
