@@ -16,7 +16,7 @@ import { User }             from './../models/user.model.client';
 /*  Angular2 Services */
 import { AuthService }      from './../../../auth/client/auth.service.client';
 import { UserService }      from '../services/user.service';
-import { AdminUserModal }   from './admin-user-modal.component';
+import { AdminUserForm }   from './admin-user-form.component';
 
 
 

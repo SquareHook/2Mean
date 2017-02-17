@@ -139,7 +139,6 @@ function roleModule(logger, userModule)
           resolve(true);
         });
       }
-      
     })
     .then(ok =>
     {
@@ -176,57 +175,44 @@ function roleModule(logger, userModule)
    * and provides role data to the userModule for
    * the update
    */
-  function updateUserRole (req, res)
-  {
+  function updateUserRole(req, res) {
     let targetRole = req.body.roleId;
     let userId = req.body.userId;
-    if(! (targetRole && userRole))
-    {
-      sendServerError(res,'Error in updateUserRole. Must supply roleId and userId', 400);
+
+    if (!(targetRole && userId)) {
+      sendServerError(res, 'Error in updateUserRole. Must supply roleId and userId', 400);
       return;
     }
-
-    return new Promise(resolve, reject)
-    .then(() =>
-    {
-      //make sure role exists
-      Roles.count({_id: targetRole}).exec()
-      .then(count =>
-      {
-        if(count < 1)
-        {
-          reject('role does not exist');
+    //make sure role exists
+    Roles.count({ _id: targetRole }).exec()
+      .then(count => {
+        if (count < 1) {
+          return new Promise((resolve, reject) => {
+            reject("parent not found");
+          });
         }
-        else
-        {
-          getAllRoles()
-          .then(data =>
-          {
-            resolve(data);
-          })
-          .catch(error =>
-          {
-            logger.error(error);
-            //sends exception to outer catch
-            reject('internal server error');
+        else {
+          return new Promise((resolve, reject) => {
+            resolve(true);
           });
         }
       })
-    })
-    .then(allRoles =>
-    {
-      return getRolesByParent(targetRole, allRoles)
-    })
-    .then(subroles =>
-    {
-      //TODO: make flushSubroles return a promise
-      userModule.flushSubroles(targetRole, subroles);
-      res.status(201).send({success: true, message:'updated user roles'});
-    })
-    .catch(error)
-    {
-      sendServerError(res, error);
-    }
+      .then(ok => {
+        return getAllRoles();
+      })
+      .then(allRoles => {
+        return getRolesByParent(targetRole, allRoles, []);
+      })
+      .then(subroles => {
+        console.log(subroles);
+        //TODO: make flushSubroles return a promise
+        userModule.flushSubroles(targetRole, subroles);
+        res.status(201).send({ success: true, message: 'updated user roles' });
+      })
+      .catch(error => {
+        sendServerError(res, error);
+      });
+
 
   }
 
@@ -250,7 +236,6 @@ function roleModule(logger, userModule)
    */
   function updateParentForRole(roleName, roleParentName)
   {
-
     return Roles.update(
     {
       _id: roleName

@@ -87,6 +87,7 @@ export class UserService {
     return this.http.put('api/users', updatedUser)
       .map(this.extractData);
   }
+  
   //used to update user fields by admin users
   adminUpdate(updatedUser: User) :Observable<User>{
     return this.http.put('api/users/adminUpdate', updatedUser)

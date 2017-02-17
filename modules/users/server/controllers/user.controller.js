@@ -436,27 +436,47 @@ function userController(logger) {
 
   /**
    * Handles user updates sent by an admin user
+   * @param {Request} req   The Express request object
+   * @param {Response} res  The Express response object
    */
-   function adminUpdate(req, res)
-   {
-    if(!isAuthorized(req.user))
-    {
-      res.status(401).send({success: false, message: "Unauthorized"});
+  function adminUpdate(req, res) {
+    if (!isAuthorized(req.user)) {
+      res.status(401).send({ success: false, message: "Unauthorized" });
       return;
     }
+    let deferred = q.defer();
     let user = req.body;
+    //note that this doesn't affect user roles
     let updateDef = {
       $set: {
-         firstName: user.firstName,
-         lastName: user.lastName,
-         updated: new Date()
-       }
+        firstName: user.firstName,
+        lastName: user.lastName,
+        updated: new Date()
+      }
     };
-    Users.update({_id: req.body._id}, updateDef, (err, data) =>
-    {
-
+    //send update to mongo
+    Users.update({ _id: req.body._id }, updateDef, (err, data) => {
+      if (err) {
+        logger.error('Error updating user', err);
+        deferred.reject({
+          code: 500,
+          error: 'Internal Server Error'
+        });
+      }
+      else {
+        deferred.resolve({
+          code: 200,
+          data: data
+        });
+      }
     });
-  
+
+    return deferred.promise
+     .then((data) => {
+       res.status(data.code).send(data.data);
+      }, (error) => {
+       res.status(error.code).send(error.error);
+      });
    }
 
   /*

@@ -57,6 +57,12 @@ export class RoleService{
       });
   }
 
+ updateUserRole(data: any): Observable<any>
+ {
+   return this.http
+    .put('api/roles/updateUserRole', data)
+    .map((r: Response) => r.json());
+ }
   removeRole(id: string): Observable<Role> {
     return this.http.delete('api/roles/' + id)
         .map((r: Response) => {

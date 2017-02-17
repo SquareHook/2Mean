@@ -40,7 +40,7 @@ import {
   SettingsComponent
 } from './components/settings.component';
 import { AdminUsersComponent } from './components/admin-users.component';
-import { AdminUserModal} from './components/admin-user-form.component';
+import { AdminUserForm} from './components/admin-user-form.component';
 
 /* Services */
 import { UserService }          from './services/user.service';
@@ -83,7 +83,7 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     MaxSizeValidatorDirective,
     ValidEmailValidatorDirective,
     AdminUsersComponent,
-    AdminUserModal
+    AdminUserForm
   ],
   providers: [ 
     { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },
