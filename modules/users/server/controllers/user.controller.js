@@ -92,7 +92,7 @@ function userController(logger) {
     var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
 
     let newUser = mapUser(body);
-    newUser.profileImageURL = this.generateProfileImageURL(newUser.email);
+    newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = 'user';
@@ -273,7 +273,7 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
-      newUser.profileImageURL = this.generateProfileImageURL(newUser.email);
+      newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
       newUser.save((err, data) => {
         if (err) {
@@ -885,9 +885,9 @@ function userController(logger) {
     return strengthRe.test(password);
   }
   
-  function generateProfileImageUrl(email) {
+  function generateProfileImageURL(email) {
     let hash = md5(email.toLowerCase());
-    newUser.profileImageURL = 'https://gravatar.com/avatar/' + hash + '?d=identicon';
+    return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
   // --------------------------- Revealing Module Section ----------------------------
