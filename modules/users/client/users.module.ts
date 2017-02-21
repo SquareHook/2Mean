@@ -45,7 +45,7 @@ import { AdminUserForm} from './components/admin-user-form.component';
 
 /* Services */
 import { UserService }          from './services/user.service';
-import { AuthService }          from './../../auth/client/auth.service.client';
+import { AuthService }          from './../../auth/client/services/auth.service';
 import { AuthGuard }            from './services/auth-guard.service';
 import { RoleService}           from './../../roles/client/services/roles.service';
 

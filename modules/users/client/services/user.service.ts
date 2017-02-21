@@ -6,7 +6,7 @@ import { Injectable, Inject } from '@angular/core';
 /**
  * Get the user class model.
  */
-import { User }               from '../models/user.model.client';
+import { User }               from '../models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.

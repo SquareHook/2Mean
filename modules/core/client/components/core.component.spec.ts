@@ -4,7 +4,7 @@ import { By }                               from '@angular/platform-browser';
 import { DebugElement }                     from '@angular/core';
 
 /* Unit under test */
-import { CoreMenuComponent }                    from './core.component.menu.client';
+import { CoreMenuComponent }                from './core.component';
 
 /* Dependencies */
 

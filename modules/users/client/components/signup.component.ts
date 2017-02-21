@@ -7,7 +7,7 @@ import { NgForm }          from '@angular/forms';
 import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }             from '../models/user.model.client';
+import { User }             from '../models/user.model';
 
 /* Angular2 Services */
 import { UserService }      from '../services/user.service';
