@@ -2,31 +2,31 @@ module.exports = [
   {
     route: '/users/list/:userList',
     type: 'GET',
-    method: 'readList',
+    method: 'crud.readList',
     secure: true
   },
   {
     route: '/users/:userId',
     type: 'GET',
-    method: 'read',
+    method: 'crud.read',
     secure: true
   },
   {
     route: '/users',
     type: 'GET',
-    method: 'list',
+    method: 'crud.list',
     secure: true
   },
   {
     route: '/users',
     type: 'POST',
-    method: 'create',
+    method: 'crud.create',
     secure: true
   },
   {
     route: '/users',
     type: 'PUT',
-    method: 'update',
+    method: 'crud.update',
     secure: true
   },
   {
@@ -38,31 +38,31 @@ module.exports = [
   {
     route: '/users/:userId',
     type: 'DELETE',
-    method: 'deleteUser',
+    method: 'crud.deleteUser',
     secure: true
   },
   {
     route: '/users/register',
     type: 'POST',
-    method: 'register',
+    method: 'auth.register',
     secure: false
   },
   {
     route: '/users/picture',
     type: 'POST',
-    method: 'changeProfilePicture',
+    method: 'profile.changeProfilePicture',
     secure: true
   },
   {
     route: '/users/:userId/picture/:fileName',
     type: 'GET',
-    method: 'getProfilePicture',
+    method: 'profile.getProfilePicture',
     secure: true
   },
   {
     route: '/users/changePassword',
     type: 'PUT',
-    method: 'changePassword',
+    method: 'auth.changePassword',
     secure: true
   }
 ];

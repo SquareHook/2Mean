@@ -75,37 +75,40 @@ function authenticationModule(logger) {
    */
   function validateAPIKey(req, res, next) {
     if (!req.cookies || !req.cookies.apikey) {
-      return res.status(400).send('Unauthorized');
+      return res.status(401).send();
     }
 
     Keys.findOne({value: req.cookies.apikey})
 
       .then((data) => {
-       
-        //if the cookie has expired remove the api key, update the user, and set the cookie
-         if(Date.now() - data.created > keyTTL)
-         {
+        if (data) {
+          //if the cookie has expired remove the api key, update the user, and set the cookie
+           if(Date.now() - data.created > keyTTL)
+           {
 
-            return logout(req, res, next);
-         }
+              return logout(req, res, next);
+           }
 
-        // Store auth information for downstream logic.
-        req.auth = data;
+          // Store auth information for downstream logic.
+          req.auth = data;
 
-        // Look up user.
-        Users.findOne({_id: data.user})
-          .then((user) => {
-            // Store user for downstream logic.
-            req.user = user;
-            return next();
-          }, (err) => {
-            if (err) {
-              logger.error('Authenteication error looking up user referenced in key', err);
-            }
-          });
+          // Look up user.
+          Users.findOne({_id: data.user})
+            .then((user) => {
+              // Store user for downstream logic.
+              req.user = user;
+              return next();
+            }, (err) => {
+              if (err) {
+                logger.error('Authenteication error looking up user referenced in key', err);
+              }
+            });
+        } else {
+          return res.status(401).send();
+        }
       }, (error) => {
         logger.error('Authentication error looking up a key', error);
-        return res.status(400).send('Unauthorized');
+        return res.status(401).send();
       });
   }
 
