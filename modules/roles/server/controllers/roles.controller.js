@@ -204,7 +204,6 @@ function roleModule(logger, userModule)
         return getRolesByParent(targetRole, allRoles, []);
       })
       .then(subroles => {
-        console.log(subroles);
         //TODO: make flushSubroles return a promise
         userModule.flushSubroles(targetRole, subroles);
         res.status(201).send({ success: true, message: 'updated user roles' });

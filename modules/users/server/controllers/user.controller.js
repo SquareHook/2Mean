@@ -316,9 +316,6 @@ function userController(logger) {
    */
   function update(req, res, next) {
     var user = req.user;
-    console.log(req);
-    console.log(req.params);
-
     var existingUser = mapUser(req.body);
     
     var deferred = q.defer();
@@ -441,7 +438,7 @@ function userController(logger) {
    */
   function adminUpdate(req, res) {
     if (!isAuthorized(req.user)) {
-      res.status(401).send({ success: false, message: "Unauthorized" });
+      res.status(403).send({ success: false, message: "Forbidden" });
       return;
     }
     let deferred = q.defer();
