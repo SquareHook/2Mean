@@ -53,6 +53,8 @@ var fs = require('fs');
  */
 var config = require(path.resolve('config/config'));
 
+var md5 = require('md5');
+
 /**
  * Main business logic for handling requests.
  */
@@ -271,7 +273,7 @@ function userProfileController(logger) {
       cb(null, true);
     }
   }
-
+  
   // --------------------------- Revealing Module Section ----------------------------
 
   return {

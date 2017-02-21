@@ -18,6 +18,8 @@ var q = require('q');
  */
 var _ = require('lodash');
 
+var md5 = require('md5');
+
 /**
  * Main business logic for handling requests.
  */
@@ -136,6 +138,7 @@ function userCrudController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
+      newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
       newUser.save((err, data) => {
         if (err) {
@@ -414,6 +417,11 @@ function userCrudController(logger) {
     user.created = new Date();
 
     return user;
+  }
+  
+  function generateProfileImageURL(email) {
+    let hash = md5(email.toLowerCase());
+    return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
   // --------------------------- Revealing Module Section ----------------------------
