@@ -26,6 +26,8 @@ var md5 = require('md5');
 function userCrudController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
   /**
    * Reads a user from the database if the permissions are adequate.
    *
@@ -299,6 +301,51 @@ function userCrudController(logger) {
     }
   }
 
+  /**
+   * Handles user updates sent by an admin user
+   * @param {Request} req   The Express request object
+   * @param {Response} res  The Express response object
+   */
+  function adminUpdate(req, res) {
+    if (!isAuthorized(req.user)) {
+      res.status(403).send({ success: false, message: "Forbidden" });
+      return;
+    }
+    let deferred = q.defer();
+    let user = req.body;
+    //note that this doesn't affect user roles
+    let updateDef = {
+      $set: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        updated: new Date()
+      }
+    };
+    //send update to mongo
+    Users.update({ _id: req.body._id }, updateDef, (err, data) => {
+      if (err) {
+        logger.error('Error updating user', err);
+        deferred.reject({
+          code: 500,
+          error: 'Internal Server Error'
+        });
+      }
+      else {
+        deferred.resolve({
+          code: 200,
+          data: data
+        });
+      }
+    });
+
+    return deferred.promise
+     .then((data) => {
+       res.status(data.code).send(data.data);
+      }, (error) => {
+       res.status(error.code).send(error.error);
+      });
+   }
+
   /*
    * sets a users subroles 
    */
@@ -369,7 +416,7 @@ function userCrudController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
+    if (_.indexOf(user.role, ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -431,6 +478,7 @@ function userCrudController(logger) {
     create                : create,
     update                : update,
     deleteUser            : deleteUser,
+    adminUpdate           : adminUpdate,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
