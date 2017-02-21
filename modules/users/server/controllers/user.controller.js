@@ -65,6 +65,8 @@ var argon2 = require('argon2');
  */
 var config = require(path.resolve('config/config'));
 
+var md5 = require('md5');
+
 /**
  * Main business logic for handling requests.
  */
@@ -90,6 +92,7 @@ function userController(logger) {
     var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
 
     let newUser = mapUser(body);
+    newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = 'user';
@@ -270,6 +273,7 @@ function userController(logger) {
 
     if (isAuthorized(user, 'create')) {
       let newUser = mapUser(body);
+      newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
       newUser.save((err, data) => {
         if (err) {
@@ -879,6 +883,11 @@ function userController(logger) {
 
     // apply the re
     return strengthRe.test(password);
+  }
+  
+  function generateProfileImageURL(email) {
+    let hash = md5(email.toLowerCase());
+    return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
   // --------------------------- Revealing Module Section ----------------------------
