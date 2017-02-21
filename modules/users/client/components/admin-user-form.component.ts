@@ -26,7 +26,7 @@ export class AdminUserForm {
     private elRef: ElementRef, 
     private roleService: RoleService,
     private userService: UserService,
-    private notificationService: NotificationsService) 
+    private notificationsService: NotificationsService) 
     {}
 
   ngOnInit()
@@ -77,7 +77,7 @@ export class AdminUserForm {
       };
       this.roleService.updateUserRole(updateObj).subscribe(data =>
        {
-            this.notificationService.info('User Updated', 'The user has been updated', {
+            this.notificationsService.info('User Updated', 'The user has been updated', {
             timeOut: 3000,
             showProgressBar: true,
             pauseOnHover: false,
