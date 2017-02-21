@@ -75,7 +75,7 @@ function authenticationModule(logger) {
    */
   function validateAPIKey(req, res, next) {
     if (!req.cookies || !req.cookies.apikey) {
-      return res.status(400).send('Not Authorized');
+      return res.status(401).send();
     }
 
     Keys.findOne({value: req.cookies.apikey})
@@ -104,11 +104,11 @@ function authenticationModule(logger) {
               }
             });
         } else {
-          return res.status(400).send('Not Authorized');
+          return res.status(401).send();
         }
       }, (error) => {
         logger.error('Authentication error looking up a key', error);
-        return res.status(400).send('Unauthorized');
+        return res.status(401).send();
       });
   }
 

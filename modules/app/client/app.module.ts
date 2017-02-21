@@ -45,7 +45,7 @@ import { ActivatedRoute }         from '@angular/router';
     ArticleModule,
     AppRoutingModule,
     RoleModule,
-    SimpleNotificationsModule,
+    SimpleNotificationsModule.forRoot(),
     PushNotificationsModule
   ],
   providers: [
@@ -60,10 +60,10 @@ import { ActivatedRoute }         from '@angular/router';
       useFactory: (
         backend: XHRBackend,
         options: BaseRequestOptions,
-        router: Router, 
-        route: ActivatedRoute
-      ) => new AuthHttpService(backend, options, router, route),
-      deps: [ XHRBackend, BaseRequestOptions, Router, ActivatedRoute ]
+        router: Router,
+        notificationsService: NotificationsService
+      ) => new AuthHttpService(backend, options, router, notificationsService),
+      deps: [ XHRBackend, BaseRequestOptions, Router, NotificationsService ]
     }
   ],
   declarations: [

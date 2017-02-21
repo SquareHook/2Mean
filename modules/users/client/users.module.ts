@@ -7,6 +7,7 @@ import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }  from '@angular/router';
 import { FormsModule, ReactiveFormsModule }          from '@angular/forms';
 import { FileSelectDirective }  from 'ng2-file-upload';
+import { NotificationsService } from 'angular2-notifications';
 
 /* Config */
 import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from './config/users-config';
