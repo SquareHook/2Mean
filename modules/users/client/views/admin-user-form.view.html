@@ -1,0 +1,63 @@
+<template #content let-c="close" let-d="dismiss">
+  <div class="modal-header">
+    <h4 class="modal-title">User Details</h4>
+    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </div>
+  <div class="modal-body">
+
+    <form (ngSubmit)="onSubmit()">
+      <div class="form-group">
+        <label for="user.username">Username</label>
+        <input type="text" class="form-control" disabled [(ngModel)]="user.username"  name="user.username"
+          required>
+      </div>
+      <div class="form-group">
+        <label for="user.firstName">First Name</label>
+        <input type="text" class="form-control"  [(ngModel)]="user.firstName"  name="user.firstName"
+          required>
+
+      </div>
+      <div class="form-group">
+        <label for="user.lastName">Last Name</label>
+        <input type="text" class="form-control"  [(ngModel)]="user.lastName"  name="user.lastName"
+          required>
+
+      </div>
+     <div class="form-group">
+        <label for="user.email">Email</label>
+        <input type="text" class="form-control" disabled [(ngModel)]="user.email" placeholder="{{user.email}}" name="user.email" required>
+        
+      </div>
+      <div class="form-group">
+        <label for="user.role">Role</label>
+          <select name="user.role" [(ngModel)]="user.role" class="form-control" (change)="updateSubroles($event)">
+            <option *ngFor="let role of roles;" selected="user.role==role._id">
+                {{role._id}}
+            </option>
+        </select>
+        <span class="form-control">
+          <small> subroles: {{user.subroles}} </small>
+        </span>
+      </div>
+      <div class="form-group">
+          <span class="form-info">
+             Created: {{user.created | date}}
+          </span>
+          <span class="form-info">
+            Updated: {{user.updated | date}}
+          </span>      
+      </div>
+
+      <button type="submit"  class="btn btn-success" (click)="c('Submission')">Submit</button>
+    </form>
+
+  </div>
+  <div class="modal-footer">
+    <button type="submit" class="btn btn-secondary" (click)="c('Close click')">Close</button>
+  </div>
+</template>
+
+
+<hr>

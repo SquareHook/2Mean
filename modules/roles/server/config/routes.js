@@ -1,6 +1,12 @@
 module.exports = [
 {
   route: '/roles',
+  type: 'GET',
+  method: 'list',
+  secure: true
+},
+{
+  route: '/roles',
   type: 'POST',
   method: 'create',
   secure: true
@@ -9,6 +15,12 @@ module.exports = [
   route: '/roles',
   type: 'PUT',
   method: 'update',
+  secure: true
+},
+{
+  route: '/roles/updateUserRole',
+  type: 'PUT',
+  method: 'updateUserRole',
   secure: true
 },
 {

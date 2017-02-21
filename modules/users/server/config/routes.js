@@ -30,6 +30,12 @@ module.exports = [
     secure: true
   },
   {
+    route: '/users/adminUpdate',
+    type: 'PUT',
+    method: 'adminUpdate',
+    secure: true
+  },
+  {
     route: '/users/:userId',
     type: 'DELETE',
     method: 'crud.deleteUser',
