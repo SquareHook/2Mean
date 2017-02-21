@@ -71,6 +71,8 @@ var config = require(path.resolve('config/config'));
 function userController(logger) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
   /**
    * Registers a new user with bare minimum roles.
    *
@@ -314,9 +316,8 @@ function userController(logger) {
    */
   function update(req, res, next) {
     var user = req.user;
-
     var existingUser = mapUser(req.body);
-
+    
     var deferred = q.defer();
 
     // validate the body.
@@ -429,6 +430,51 @@ function userController(logger) {
       });
     }
   }
+
+  /**
+   * Handles user updates sent by an admin user
+   * @param {Request} req   The Express request object
+   * @param {Response} res  The Express response object
+   */
+  function adminUpdate(req, res) {
+    if (!isAuthorized(req.user)) {
+      res.status(403).send({ success: false, message: "Forbidden" });
+      return;
+    }
+    let deferred = q.defer();
+    let user = req.body;
+    //note that this doesn't affect user roles
+    let updateDef = {
+      $set: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        updated: new Date()
+      }
+    };
+    //send update to mongo
+    Users.update({ _id: req.body._id }, updateDef, (err, data) => {
+      if (err) {
+        logger.error('Error updating user', err);
+        deferred.reject({
+          code: 500,
+          error: 'Internal Server Error'
+        });
+      }
+      else {
+        deferred.resolve({
+          code: 200,
+          data: data
+        });
+      }
+    });
+
+    return deferred.promise
+     .then((data) => {
+       res.status(data.code).send(data.data);
+      }, (error) => {
+       res.status(error.code).send(error.error);
+      });
+   }
 
   /*
    * sets a users subroles 
@@ -741,6 +787,8 @@ function userController(logger) {
       });
   }
 
+
+
   // --------------------------- Private Function Definitions ----------------------------
 
   /**
@@ -796,7 +844,7 @@ function userController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
+    if (_.indexOf(user.role, ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -887,6 +935,7 @@ function userController(logger) {
     read                  : read,
     create                : create,
     update                : update,
+    adminUpdate           :adminUpdate,
     deleteUser            : deleteUser,
     register              : register,
     changeProfilePicture  : changeProfilePicture,
