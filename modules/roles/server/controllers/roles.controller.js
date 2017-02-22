@@ -102,6 +102,7 @@ function roleModule(logger, userModule)
     var role = new Roles();
     role._id = req.body._id;
     role.parent = req.body.parent;
+
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
 
@@ -205,7 +206,7 @@ function roleModule(logger, userModule)
       })
       .then(subroles => {
         //TODO: make flushSubroles return a promise
-        userModule.flushSubroles(targetRole, subroles);
+        userModule.crud.flushSubroles(targetRole, subroles);
         res.status(201).send({ success: true, message: 'updated user roles' });
       })
       .catch(error => {
@@ -253,12 +254,12 @@ function roleModule(logger, userModule)
     return new Promise((resolve, reject) =>
     {
       //update the parent roles' subroles
-      let parent = _.find(data, '_id', role.parent);
+      let parent = _.find(data, ['_id', role.parent]);
       while (parent)
       {
         var subroles = getRolesByParent(parent._id, data, []);
-        userModule.flushSubroles(parent._id, subroles);
-        parent = _.find(data, '_id', parent.parent);
+        userModule.crud.flushSubroles(parent._id, subroles);
+        parent = _.find(data, ['_id', parent.parent]);
       }
       resolve("roles updated");
     });
@@ -269,7 +270,7 @@ function roleModule(logger, userModule)
    */
   function getRolesByParent(parentRoleName, data, subroles)
   {
-    var directDescendants = _.filter(data, 'parent', parentRoleName);
+    var directDescendants = _.filter(data, ['parent', parentRoleName]);
     if (directDescendants && directDescendants.length > 0)
     {
       _.forEach(directDescendants, function(descendant)
@@ -374,14 +375,14 @@ function roleModule(logger, userModule)
             });
           }
           var oldparsub = getRolesByParent(oldParent, allRoles, []);
-          userModule.flushSubroles(oldParent, oldparsub);
+          userModule.crud.flushSubroles(oldParent, oldparsub);
 
           //update the parent roles' subroles
           var parent = addedRole;
           while (parent !== null)
           {
             var subroles = getRolesByParent(parent._id, allRoles, []);
-            userModule.flushSubroles(parent._id, subroles);
+            userModule.crud.flushSubroles(parent._id, subroles);
             parent = _.find(allRoles, '_id', parent.parent);
           }
 
@@ -454,7 +455,7 @@ function roleModule(logger, userModule)
           });
         //make sure the deleted role is removed from subroles as well
         list.push(req.params.id);
-        userModule.removeSubroles(list);
+        userModule.crud.removeSubroles(list);
         
         resolve(true);
       })
