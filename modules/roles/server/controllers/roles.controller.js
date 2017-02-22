@@ -103,9 +103,6 @@ function roleModule(logger, userModule)
     role._id = req.body._id;
     role.parent = req.body.parent;
 
-    console.log(req.body.parent);
-
-
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
 
