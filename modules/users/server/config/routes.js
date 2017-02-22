@@ -32,7 +32,7 @@ module.exports = [
   {
     route: '/users/adminUpdate',
     type: 'PUT',
-    method: 'adminUpdate',
+    method: 'crud.adminUpdate',
     secure: true
   },
   {

@@ -7,7 +7,7 @@ import {
 }  from '@angular/router';
 
 /* Angular2 services */
-import { AuthService } from '../../../auth/client/auth.service.client';
+import { AuthService } from '../../../auth/client/services/auth.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

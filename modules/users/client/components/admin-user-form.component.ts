@@ -4,7 +4,7 @@ import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs/Subject';
 import { RoleService} from '../../../roles/client/services/roles.service';
 import { UserService} from '../../../users/client/services/user.service';
-import { User} from '../../../users/client/models/user.model.client';
+import { User} from '../../../users/client/models/user.model';
 import {NotificationsService} from 'angular2-notifications';
 
 @Component({

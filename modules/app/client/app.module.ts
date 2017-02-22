@@ -17,7 +17,7 @@ import {
   NotificationsService
 } from 'angular2-notifications';
 import { UserService }            from '../../users/client/services/user.service';
-import { AuthService }            from '../../auth/client/auth.service.client';
+import { AuthService }            from '../../auth/client/services/auth.service';
 import { RoleService }            from '../../roles/client/services/roles.service';
 import { AuthModule }             from '../../auth/client/auth.module';
 import { CoreModule }             from '../../core/client/core.module';

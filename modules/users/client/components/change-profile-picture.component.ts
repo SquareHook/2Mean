@@ -22,10 +22,10 @@ import {
 } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }                   from '../models/user.model.client';
+import { User }                   from '../models/user.model';
 
 /* Angular2 Services */
-import { AuthService }            from '../../../auth/client/auth.service.client';
+import { AuthService }            from '../../../auth/client/services/auth.service';
 import { UserService }            from '../services/user.service';
 
 /* Angular2 Directives */

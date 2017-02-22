@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../../auth/client/auth.service.client';
+import { AuthService } from '../../../auth/client/services/auth.service';
 
 import { Subscription } from 'rxjs/Subscription';
 
@@ -13,7 +13,7 @@ const menuJson = require('./../config/menus.json');
 @Component({
   selector: 'core-menu',
   providers: [],
-  templateUrl: 'core.component.client.html'
+  templateUrl: '../views/core.view.html'
 })
 
 export class CoreMenuComponent implements OnInit{

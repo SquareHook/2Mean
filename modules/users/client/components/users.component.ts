@@ -4,7 +4,7 @@ import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 
 /* Angular2 Models */
-import { User }             from '../models/user.model.client';
+import { User }             from '../models/user.model';
 
 @Component({
   templateUrl: './../views/users.view.html'
