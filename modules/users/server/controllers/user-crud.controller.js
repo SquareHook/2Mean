@@ -428,18 +428,7 @@ function userCrudController(logger) {
     let sanitized = JSON.parse(JSON.stringify(user));
     sanitized.password = undefined;
 
-    return {
-      _id: user._id,
-      created: user.created,
-      displayName: user.displayName,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageURL: user.profileImageURL,
-      role: user.role,
-      subroles: user.subroles,
-      username: user.username
-    }
+    return sanitized;
   }
   /*
    * Maps the post request representation of a user to a mongoose User model.
