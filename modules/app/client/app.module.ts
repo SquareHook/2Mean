@@ -45,7 +45,7 @@ import { ActivatedRoute }         from '@angular/router';
     ArticleModule,
     AppRoutingModule,
     RoleModule,
-    SimpleNotificationsModule.forRoot(),
+    SimpleNotificationsModule,
     PushNotificationsModule
   ],
   providers: [
