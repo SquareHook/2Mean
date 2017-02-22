@@ -22,8 +22,8 @@
                     <label for="parent">Parent</label>
                     <small class="form-text text-muted">Choose a parent role </small>
                     <select name="parent" [(ngModel)]="Role.parent" class="form-control">
-                        <option *ngFor="let parent of Parents;" [value]="parent">
-                            {{parent}}
+                        <option *ngFor="let parent of Parents;" [value]="parent._id">
+                            {{parent._id}}
                         </option>
                     </select>
                     <div [hidden]="NoErrors" class="alert alert-danger" role="alert">
@@ -39,8 +39,8 @@
                 <h2>Remove Role</h2>
                 <div class="form-group">
                 <select name="parent" [(ngModel)]="SelectedRole" class="form-control">
-                    <option *ngFor="let role of OkToRemove;" [value]="role">
-                        {{role}}
+                    <option *ngFor="let role of OkToRemove;" [value]="role._id">
+                        {{role._id}}
                     </option>
                 </select>
                 </div>
