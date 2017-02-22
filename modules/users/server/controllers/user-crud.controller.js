@@ -224,7 +224,7 @@ function userCrudController(logger) {
               } else {
                 deferred.resolve({
                   code: 200,
-                  data: data
+                  data: sanitizeUser(data)
                 });
               }
             });
@@ -424,18 +424,11 @@ function userCrudController(logger) {
   }
 
   function sanitizeUser(user) {
-    return {
-      _id: user._id,
-      created: user.created,
-      displayName: user.displayName,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageURL: user.profileImageURL,
-      role: user.role,
-      subroles: user.subroles,
-      username: user.username
-    }
+    // cheat a deep copy with JSON
+    let sanitized = JSON.parse(JSON.stringify(user));
+    sanitized.password = undefined;
+
+    return sanitized;
   }
   /*
    * Maps the post request representation of a user to a mongoose User model.
