@@ -127,9 +127,5 @@ export class CoreMenuComponent implements OnInit{
     this.router.navigateByUrl(state);
 
   }
-
-  clicked(e: any) {
-    console.log(e);
-  }
 }
 
