@@ -20,10 +20,11 @@ export class CoreMenuComponent implements OnInit{
   menu: Array<any>;
   loggedIn: boolean;
   user: any;
+  isCollapsed: boolean;
 
   constructor(private router: Router, private authService: AuthService) {
     this.menu = [];
-
+    this.isCollapsed = true;
     
     }
 
@@ -125,6 +126,10 @@ export class CoreMenuComponent implements OnInit{
 
     this.router.navigateByUrl(state);
 
+  }
+
+  clicked(e: any) {
+    console.log(e);
   }
 }
 

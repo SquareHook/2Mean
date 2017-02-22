@@ -1,62 +1,63 @@
-<nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary fixed-top">
-    <a class="navbar-brand" routerLink="/" routerLinkActive="active">
-        <span class="icon fa-social-angular-outline"></span>
-    </a>
-    <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktop-header-nav" aria-controls="desktop-header-nav" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div id="desktop-header-nav" class="collapse navbar-collapse">
-        <ul class="nav navbar-nav">
-            <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
-                <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
-                <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
-                    <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
-                    <div class="dropdown-menu">
-                        <span *ngFor="let subitem of item.subitems">
-                        <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> </button>
-                       
-                        <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
-
-                        </button>
-                        </span>
-                    </div>
-                </div>
-            </li>
-        </ul>
-        <div *ngIf="!loggedIn" class="auth my-2 my-lg-0">
-            <a routerLink="/signin" routerLinkActive="active">Signin</a>
-            <a routerLink="/signup" routerLinkActive="active">SignUp</a>
-        </div>
-        <ul *ngIf="loggedIn" class="nav auth float-xs-right">
-          <li class="nav-item">
-            <div ngbDropdown routerLinkActive="active">
-              <button class="btn btn-outline-primary" ngbDropdownToggle>
-              <!--TODO height/width inherit from navbar-->
-                <img height="23.5px" width="23.5px" alt="profile" class="rounded-circle" [src]="user.profileImageURL">
+<nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary sticky-top">
+  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktopHeaderNav" aria-controls="desktop-header-nav" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation" (click)="isCollapsed = !isCollapsed">
+    <span class="navbar-toggler-icon">|||</span>
+  </button>
+  <a class="navbar-brand" routerLink="/" routerLinkActive="active">
+    <span class="icon fa-social-angular-outline"></span>
+  </a>
+  <div id="desktopHeaderNav" [ngbCollapse]="isCollapsed" class="navbar-collapse collapse">
+    <ul class="nav navbar-nav">
+      <li *ngFor="let item of menu" class="nav-item" routerLinkActive="active">
+        <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
+        <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
+          <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
+          <div class="dropdown-menu">
+            <span *ngFor="let subitem of item.subitems">
+              <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> 
+              
               </button>
-              <div class="dropdown-menu">
-                <button class="dropdown-item" 
-                        [routerLink]="[ '/profile', { outlets: { 'profile': ['edit'] }} ]">
-                  Edit
-                </button>
-                <button class="dropdown-item" 
-                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-profile-picture'] }} ]">
-                  Change Picture
-                </button>
-                <button class="dropdown-item" 
-                        [routerLink]="[ '/profile', { outlets: { 'profile': ['change-password'] }} ]">
-                  Change Password
-                </button>
-                <button class="dropdown-item" 
-                        [routerLink]="[ '/profile', { outlets: { 'profile': ['manage-social'] }} ]">
-                  Manage Social
-                </button>
-              </div>
-            </div>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" routerLink="/signout">SignOut</a>
-          </li>
-        </ul>
-    </div>
+              <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
+
+              </button>
+            </span>
+          </div>
+        </div>
+      </li>
+    </ul>
+    <ul *ngIf="!loggedIn" class="nav navbar-nav auth float-xs-right my-2 my-lg-0">
+      <a routerLink="/signin" routerLinkActive="active">Signin</a>
+      <a routerLink="/signup" routerLinkActive="active">SignUp</a>
+    </ul>
+    <ul *ngIf="loggedIn" class="nav navbar-nav auth float-xs-right">
+      <li class="nav-item">
+        <div ngbDropdown routerLinkActive="active">
+          <button class="btn btn-outline-primary" ngbDropdownToggle>
+          <!--TODO height/width inherit from navbar-->
+          <img height="23.5px" width="23.5px" alt="profile" class="rounded-circle" [src]="user.profileImageURL">
+          </button>
+          <div class="dropdown-menu">
+            <button class="dropdown-item" 
+                    [routerLink]="[ '/profile', { outlets: { 'profile': ['edit'] }} ]">
+              Edit
+            </button>
+            <button class="dropdown-item" 
+                    [routerLink]="[ '/profile', { outlets: { 'profile': ['change-profile-picture'] }} ]">
+              Change Picture
+            </button>
+            <button class="dropdown-item" 
+                    [routerLink]="[ '/profile', { outlets: { 'profile': ['change-password'] }} ]">
+              Change Password
+            </button>
+            <button class="dropdown-item" 
+                    [routerLink]="[ '/profile', { outlets: { 'profile': ['manage-social'] }} ]">
+              Manage Social
+            </button>
+          </div>
+        </div>
+      </li>
+      <li class="nav-item">
+      <a class="nav-link" routerLink="/signout">SignOut</a>
+      </li>
+    </ul>
+  </div>
 </nav>
