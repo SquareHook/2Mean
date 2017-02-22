@@ -18,7 +18,7 @@ export class AppComponent {
   name = 'Too Mean';
   
   public notificationOptions = {
-    position: ["bottom", "right"],
+    position: ["top", "right"],
     timeOut: 5000,
     lastOnBottom: true
   }

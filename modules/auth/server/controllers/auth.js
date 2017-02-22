@@ -28,6 +28,10 @@ var path = require('path');
  */
 var argon2 = require('argon2');
 
+/*
+* md5 for hashing 
+*/
+var md5 = require('md5');
 /**
  * config
  */
@@ -57,7 +61,10 @@ function authenticationModule(logger) {
           newUser.password = hash;
           newUser.role ='admin';
           newUser.subroles = ['user'];
-
+          //generate profile image
+          let emailHash = md5(newUser.email.toLowerCase());
+          newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
+      
           newUser.save((err, data) => {
             if (err) {
               logger.error(err);

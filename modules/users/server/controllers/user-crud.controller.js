@@ -73,8 +73,8 @@ function userCrudController(logger) {
   */
   function list(req, res)
   {
-    let page = req.params.page || 1;
-    let search = req.params.search || "";
+    let page = req.query.page || 1;
+    let search = req.query.search || "";
     let skip = (page - 1) * pageLimit;
     let queryObj;
     if (search === "") {
@@ -82,7 +82,7 @@ function userCrudController(logger) {
     }
     else {
       queryObj = {
-        'username': new RegExp(search, 'i')
+        'username': new RegExp('^'+search+'*', 'i')
       };
     }
 

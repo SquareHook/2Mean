@@ -107,6 +107,18 @@ too-mean > .container {
   font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
 
+.width-auto
+{
+    width:auto !important;
+}
+
+.content-space-between
+{
+    justify-content: space-between;
+}
+
+
+
 /**************** footer *************************/
 
 footer {
@@ -190,10 +202,17 @@ nav.bg-primary {
     line-height:1.45rem;
 }
 
+.subnav
+{
+    padding:0px 30px;
+    margin-bottom:20px;
+    box-shadow: none;
+}
 
 /***************** cards *********************/
 .user-card-group .card 
 {
+    padding-top:5px;
     &:hover
     {
         cursor:pointer;
@@ -207,4 +226,17 @@ nav.bg-primary {
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;
+}
+
+img.card-img-top
+{   
+    width: auto;
+    display: block;
+    margin: auto;
+}
+
+/***************** notifications *********************/
+simple-notifications
+{
+    z-index:10000;
 }
