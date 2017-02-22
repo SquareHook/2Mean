@@ -224,7 +224,7 @@ function userCrudController(logger) {
               } else {
                 deferred.resolve({
                   code: 200,
-                  data: data
+                  data: sanitizeUser(data)
                 });
               }
             });
@@ -424,6 +424,10 @@ function userCrudController(logger) {
   }
 
   function sanitizeUser(user) {
+    // cheat a deep copy with JSON
+    let sanitized = JSON.parse(JSON.stringify(user));
+    sanitized.password = undefined;
+
     return {
       _id: user._id,
       created: user.created,
