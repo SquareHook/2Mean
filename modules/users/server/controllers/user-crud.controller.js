@@ -82,7 +82,7 @@ function userCrudController(logger) {
     }
     else {
       queryObj = {
-        'username': new RegExp('^'+search+'*', 'i')
+        'username': new RegExp('[a-z]*'+search +'+?', 'i')
       };
     }
 
@@ -371,7 +371,7 @@ function userCrudController(logger) {
         {
           if(err)
           {
-            console.log("removeSubroles failed");
+            logger.error(err);
           }
         });
       }

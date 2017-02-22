@@ -2,11 +2,11 @@
     <div class="row">
         <div class="col-md-12">
             <nav class="navbar navbar-toggleable-md navbar-inverse bg-primary content-space-between subnav">
-                <a class="navbar-brand" href="#">USERS</a>
-                <div class="collapse navbar-collapse width-auto" id="navbarColor02">
-                    <form class="form-inline">
-                        <input (keypress)="searchHelper($event.keyCode)" name="searchText" [(ngModel)]="searchText" class="form-control" placeholder="enter a user name">
-                        <button class="btn btn-outline-secondary my-2 my-sm-0 icon fa-search search-button" type="submit" (click)="searchUsers()">Search</button>
+                <a class="navbar-brand" href="#">Users</a>
+                <div class="width-auto" id="navbarColor02">
+                    <form (ngSubmit)="searchUsers()" class="form-inline" ng-submit="">
+                        <input  name="searchText" [(ngModel)]="searchText" class="form-control" placeholder="enter a user name">
+                        <button class="btn btn-outline-secondary my-2 my-sm-0 icon fa-search search-button" type="submit" >Search</button>
                     </form>
                 </div>
             </nav>

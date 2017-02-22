@@ -41,14 +41,7 @@ export class AdminUsersComponent implements OnInit {
    this.searchUsers();
   }
 
-  //runs search function when enter is hit in the search input 
-  searchHelper(keyCode)
-  {
-    if(keyCode === 13)
-    {
-      this.searchUsers();
-    }
-  }
+
 
   //returns a list of users with optional filtering
   searchUsers()
@@ -69,7 +62,7 @@ export class AdminUsersComponent implements OnInit {
       }
     }, error=>{
       console.log(error);
-    })
+    });
   }
   displayUser(user: User)
   { 
