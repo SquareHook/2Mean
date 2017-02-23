@@ -75,7 +75,7 @@ export class UserService {
   //list for searching and pagination
   list(page: number, search: string) : Observable<Array<User>>
   {
-    return this.http.get('api/users?page='+page)
+    return this.http.get('api/users?page='+page +'&search='+search)
     .map(this.extractData);
   }
   create(newUser: User) : Observable<User> {
