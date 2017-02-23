@@ -1,28 +1,26 @@
-<template #content let-c="close" let-d="dismiss">
+<template #content let-close="close" let-dismiss="dismiss">
   <div class="modal-header">
     <h4 class="modal-title">User Details</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
+    <button type="button" class="close" aria-label="Close" (click)="dismiss('Cross click')">
       <span aria-hidden="true">&times;</span>
     </button>
+ 
   </div>
   <div class="modal-body">
-
+   
     <form (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="user.username">Username</label>
-        <input type="text" class="form-control" disabled [(ngModel)]="user.username"  name="user.username"
-          required>
+        <input type="text" class="form-control" disabled [(ngModel)]="user.username"  name="user.username"required>
       </div>
       <div class="form-group">
         <label for="user.firstName">First Name</label>
-        <input type="text" class="form-control"  [(ngModel)]="user.firstName"  name="user.firstName"
-          required>
+        <input type="text" class="form-control"  [(ngModel)]="user.firstName"  name="user.firstName" required>
 
       </div>
       <div class="form-group">
         <label for="user.lastName">Last Name</label>
-        <input type="text" class="form-control"  [(ngModel)]="user.lastName"  name="user.lastName"
-          required>
+        <input type="text" class="form-control"  [(ngModel)]="user.lastName"  name="user.lastName"required>
 
       </div>
      <div class="form-group">
@@ -50,12 +48,17 @@
           </span>      
       </div>
 
-      <button type="submit"  class="btn btn-success" (click)="c('Submission')">Submit</button>
+      <div class="flex content-space-between">
+        <button type="submit"  class="btn btn-success" (click)="close('Submission')">Submit</button>
+        <button type="button" class="btn btn-danger" (click)="close('Deletion')">Delete</button>
+      </div>
     </form>
+
+   
 
   </div>
   <div class="modal-footer">
-    <button type="submit" class="btn btn-secondary" (click)="c('Close click')">Close</button>
+    <button type="submit" class="btn btn-secondary" (click)="close('Close click')">Close</button>
   </div>
 </template>
 

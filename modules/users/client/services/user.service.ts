@@ -94,7 +94,7 @@ export class UserService {
     .map(this.extractData);
   }
 
-  delete(userId: string) : Observable<User> {
+  delete(userId: string) : Observable<any> {
     return this.http.delete('api/users/' + userId)
       .map(this.extractData);
   }

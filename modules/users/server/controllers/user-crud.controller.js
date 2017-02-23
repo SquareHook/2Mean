@@ -17,7 +17,6 @@ var q = require('q');
  * Underscore/Lodash functionality.
  */
 var _ = require('lodash');
-
 var md5 = require('md5');
 
 /**
@@ -287,19 +286,25 @@ function userCrudController(logger) {
    */
   function deleteUser(req, res, next) {
     var userId = req.params.userId;
-
-    if (isAuthorized(user, 'delete')) {
+    if (isAuthorized(req.user, 'delete')) {
       Users.findOne({_id: userId}).remove((err, data) => {
         if (err) {
           logger.error('Error removing user', err);
-
-          res.status(500).send('Internal Server Error');
+          res.status(500).send({success: false, message: "Internal Server Error"});
         } else {
-          res.status(200).send('User Deleted');
+          if(data.result.ok && data.result.n > 0)
+          {
+            res.status(200).send({success: true, message: "Deleted user with id: " + userId});
+          }
+          else
+          {
+            res.status(200).send({success: false, messsage: "Unable to delete user with id: " + userId});
+          }
         }
       });
     }
   }
+
 
   /**
    * Handles user updates sent by an admin user
