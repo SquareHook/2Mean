@@ -205,9 +205,10 @@ function roleModule(logger, userModule)
         return getRolesByParent(targetRole, allRoles, []);
       })
       .then(subroles => {
-        //TODO: make flushSubroles return a promise
-        userModule.crud.flushSubroles(targetRole, subroles);
-        res.status(201).send({ success: true, message: 'updated user roles' });
+        return userModule.crud.updateUserRoles(userId, targetRole, subroles);
+      }).then(user =>
+      {
+        res.status(201).send(user);
       })
       .catch(error => {
         sendServerError(res, error);

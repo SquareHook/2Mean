@@ -2,6 +2,8 @@
  * Database handle.
  */
 var mongoose = require('mongoose');
+//tell mongoose to use q promise library promises
+mongoose.Promise = require('q').Promise;
 
 /**
  * User model.
@@ -352,7 +354,7 @@ function userCrudController(logger) {
    }
 
   /*
-   * sets a users subroles 
+   * Updates all subroles for a given role 
    */
    function flushSubroles(parentRole, subroles)
    {
@@ -380,6 +382,21 @@ function userCrudController(logger) {
           }
         });
       }
+     
+   }
+
+   /**
+    * Updates a users roles
+    * @param {userId} the id of the user to update
+    * @param {targetRole} the role to place the user in
+    * @param {subroles} a list of corres
+    * @returns {Promise} an update promise
+    */
+   function updateUserRoles(userId, targetRole, subroles)
+   {
+     let query = {_id: userId};
+     let update = {$set: {role: targetRole, subroles: subroles}};
+     return Users.update(query, update);
      
    }
 
@@ -477,6 +494,7 @@ function userCrudController(logger) {
     update                : update,
     deleteUser            : deleteUser,
     adminUpdate           : adminUpdate,
+    updateUserRoles       : updateUserRoles,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
