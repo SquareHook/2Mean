@@ -1,4 +1,4 @@
-import {Component, Input, ElementRef, ViewChild, } from '@angular/core';
+import {Component, Input, Output, ElementRef, ViewChild, EventEmitter } from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {NgbModal, ModalDismissReasons} from '@ng-bootstrap/ng-bootstrap';
 import { Subject } from 'rxjs/Subject';
@@ -14,6 +14,9 @@ import {NotificationsService} from 'angular2-notifications';
 export class AdminUserForm {
   closeResult: string;
   display: boolean;
+  @Output()
+  refreshUsers: EventEmitter<boolean> = new EventEmitter<boolean>();
+
   @Input()
   userSubject:Subject<any>;
   private user: User;
@@ -29,6 +32,7 @@ export class AdminUserForm {
     private notificationsService: NotificationsService) 
     {}
 
+   
   ngOnInit()
   {
     this.roleService.getRoles().subscribe(data =>
@@ -43,14 +47,19 @@ export class AdminUserForm {
     });
   }
 
+ 
  //open up the user edit modal for the selected user
   open(content:any) {
      
     this.modalService.open(content).result.then((result) => {
       //the modal can be closed with a button, by clicking on the backdrop, or by clicking submit
-      if(this.getDismissReason(result) == "with: Submission")
+      if(this.getDismissReason(result) == "Submission")
       {
         this.onSubmit();
+      }
+      else if(this.getDismissReason(result) == "Deletion")
+      {
+        this.deleteUser();
       }
     }, (reason) => {
       this.closeResult = `Dismissed ${this.getDismissReason(reason)}`;
@@ -65,6 +74,38 @@ export class AdminUserForm {
     });
   }
 
+  deleteUser()
+  {
+    let confirmed: any = confirm("Are you sure you want to delete this user? This can't be undone.");
+    if(confirmed)
+    {
+      this.userService.delete(this.user._id).subscribe( result =>
+      {
+        if(result.success)
+        {
+           //notify success and tell parent to pull list of users from the server
+            this.notificationsService.info('User Deleted', 'The user has been deleted', {
+            timeOut: 3000,
+            showProgressBar: true,
+            pauseOnHover: false,
+            clickToClose: true,
+            maxLength: 50
+          });
+          this.refreshUsers.emit(true);
+        }
+        else
+        {
+            this.notificationsService.error('Error', 'The user could not be deleted', {
+            timeOut: 3000,
+            showProgressBar: true,
+            pauseOnHover: false,
+            clickToClose: true,
+            maxLength: 50
+          });
+        }
+      });
+    }
+  }
   onSubmit() {
     
     //update general information about the user
@@ -98,8 +139,9 @@ export class AdminUserForm {
       return 'by pressing ESC';
     } else if (reason === ModalDismissReasons.BACKDROP_CLICK) {
       return 'by clicking on a backdrop';
-    } else {
-      return  `with: ${reason}`;
+    } 
+    else {
+      return  `${reason}`;
     }
   }
 }

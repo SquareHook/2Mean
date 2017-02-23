@@ -41,7 +41,10 @@ export class AdminUsersComponent implements OnInit {
    this.searchUsers();
   }
 
-
+  refreshUsers(yes: boolean)
+  {
+    this.searchUsers();
+  }
 
   //returns a list of users with optional filtering
   searchUsers()

@@ -23,7 +23,7 @@
         </div>
         <template ngbModalContainer>
         </template>
-        <admin-user-modal [userSubject]="userSubject">
+        <admin-user-modal [userSubject]="userSubject" (refreshUsers)="refreshUsers($event)">
         </admin-user-modal>
 
 
