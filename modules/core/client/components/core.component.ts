@@ -5,7 +5,7 @@ import { AuthService } from '../../../auth/client/services/auth.service';
 
 import { Subscription } from 'rxjs/Subscription';
 
-const menuJson = require('./../config/menus.json');
+import { Menu } from './../config/menus';
 
 /*
 *  The component that renders the main navigation bar
@@ -54,10 +54,7 @@ export class CoreMenuComponent implements OnInit{
     this.menu = [];
     let tempMenu = [];
 
-    //do some formatting to get proper JSON
-    tempMenu = menuJson.replace("module.exports =", "");
-    tempMenu = tempMenu.slice(0, tempMenu.length - 1);
-    tempMenu = JSON.parse(tempMenu);
+    tempMenu = Menu;
 
     for (let item of tempMenu) {
       if (this.authorized(item)) {
