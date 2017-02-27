@@ -78,6 +78,20 @@ Optionally you can also enable the following environment variables:
 
 # Too Mean
 
+## Static Assets
+To include static assets (like images) in an Angular 2 component, you can
+do the following:
+
+```
+@Component({
+  template: '<img [src]="imageSource">'
+})
+export SomeComponent {
+  let imageSource = require('<image path>');
+}
+```
+
+Webpack will replace the required image with its path in the `dist` directory.
 
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
