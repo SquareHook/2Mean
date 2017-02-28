@@ -16,44 +16,69 @@ div.alert {
     text-align: center;
 }
 
-.navbar {
-    padding: 0 20px;
-    padding-left: 0px;
-    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.24);
-}
-
-.navbar-nav {
-    flex-grow: 1;
-}
-
-.navbar-nav .nav-item + .nav-item {
-    margin: 0 0;
-}
-
-.navbar-dark .navbar-nav .nav-link {
-    color: @inactive-link-color;
-}
-
-.navbar-brand {
-    padding-top: 0.62rem;
-    padding-left: 0.7rem;
-    padding-right: 0.7rem;
-    margin: 0;
-    font-size: 1.8em;
-    &:hover,
-    &:focus,
-    &:active {
-        background-color: darken(@angular-blue, 5%);
-    }
-    transition: background color 0.3s;
-    span {
-        color: #ffffff;
-    }
-}
-
 .btn,
 .form-control {
     border-radius: 0px;
+}
+
+.btn-core {
+  padding: 5px 15px;
+  margin: 5px 0;
+  text-transform: uppercase;
+  color: @angular-blue;
+  border: 1px solid @angular-blue;
+  font-family: "RBNo21a-Bold", sans-serif;
+  font-size: 14px;
+  letter-spacing: 1px;
+  display: inline-block;
+  border-radius: 0px;
+  width: auto;
+  background-image: none;
+  -webkit-appearance: none;
+  appearance: none;
+  -moz-appearance: none;
+  background-color: transparent;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
+}
+
+p .btn-core {
+  margin-left: 0px;
+}
+
+.btn-core:hover,
+.btn-core.btn-red.inverse:hover {
+  cursor: pointer;
+  color: #ffffff;
+  text-decoration: none;
+  background-color: @angular-blue;
+}
+
+.btn-red {
+  color: #ffffff;
+  border: 0px solid #ffffff;
+  background-color: @angular-red;
+}
+
+.btn-red:hover {
+  background-color: darken(@angular-red,15%);
+}
+
+.btn-red.inverse {
+  color: @angular-red;
+  border: 1px solid @angular-red;
+  background-color: transparent;
+}
+
+.btn-lg {
+  font-size: 20px;
+  line-height: 20px;
+  padding: 10px 30px;
+}
+
+sup {
+  top: -0.25em;
+  font-weight: 400;
 }
 
 .auth {
@@ -117,9 +142,17 @@ too-mean > .container {
     justify-content: space-between;
 }
 
-.flex
-{
+.flex {
     display:flex;
+    flex-flow: row nowrap;
+    justify-content: space-between;
+}
+
+@media screen and (max-width: 979px) {
+    too-mean > .container {
+        margin-top: 20px;
+        margin-bottom: 20px;
+    }
 }
 
 
@@ -152,14 +185,14 @@ form h2 {
     color: lighten(black, 20%);
     font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
 }
-form select.input-large
-{
+
+form select.input-large {
     width:100%;
     border-radius:0px !important;
     line-height:1.25;
 }
-form .form-info
-{
+
+form .form-info {
     padding:5px 5px;
     display: block;
     font-size:12px;
@@ -177,6 +210,63 @@ nav.bg-primary {
     background: @angular-blue !important;
 }
 
+.navbar a {
+    color: #ffffff;
+}
+
+.navbar .navbar-brand,
+.navbar .navbar-toggler {
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: center;
+    min-height: 60px;
+}
+
+.navbar-toggler {
+    padding: 0;
+}
+
+.navbar {
+    padding: 5px 20px;
+    box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.24);
+    flex-flow: row wrap;
+
+}
+
+.navbar-nav {
+    flex-grow: 1;
+}
+
+.navbar-nav.auth {
+    flex-grow: 0;
+}
+
+.navbar-nav .nav-item + .nav-item {
+    margin: 0 0;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: @inactive-link-color;
+}
+
+
+
+.navbar-brand {
+    padding: 0;
+    margin: 0;
+    margin-right: 20px;
+    font-size: 1.8em;
+    transition: background color 0.3s;
+
+    &:hover {
+        background-color: darken(@angular-blue, 5%);
+    }
+    
+    span {
+        color: #ffffff;
+    }
+}
+
 .navbar-nav .nav-link,
 .navbar-dark .navbar-nav .nav-link,
 .navbar .nav-item .btn,
@@ -188,6 +278,7 @@ nav.bg-primary {
     letter-spacing: 0.16px;
     margin: 0;
     min-width: auto;
+
     &:hover,
     &:focus,
     &:active {
@@ -197,50 +288,94 @@ nav.bg-primary {
 
 .navbar .nav-item .btn {
     color: @inactive-link-color;
+    margin-bottom:0px;
+    line-height:1.45rem;
+
     &:hover,
     &:focus,
     &:active {
         border: 0px solid @angular-blue;
     }
-    margin-bottom:0px;
-    line-height:1.45rem;
 }
 
-.subnav
-{
+.navbar-collapse .dropdown-menu {
+    background-color: darken(@angular-blue, 10%);
+    color: rgba(255, 255, 255, 0.75);;
+    padding: 0;
+    margin: 0;
+
+    .dropdown-item {
+        color: rgba(255, 255, 255, 0.75);
+        padding: 4px 16px;
+
+        &:focus,
+        &:hover {
+            color: rgba(255, 255, 255, 0.75);
+            background-color: lighten(@angular-blue,10%);
+        }
+    }
+
+
+}
+
+.subnav {
     padding:0px 30px;
     margin-bottom:20px;
     box-shadow: none;
 }
 
+@media screen and (min-width: 768px) {
+    .navbar .navbar-toggler {
+        display: none;
+   }
+
+   .navbar-toggleable-md .navbar-collapse {
+        width: auto;
+        flex-grow: 1;
+   }
+}
+
+@media screen and (max-width: 767px) {
+    .navbar-collapse {
+        order: 99;
+        flex-basis: 100%;
+        flex-grow: 1;
+    }
+
+    .navbar-nav .nav-link,
+    .navbar-dark .navbar-nav .nav-link,
+    .navbar .nav-item .btn,
+    .auth a {
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
 /***************** cards *********************/
-.user-card-group .card 
-{
+.user-card-group .card {
     padding-top:5px;
+    flex: 0 0 200px;
+    margin:0px 10px 10px 10px;
+
     &:hover
     {
         cursor:pointer;
     }
-    flex: 0 0 200px;
-    margin:0px 10px 10px 10px;
 }
 
-.card-wrapper
-{
+.card-wrapper {
     display: flex;
     flex-flow: row wrap;
     justify-content: flex-start;
 }
 
-img.card-img-top
-{   
+img.card-img-top {   
     width: auto;
     display: block;
     margin: auto;
 }
 
 /***************** notifications *********************/
-simple-notifications
-{
+simple-notifications {
     z-index:10000;
 }

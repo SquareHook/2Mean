@@ -1,9 +1,9 @@
-<nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary sticky-top">
-  <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktopHeaderNav" aria-controls="desktop-header-nav" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation" (click)="isCollapsed = !isCollapsed">
-    <span class="navbar-toggler-icon">|||</span>
-  </button>
+<nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary navbar-fixed-top">
+  <a class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktopHeaderNav" aria-controls="desktop-header-nav" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation" (click)="isCollapsed = !isCollapsed">
+    <i class="fa fa-2x fa-bars"></i>
+  </a>
   <a class="navbar-brand" routerLink="/" routerLinkActive="active">
-    <span class="icon fa-social-angular-outline"></span>
+    <i class="fa fa-2x fa-social-angular-outline"></i>
   </a>
   <div id="desktopHeaderNav" [ngbCollapse]="isCollapsed" class="navbar-collapse collapse">
     <ul class="nav navbar-nav">
