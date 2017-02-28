@@ -103,6 +103,7 @@ app.get('/api/test',
  * Setup the client application route.
  */
 
+// static route to serve app source and static assets (images)
 app.use(express.static(path.resolve('dist')));
 
 /**

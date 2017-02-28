@@ -1,8 +1,8 @@
+
 import { Component } from '@angular/core';
 
 import { NotificationsService } from 'angular2-notifications';
 import { Subject } from 'rxjs/Subject';
-
 
 @Component({
   selector: 'too-mean',
