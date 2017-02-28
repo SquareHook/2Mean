@@ -1,10 +1,14 @@
-<h2> Latest Articles </h2>
-<div class="list-group">
-    <a *ngFor="let article of articles" href="#" class="list-group-item list-group-item-action flex-column align-items-start" routerLink="/articles/{{article._id}}">
-        <div class="d-flex w-100 justify-content-between">
-            <h5 class="mb-1">{{article.title}}</h5>
-        </div>
-        <p class="mb-1">{{article.content}}</p>
-        <small>By <strong>{{article.userName}}</strong> on {{article.created | date}}</small>
-    </a>
+<div class="row">
+	<div class="col-xs-12 col-md-12">
+		<h2> Latest Articles </h2>
+		<div class="list-group">
+		    <a *ngFor="let article of articles" href="#" class="list-group-item list-group-item-action flex-column align-items-start" routerLink="/articles/{{article._id}}">
+		        <div class="d-flex w-100 justify-content-between">
+		            <h5 class="mb-1">{{article.title}}</h5>
+		        </div>
+		        <p class="mb-1">{{article.content}}</p>
+		        <small>By <strong>{{article.userName}}</strong> on {{article.created | date}}</small>
+		    </a>
+	    </div>
+	</div>
 </div>
