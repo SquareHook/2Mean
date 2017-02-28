@@ -1,6 +1,6 @@
 {
   "name": "toomean",
-  "version": "0.2.1",
+  "version": "0.9.0",
   "description": "Angular 2, Nodejs, Express and Mongo stack",
   "main": "server.js",
   "repository": {
@@ -10,11 +10,10 @@
   "scripts": {
     "test": "karma start config/karma.conf.js",
     "build": "webpack --config ./config/webpack/webpack.common.js --watch",
-    "server": "if [[ ${NODE_DEBUG} == \"true\" ]]; then npm run server:debug; else npm run server:dev; fi",
+    "server": "if $NODE_DEBUG; then npm run server:debug; else npm run server:dev; fi",
     "server:dev": "node-dev ./server.js",
     "server:debug": "node-dev --inspect ./server.js",
-    "watch-menus": "watch \"node watch-menus.js modules/**/client/config/menu.json > modules/core/client/config/menus.json\"",
-    "start": "concurrently --kill-others --names \"webpack,node,config\" --prefix \"[{name}]\" --prefix-colors \"green,blue,red\" \"npm run build\" \"node-dev ./server.js\" \"npm run watch-menus\"",
+    "start": "concurrently --kill-others --names \"webpack,node\" --prefix \"[{name}]\" --prefix-colors \"green,blue\" \"npm run build\" \"npm run server\"",
     "postinstall": "if [ ! -e ./config/private/cacert.pem ]; then npm run gen-cert; else echo \"TLS files already exist\"; fi",
     "gen-cert": "./init-ssl.sh",
     "lint:ts": "tslint -c ./config/tslint.json ./modules/*/client/*.ts ./modules/*/client/**/*.ts"
@@ -58,6 +57,7 @@
     "json-merge-loader": "^1.1.0",
     "less": "^2.7.1",
     "less-loader": "^2.2.3",
+    "lodash": "^4.17.4",
     "md5": "^2.2.1",
     "mongoose": "^4.7.4",
     "multer": "^1.2.1",
@@ -81,15 +81,19 @@
     "zone.js": "^0.7.4"
   },
   "devDependencies": {
+    "@types/chai": "^3.4.34",
     "@types/core-js": "^0.9.35",
     "@types/jasmine": "^2.5.40",
+    "@types/sinon": "^1.16.35",
     "awesome-typescript-loader": "^3.0.0-beta.17",
+    "chai": "^3.5.0",
     "html-webpack-plugin": "^2.24.1",
     "istanbul": "^0.4.5",
     "istanbul-instrumenter-loader": "^1.2.0",
     "jasmine": "^2.5.2",
     "jasmine-core": "^2.5.2",
     "karma": "^1.3.0",
+    "karma-chai": "^0.1.0",
     "karma-coverage": "^1.1.1",
     "karma-es5-shim": "0.0.4",
     "karma-jasmine": "^1.1.0",
@@ -97,12 +101,14 @@
     "karma-nyan-reporter": "^0.2.4",
     "karma-phantomjs-launcher": "^1.0.2",
     "karma-remap-coverage": "^0.1.4",
+    "karma-sinon": "^1.0.5",
     "karma-sourcemap-loader": "^0.3.7",
     "karma-webpack": "^1.8.1",
     "null-loader": "^0.1.1",
     "phantomjs-prebuilt": "^2.1.14",
     "raw-loader": "^0.5.1",
     "remap-istanbul": "^0.8.4",
+    "sinon": "^2.0.0-pre.5",
     "source-map-loader": "^0.1.5",
     "ts-loader": "^1.3.3",
     "tslint": "^4.2.0",
@@ -111,5 +117,6 @@
     "typings": "^2.1.0",
     "webpack": "^1.14.0",
     "webpack-dev-server": "^1.16.2"
-  }
+  },
+  "engine": "node >= 7.5.0"
 }

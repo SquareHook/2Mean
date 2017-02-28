@@ -6,7 +6,7 @@ import { Injectable, Inject } from '@angular/core';
 /**
  * Get the user class model.
  */
-import { User }               from '../models/user.model.client';
+import { User }               from '../models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.
@@ -75,7 +75,7 @@ export class UserService {
   //list for searching and pagination
   list(page: number, search: string) : Observable<Array<User>>
   {
-    return this.http.get('api/users?page='+page)
+    return this.http.get('api/users?page='+page +'&search='+search)
     .map(this.extractData);
   }
   create(newUser: User) : Observable<User> {
@@ -87,8 +87,14 @@ export class UserService {
     return this.http.put('api/users', updatedUser)
       .map(this.extractData);
   }
+  
+  //used to update user fields by admin users
+  adminUpdate(updatedUser: User) :Observable<User>{
+    return this.http.put('api/users/adminUpdate', updatedUser)
+    .map(this.extractData);
+  }
 
-  delete(userId: string) : Observable<User> {
+  delete(userId: string) : Observable<any> {
     return this.http.delete('api/users/' + userId)
       .map(this.extractData);
   }

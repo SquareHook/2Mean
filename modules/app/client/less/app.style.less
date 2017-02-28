@@ -86,6 +86,42 @@ too-mean > .container {
 .btn-right {
     float: right;
 }
+.search-box
+{
+    margin-bottom:20px;
+}
+.input-group-addon
+{
+    display:inline;
+    &:hover
+    {
+        cursor: pointer;
+    }
+}
+
+.col-md-12 > h2
+{
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 10px;
+  color: #333333;
+  font-family: "Roboto", "Helvetica Neue Light", "Helvetica Neue", Helvetica, Arial, "Lucida Grande", sans-serif;
+}
+
+.width-auto
+{
+    width:auto !important;
+}
+
+.content-space-between
+{
+    justify-content: space-between;
+}
+
+.flex
+{
+    display:flex;
+}
+
 
 /**************** footer *************************/
 
@@ -122,7 +158,12 @@ form select.input-large
     border-radius:0px !important;
     line-height:1.25;
 }
-
+form .form-info
+{
+    padding:5px 5px;
+    display: block;
+    font-size:12px;
+}
 
 /***************** navigation *********************/
 
@@ -163,4 +204,43 @@ nav.bg-primary {
     }
     margin-bottom:0px;
     line-height:1.45rem;
+}
+
+.subnav
+{
+    padding:0px 30px;
+    margin-bottom:20px;
+    box-shadow: none;
+}
+
+/***************** cards *********************/
+.user-card-group .card 
+{
+    padding-top:5px;
+    &:hover
+    {
+        cursor:pointer;
+    }
+    flex: 0 0 200px;
+    margin:0px 10px 10px 10px;
+}
+
+.card-wrapper
+{
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+}
+
+img.card-img-top
+{   
+    width: auto;
+    display: block;
+    margin: auto;
+}
+
+/***************** notifications *********************/
+simple-notifications
+{
+    z-index:10000;
 }

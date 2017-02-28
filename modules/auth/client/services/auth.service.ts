@@ -10,7 +10,7 @@ import { Subject } from 'rxjs/Subject';
 /**
  * Get the user class model.
  */
-import { User } from '../../users/client/models/user.model.client';
+import { User } from '../../../users/client/models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.

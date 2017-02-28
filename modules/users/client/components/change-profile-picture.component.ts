@@ -6,12 +6,13 @@ import {
   OnInit 
 } from '@angular/core';
 import { BrowserModule }          from '@angular/platform-browser';
-import { Router }                 from '@angular/router';
+import { Router, NavigationExtras }                 from '@angular/router';
 import { 
   FormGroup,
   FormBuilder,
   Validators 
 } from '@angular/forms';
+import { NotificationsService } from 'angular2-notifications';
 
 /* Config */
 import { 
@@ -21,10 +22,10 @@ import {
 } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }                   from '../models/user.model.client';
+import { User }                   from '../models/user.model';
 
 /* Angular2 Services */
-import { AuthService }            from '../../../auth/client/auth.service.client';
+import { AuthService }            from '../../../auth/client/services/auth.service';
 import { UserService }            from '../services/user.service';
 
 /* Angular2 Directives */
@@ -51,7 +52,9 @@ export class ChangeProfilePictureComponent {
     private authService: AuthService,
     private userService: UserService,
     @Inject(USERS_CONFIG) config : UsersConfig,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private router: Router,
+    private notificationsService: NotificationsService
   ) { 
     this.user = authService.user;
     this.formValid = false;
@@ -99,6 +102,17 @@ export class ChangeProfilePictureComponent {
 
         // clear the queue so next files will not accumulate
         this.userService.clearUploaderQueue();
+        this.notificationsService.success('File uploaded', '');
+      } else if (status === 401) {
+        let navigationExtras: NavigationExtras = {
+          queryParams: {
+            'redirect': this.router.url,
+            'reauthenticate': true
+          }
+        };
+        
+        this.notificationsService.alert('Unauthenticated', 'You need to log back in');
+        this.router.navigate([ '/signin' ], navigationExtras);
       }
     });
   }

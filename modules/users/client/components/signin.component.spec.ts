@@ -15,8 +15,8 @@ import { SigninComponent }                  from './signin.component';
 
 import { UsersRoutingModule } from '../config/user-routing.module';
 import { UserService } from '../services/user.service';
-import { AuthService } from '../../../auth/client/auth.service.client';
-import { User } from '../models/user.model.client';
+import { AuthService } from '../../../auth/client/services/auth.service';
+import { User } from '../models/user.model';
 
 import { UsersComponent }       from './users.component';
 import {
@@ -69,7 +69,7 @@ describe('SigninComponent', () => {
     displayName: 'Squarehook',
     email: 'support@squarehook.com',
     firstName: 'Admin',
-    id: '5866b8c0f5b5613933d30a21',
+    _id: '5866b8c0f5b5613933d30a21',
     lastName: 'User',
     password: 'null',
     profileImageURL: 'modules/users/client/img/profile/default.png',

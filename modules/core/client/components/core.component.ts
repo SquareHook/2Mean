@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../../auth/client/auth.service.client';
+import { AuthService } from '../../../auth/client/services/auth.service';
 
 import { Subscription } from 'rxjs/Subscription';
 
-const menuJson = require('./../config/menus.json');
+import { Menu } from './../config/menus';
 
 /*
 *  The component that renders the main navigation bar
@@ -13,17 +13,18 @@ const menuJson = require('./../config/menus.json');
 @Component({
   selector: 'core-menu',
   providers: [],
-  templateUrl: 'core.component.client.html'
+  templateUrl: '../views/core.view.html'
 })
 
 export class CoreMenuComponent implements OnInit{
   menu: Array<any>;
   loggedIn: boolean;
   user: any;
+  isCollapsed: boolean;
 
   constructor(private router: Router, private authService: AuthService) {
     this.menu = [];
-
+    this.isCollapsed = true;
     
     }
 
@@ -53,10 +54,7 @@ export class CoreMenuComponent implements OnInit{
     this.menu = [];
     let tempMenu = [];
 
-    //do some formatting to get proper JSON
-    tempMenu = menuJson.replace("module.exports =", "");
-    tempMenu = tempMenu.slice(0, tempMenu.length - 1);
-    tempMenu = JSON.parse(tempMenu);
+    tempMenu = Menu;
 
     for (let item of tempMenu) {
       if (this.authorized(item)) {

@@ -23,17 +23,20 @@ var Promise = q.promise;
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule)
 {
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
-  var adminCount = Roles.count({_id: 'admin', parent: null}).exec()
+  var adminCount = Roles.count({_id: ADMIN_ROLE_NAME, parent: null}).exec()
   .then(count => {
     if (count < 1)
     {
       let adminRole = new Roles();
-      adminRole._id = 'admin';
+      adminRole._id = ADMIN_ROLE_NAME;
       adminRole.parent = null;
-      adminRole.subrles = ['user'];
+      adminRole.canModify = false;
+      adminRole.subroles = [DEFAULT_ROLE_NAME];
       adminRole.save()
       .then(data => {
         logger.info('created admin role');
@@ -49,28 +52,29 @@ function roleModule(logger, userModule)
     logger.log('crit', 'Unable to determine if an admin role is present');
   });
     
-  // check to make sure there exists an user role 
+  // check to make sure there exists a default role
   //if one doesn't exist, create it.
-  var userCount = Roles.count({_id: 'user', parent: 'admin'}).exec()
+  var userCount = Roles.count({_id: DEFAULT_ROLE_NAME, parent: ADMIN_ROLE_NAME}).exec()
   .then(count => {
     if (count < 1)
     {
       let userRole = new Roles();
-      userRole._id = 'user';
-      userRole.parent = 'admin';
+      userRole._id = DEFAULT_ROLE_NAME;
+      userRole.parent = ADMIN_ROLE_NAME;
+      userRole.parent.canModify = false;
       userRole.save()
       .then(data => {
-        logger.info('created user role');
+        logger.info('created default role');
       })
       .catch(err =>
       {
-        logger.log('crit',"Failed to create default user role");
+        logger.log('crit',"Failed to create default default user role");
       });
     }
   })
   .catch(err =>
   {
-    logger.log('crit', 'Unable to determine if a user role is present');
+    logger.log('crit', 'Unable to determine if a default role is present');
   });
     
 
@@ -98,6 +102,7 @@ function roleModule(logger, userModule)
     var role = new Roles();
     role._id = req.body._id;
     role.parent = req.body.parent;
+
     role.canModify = req.body.canModify || false;
     role.parentForDescendants = req.body.parentForDescendants || [];
 
@@ -135,7 +140,6 @@ function roleModule(logger, userModule)
           resolve(true);
         });
       }
-      
     })
     .then(ok =>
     {
@@ -159,8 +163,58 @@ function roleModule(logger, userModule)
       {
         sendServerError(res, error, 400);
       } 
-      sendServerError(res, error);
+      else
+      {
+        sendServerError(res, error);
+      }
     })
+  }
+  
+  /**
+   * Updates the role that a user is in.
+   * Validates, determines subroles, and requests
+   * and provides role data to the userModule for
+   * the update
+   */
+  function updateUserRole(req, res) {
+    let targetRole = req.body.roleId;
+    let userId = req.body.userId;
+
+    if (!(targetRole && userId)) {
+      sendServerError(res, 'Error in updateUserRole. Must supply roleId and userId', 400);
+      return;
+    }
+    //make sure role exists
+    Roles.count({ _id: targetRole }).exec()
+      .then(count => {
+        if (count < 1) {
+          return new Promise((resolve, reject) => {
+            reject("parent not found");
+          });
+        }
+        else {
+          return new Promise((resolve, reject) => {
+            resolve(true);
+          });
+        }
+      })
+      .then(ok => {
+        return getAllRoles();
+      })
+      .then(allRoles => {
+        return getRolesByParent(targetRole, allRoles, []);
+      })
+      .then(subroles => {
+        return userModule.crud.updateUserRoles(userId, targetRole, subroles);
+      }).then(user =>
+      {
+        res.status(201).send(user);
+      })
+      .catch(error => {
+        sendServerError(res, error);
+      });
+
+
   }
 
   function updateDirectDescendants(role)
@@ -183,7 +237,6 @@ function roleModule(logger, userModule)
    */
   function updateParentForRole(roleName, roleParentName)
   {
-
     return Roles.update(
     {
       _id: roleName
@@ -201,14 +254,13 @@ function roleModule(logger, userModule)
   {
     return new Promise((resolve, reject) =>
     {
-
       //update the parent roles' subroles
-      let parent = _.find(data, '_id', role.parent);
+      let parent = _.find(data, ['_id', role.parent]);
       while (parent)
       {
         var subroles = getRolesByParent(parent._id, data, []);
-        userModule.flushSubroles(parent._id, subroles);
-        parent = _.find(data, '_id', parent.parent);
+        userModule.crud.flushSubroles(parent._id, subroles);
+        parent = _.find(data, ['_id', parent.parent]);
       }
       resolve("roles updated");
     });
@@ -219,7 +271,7 @@ function roleModule(logger, userModule)
    */
   function getRolesByParent(parentRoleName, data, subroles)
   {
-    var directDescendants = _.filter(data, 'parent', parentRoleName);
+    var directDescendants = _.filter(data, ['parent', parentRoleName]);
     if (directDescendants && directDescendants.length > 0)
     {
       _.forEach(directDescendants, function(descendant)
@@ -250,9 +302,7 @@ function roleModule(logger, userModule)
         }
         else
         {
-          _.forEach(data, function(role){
-            list.push(role._id);
-          });
+          list = getRolesByParent(ADMIN_ROLE_NAME, data, []);
         }
         res.status(200).send(list);
       })
@@ -326,14 +376,14 @@ function roleModule(logger, userModule)
             });
           }
           var oldparsub = getRolesByParent(oldParent, allRoles, []);
-          userModule.flushSubroles(oldParent, oldparsub);
+          userModule.crud.flushSubroles(oldParent, oldparsub);
 
           //update the parent roles' subroles
           var parent = addedRole;
           while (parent !== null)
           {
             var subroles = getRolesByParent(parent._id, allRoles, []);
-            userModule.flushSubroles(parent._id, subroles);
+            userModule.crud.flushSubroles(parent._id, subroles);
             parent = _.find(allRoles, '_id', parent.parent);
           }
 
@@ -406,7 +456,7 @@ function roleModule(logger, userModule)
           });
         //make sure the deleted role is removed from subroles as well
         list.push(req.params.id);
-        userModule.removeSubroles(list);
+        userModule.crud.removeSubroles(list);
         
         resolve(true);
       })
@@ -429,7 +479,7 @@ function roleModule(logger, userModule)
    */
   function getRoleTree(req, res, next)
   {
-    rootRole = req.params.id ? req.params.id : 'admin';
+    rootRole = req.params.id? req.params.id: ADMIN_ROLE_NAME;
     getAllRoles()
     .then((data) =>
     {
@@ -442,6 +492,26 @@ function roleModule(logger, userModule)
     });
   }
 
+  /**
+   * Returns a list of all Roles
+   * 
+   * @param req {The HTTP request object}
+   * @param res {The HTTP result object}
+   * @returns roles {A list of all roles}
+   * 
+   */
+  function listAllRoles(req, res)
+  {
+    return getAllRoles()
+    .then(roles =>{
+      res.status(200).send(roles);
+    })
+    .catch(error =>
+    {
+      logger.error(error);
+      sendServerError(res, "Internal Server Error");
+    });
+  }
 
   /*
    * Returns a formatted role tree object starting from the target
@@ -504,10 +574,12 @@ function roleModule(logger, userModule)
 
   return {
     create: addRole,
+    list: listAllRoles,
     update: updateRole,
     delete: removeRole,
     subroles: getSubroles,
-    tree: getRoleTree
+    tree: getRoleTree,
+    updateUserRole: updateUserRole
   }
 }
 

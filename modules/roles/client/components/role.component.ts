@@ -13,7 +13,7 @@ import {Subscription} from 'rxjs/Subscription';
 
 @Component({
   selector: 'create-role', 
-  templateUrl: '../views/roles.html',
+  templateUrl: '../views/roles.view.html',
   styles: [
     require('../css/style.css').toString()
   ]
