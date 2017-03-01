@@ -5,8 +5,10 @@
 
 @inactive-link-color: rgba(255, 255, 255, 0.75);
 @active-link-color: rgba(255, 255, 255, 1);
-@angular-blue: rgba(25, 118, 210, 1);
-@angular-red: rgba(221, 0, 49, 1);
+@blue: rgba(25, 118, 210, 1);
+@red: rgba(221, 0, 49, 1);
+@green: rgba(92,193,25,1);
+@yellow: rgba(210,198,25,1);
 @background-midnight: #263238;
 
 /******************  boostrap fixes ******************/
@@ -25,8 +27,8 @@ div.alert {
   padding: 5px 15px;
   margin: 5px 0;
   text-transform: uppercase;
-  color: @angular-blue;
-  border: 1px solid @angular-blue;
+  color: @blue;
+  border: 1px solid @blue;
   font-family: "RBNo21a-Bold", sans-serif;
   font-size: 14px;
   letter-spacing: 1px;
@@ -38,42 +40,52 @@ div.alert {
   appearance: none;
   -moz-appearance: none;
   background-color: transparent;
-  -webkit-transition: all 0.3s ease;
-  transition: all 0.3s ease;
+
+  .color-class(@active-link-color,@active-link-color,@blue);
+}
+
+.btn-core.red {
+  .color-class(@active-link-color,@active-link-color,@red);
+}
+
+.btn-core.green {
+  .color-class(@active-link-color,@active-link-color,@green);
+}
+
+.btn-core.yellow {
+  .color-class(@active-link-color,@active-link-color,@yellow);
 }
 
 p .btn-core {
   margin-left: 0px;
 }
 
-.btn-core:hover,
-.btn-core.btn-red.inverse:hover {
-  cursor: pointer;
-  color: #ffffff;
-  text-decoration: none;
-  background-color: @angular-blue;
-}
+.color-class(@color,@hovercolor,@bgcolor) {
+  color: @color;
+  border-color: @color;
+  background-color: @bgcolor;
+  -webkit-transition: all 0.3s ease;
+  transition: all 0.3s ease;
 
-.btn-red {
-  color: #ffffff;
-  border: 0px solid #ffffff;
-  background-color: @angular-red;
-}
-
-.btn-red:hover {
-  background-color: darken(@angular-red,15%);
-}
-
-.btn-red.inverse {
-  color: @angular-red;
-  border: 1px solid @angular-red;
-  background-color: transparent;
+  &:hover {
+    color: @hovercolor;
+    border-color: @hovercolor;
+    background-color: darken(@bgcolor,10%);
+  }
 }
 
 .btn-lg {
   font-size: 20px;
   line-height: 20px;
   padding: 10px 30px;
+}
+
+.fade {
+  opacity: 0.5;
+
+  &:hover {
+    opacity: 1;
+  }
 }
 
 sup {
@@ -207,7 +219,7 @@ form .form-info {
 }
 
 nav.bg-primary {
-    background: @angular-blue !important;
+    background: @blue !important;
 }
 
 .navbar a {
@@ -259,7 +271,7 @@ nav.bg-primary {
     transition: background color 0.3s;
 
     &:hover {
-        background-color: darken(@angular-blue, 5%);
+        background-color: darken(@blue, 5%);
     }
     
     span {
@@ -282,7 +294,7 @@ nav.bg-primary {
     &:hover,
     &:focus,
     &:active {
-        background-color: darken(@angular-blue, 5%);
+        background-color: darken(@blue, 5%);
     }
 }
 
@@ -294,12 +306,12 @@ nav.bg-primary {
     &:hover,
     &:focus,
     &:active {
-        border: 0px solid @angular-blue;
+        border: 0px solid @blue;
     }
 }
 
 .navbar-collapse .dropdown-menu {
-    background-color: darken(@angular-blue, 10%);
+    background-color: darken(@blue, 10%);
     color: rgba(255, 255, 255, 0.75);;
     padding: 0;
     margin: 0;
@@ -311,7 +323,7 @@ nav.bg-primary {
         &:focus,
         &:hover {
             color: rgba(255, 255, 255, 0.75);
-            background-color: lighten(@angular-blue,10%);
+            background-color: lighten(@blue,10%);
         }
     }
 
