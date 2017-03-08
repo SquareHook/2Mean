@@ -75,62 +75,81 @@ function userAuthController(logger) {
 
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = 'user';
-
-    // get password and salt
-    argon2.generateSalt().then(salt => {
-      argon2.hash(newUser.password, salt).then(hash => {
-        newUser.password = hash;
     
-        // save the user
-        newUser.save((err, data) => {
-          if (err) {
-            let errors = extractMongooseErrors(err.errors);
-            let validation = _.find(errors, (o) => {
-              return (o.name === 'ValidatorError'); 
-            });
-
-            if (validation) {
-              logger.error('Validation error on registering a new user', validation);
-              deferred.reject({
-                code: 400,
-                error: validation.message
+    if (!isStrongPassword(newUser.password)) {
+      deferred.reject({
+        code: 400,
+        error: 'Invalid password: ' + config.auth.invalidPasswordMessage
+      });
+    } else {
+      // get password and salt
+      argon2.generateSalt().then(salt => {
+        argon2.hash(newUser.password, salt).then(hash => {
+          newUser.password = hash;
+      
+          // save the user
+          newUser.save((err, data) => {
+            if (err) {
+              let errors = extractMongooseErrors(err.errors);
+              let validation = _.find(errors, (o) => {
+                return (o.name === 'ValidatorError'); 
               });
-            } else {
-              // check for specific codes to provide feedback to ui
-              let errObj = err.toJSON();
-              let code = errObj.code;
-              let errmsg = errObj.errmsg;
 
-              // user already exists
-              // 11000 code is from mongoose
-              if (code === 11000 && false) {
-                // TODO implement email-password login and registration
-                // confirmation emails. Otherwise usernames could be enumerated
-                // with this endpoint. Until then send back generic error
-                // message
+              if (validation) {
+                logger.error('Validation error on registering a new user', validation);
                 deferred.reject({
-                  code: 500, 
-                  error: 'Username is taken'
+                  code: 400,
+                  error: validation.message
                 });
               } else {
-                logger.error('Creating User Error', err.errmsg);
-                deferred.reject({
-                  code: 500,
-                  error: 'Internal Server Error'
-                });
-              }
+                // check for specific codes to provide feedback to ui
+                let errObj = err.toJSON();
+                let code = errObj.code;
+                let errmsg = errObj.errmsg;
 
+                // user already exists
+                // 11000 code is from mongoose
+                if (code === 11000) {
+                  let errmsgList = errmsg.split(' ');
+                  // index is the duplicate key
+                  let index = errmsgList[errmsgList.indexOf('index:')+1];
+
+                  // TODO implement email-password login and registration
+                  // confirmation emails. Otherwise usernames could be enumerated
+                  // with this endpoint. Until then send back generic error
+                  // message
+
+                  if (index === 'username_1') {
+                    deferred.reject({
+                      code: 500, 
+                      error: 'Username is taken'
+                    });
+                  } else {
+                    deferred.reject({
+                      code: 500,
+                      error: 'Internal Server Error'
+                    });
+                  }
+                } else {
+                  logger.error('Creating User Error', err.errmsg);
+                  deferred.reject({
+                    code: 500,
+                    error: 'Internal Server Error'
+                  });
+                }
+
+              }
+            } else {
+              logger.info('User created: ' + newUser.username);
+              deferred.resolve({
+                code: 201,
+                data: data
+              });
             }
-          } else {
-            logger.info('User created: ' + newUser.username);
-            deferred.resolve({
-              code: 201,
-              data: data
-            });
-          }
+          });
         });
       });
-    });
+    }
 
     return deferred.promise
       .then((data) => {
