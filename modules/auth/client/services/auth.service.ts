@@ -79,7 +79,7 @@ export class AuthService {
    * @param {string}   password The password to auth with.
    * @param {function} cb       The callback to use to get results.
    */
-  login(username: string, password: string, cb: (err: Object, user: Object) =>  any) : void {
+  login(username: string, password: string, cb: (err: any, user: Object) =>  any) : void {
   
     let body = {
       username: username,
@@ -113,7 +113,7 @@ export class AuthService {
 
         cb(null, this.user);
       }, (error: Response | any) => {
-        cb({ error: 401}, null);
+        cb(error, null);
       });
 
 

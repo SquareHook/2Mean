@@ -187,71 +187,81 @@ function authenticationModule(logger) {
       });
     } else {
       Users.findOne({username: creds.username})
+        .exec()
         .then((user) => {
-          // Create new key (even if valid one exists).
-          let key = new Keys();
+          if (user) {
+            // Create new key (even if valid one exists).
+            let key = new Keys();
 
-          let apikey = {
-            value: createKey(16),
-            created: new Date()
-          };
+            let apikey = {
+              value: createKey(16),
+              created: new Date()
+            };
 
-          argon2.verify(user.password, creds.password).then(match => {
-            if (!match) {
-              deferred.reject({
-                code: 401,
-                error: 'Incorrect Username/Password'
-              });
-            } else {
-              // Remove the old key from the Keys collection.
-              if (user.apikey && user.apikey.value) {
-                Keys.findOne({value: user.apikey.value})
-                  .then((data) => {
-                    data.remove();
-                  }, (err) => {
-                    logger.error('Error finding old key to remove', err.errmsg);
-                  });
+            argon2.verify(user.password, creds.password).then(match => {
+              if (!match) {
+                deferred.reject({
+                  code: 400,
+                  error: 'Incorrect Username/Password'
+                });
+              } else {
+                // Remove the old key from the Keys collection.
+                if (user.apikey && user.apikey.value) {
+                  Keys.findOne({value: user.apikey.value})
+                    .then((data) => {
+                      data.remove();
+                    }, (err) => {
+                      logger.error('Error finding old key to remove', err.errmsg);
+                    });
+                }
+    
+                // Update users reference to the key.
+                user.apikey.value = apikey.value;
+                user.apikey.created = apikey.created;
+    
+                user.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                logger.info('User logged in.', user.username);
+    
+                // Save the new key.
+                key.value = apikey.value;
+                key.created = apikey.created;
+                key.user = user._id;
+                //determine its roles
+                let keyRoles = [];
+                keyRoles.push(user.role);
+                keyRoles = keyRoles.concat(user.subroles);
+                key.roles = keyRoles;
+    
+                key.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                deferred.resolve({
+                  code: 200,
+                  data: {
+                    apikey: user.apikey.value,
+                    user: sanitizeUser(user)
+                  }
+                });
               }
-    
-              // Update users reference to the key.
-              user.apikey.value = apikey.value;
-              user.apikey.created = apikey.created;
-    
-              user.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              logger.info('User logged in.', user.username);
-    
-              // Save the new key.
-              key.value = apikey.value;
-              key.created = apikey.created;
-              key.user = user._id;
-              //determine its roles
-              let keyRoles = [];
-              keyRoles.push(user.role);
-              keyRoles = keyRoles.concat(user.subroles);
-              key.roles = keyRoles;
-    
-              key.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              deferred.resolve({
-                code: 200,
-                data: {
-                  apikey: user.apikey.value,
-                  user: sanitizeUser(user)
-                }
-              });
-            }
-          }).catch(err => {
-            logger.error(err);
-          });
+            }).catch(err => {
+              logger.error(err);
+            });
+          } else {
+            logger.error('User not found');
+
+            deferred.reject({
+              code: 400,
+              error: 'Incorrect Username/Password'
+            });
+          }
         }, (error) => {
           logger.error('Auth Module error: Hit error querying for user.', error);
 
