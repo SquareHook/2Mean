@@ -58,7 +58,7 @@ var md5 = require('md5');
 /**
  * Main business logic for handling requests.
  */
-function userProfileController(logger) {
+function userProfileController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
   /**
@@ -74,134 +74,56 @@ function userProfileController(logger) {
   function changeProfilePicture(req, res, next) {
     // get user from request
     var user = req.user;
+    let uploadConfig = {
+      strategy: config.uploads.profilePicture.use,
+      oldFileUrl: user.profileImageURL,
+      req: req,
+      res: res
+    };
 
-    // save old image uri so it can be removed if save works
-    var re = /\/[^\/]*$/;
-    var start = user.profileImageURL.search(re);
-    // start 1 after to remove slash from file name
-    var oldFileName = user.profileImageURL.slice(start+1);
-
-    if (oldFileName.length === 0) {
-      // no old url
-      oldFileName = undefined;
-      logger.warning('Old url did not exist while changing user profile picture');
-    }
-    
-    var deferred = q.defer();
-
-    //use uuid timestamp based id
-    var fileName = uuid.v1();
-    var upload;
-    var url;
-
-    if (config.uploads.profilePicture.use == 's3') {
-      var s3 = new aws.S3();
-      upload = multer({
-        storage: multerS3({
-          s3: s3,
-          bucket: config.uploads.profilePicture.s3.bucket,
-          acl: 'public-read',
-          metadata: function (req, file, cb) {
-            cb(null, {fieldName: file.fieldname});
-          },
-          key: function (req, file, cb) {
-            cb(null, fileName);
-          }
-        }),
-        fileFilter: profilePictureFileFilter,
-        limits: config.uploads.profilePicture.s3.limits
-      }).single('file');
-
-      // s3 file acessed directly from aws
-      url = config.uploads.profilePicture.s3.dest + fileName;
-    } else if (config.uploads.profilePicture.use == 'local') {
-      upload = multer({
-        storage: multer.diskStorage({
-          destination: function (req, file, cb) {
-            cb(null, config.uploads.profilePicture.local.dest);
-          },
-          filename: function (req, file, cb) {
-            cb(null, fileName);
-          }
-        }),
-        fileFilter: profilePictureFileFilter,
-        limits: config.uploads.profilePicture.local.limits
-      }).single('file');
-
-      // local files accessed through api
-      url = '/api/users/' + user._id + '/picture/' + fileName;
-    } else {
-      logger.error('Upload strategy unknown', config.uploads.profilePicture.use);
-      //TODO is there a server config error code?
-      res.status(400).send('Server Configuration Error: Upload strategy unknown');
-    }
-
-    //TODO pretty sure this is hitting a stub
-    if (isAuthorized(user, 'update')) {
-      // use the multer upload object
-      upload(req, res, function (err) {
-        if (err) {
-          logger.error(err);
-
-          return res.status(400).send({
-            message: 'Error occurred while uploading profile picture'
-          });
+    return new Promise((resolve, reject) => {
+      if (isAuthorized(user, 'update')) { 
+        if (uploadConfig.strategy === 's3') {
+          uploadConfig.s3 = config.uploads.profilePicture.s3;
+        } else if (uploadConfig.strategy === 'local') {
+          uploadConfig.local = config.uploads.profilePicture.local;
+          uploadConfig.local.apiPrefix = '/api/users/' + user._id + '/picture/';
         } else {
-          // on successful upload we should change the user's imageUrl in
-          // the database
-          user.profileImageURL = url;
-
-          user.save((err, data) => {
-            if (err) {
-              logger.error('Error updating user', err);
-
-              deferred.reject({
-                code: 500,
-                error: 'Internal Server Error'
-              });
-            } else {
-              if (config.uploads.profilePicture.use == 'local') {
-                // fs uses unlink to delete files
-                // delete old profile picture
-                fs.unlink(path.resolve(config.uploads.profilePicture.local.dest, oldFileName),
-                  () => {
-                    logger.debug('Old profile picture deleted');
-                  });
-              } else if (config.uploads.profilePicture.use === 's3') {
-                // s3 sdk sends a delete request to the aws-s3 api
-                var params = {
-                  Bucket: config.uploads.profilePicture.s3.bucket,
-                  Key: oldFileName
-                };
-
-                s3.deleteObject(params, function(err, data) {
-                  if (err) {
-                    // this will need to be logged and resolved to prevent
-                    // cluttering of s3 resources
-                    // AKA use elasticsearch/kibana logger config
-                    // to stay aware of this kind of event and fix it
-                    logger.error('Error while deleting object on s3', err);
-                  } else {
-                    logger.debug('Old profile picture deleted');
-                  }
-                });
-              }
-              deferred.resolve({
-                code: 200,
-                data: data
-              });
-            }
-          });
+          throw new Error('unknown strategy');
         }
-      });
-    }
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+        return Users.findById(user._id).exec().then((foundUser) => {
+          if (foundUser) {
+            resolve(shared.uploader.upload(uploadConfig).then((url) => {
+              foundUser.profileImageURL = url;
+              return foundUser.save();
+            }));
+          } else {
+            throw new Error('not found');
+          }
+        });
+      } else {
+        throw new Error('forbidden');
+      }
+    })
+    .then((savedUser) => {
+      res.status(200).send(savedUser);
+    })
+    .catch((error) => {
+      if (error.message === 'unknown strategy') {
+        logger.error(error.message + ' for profile picture upload');
+        res.status(500).send();
+      } else if (error.message === 'forbidden') {
+        res.status(403).send();
+      } else if (error.message === 'not found') {
+        res.status(404).send();
+      } else if (error.name === 'ValidationError') {
+        res.status(400).send(error.message);
+      } else {
+        logger.error(error);
+        res.status(500).send();
+      }
+    });
   }
     
   /**
