@@ -39,6 +39,7 @@ export class ChangeProfilePictureComponent {
   @Input() user: User;
   userForm: FormGroup;  
   formValid: boolean;
+  endpoint: string;
 
   private formErrors: any;
   private validationMessages: any;
@@ -60,6 +61,7 @@ export class ChangeProfilePictureComponent {
     this.formValid = false;
 
     // get config for validation
+    this.endpoint = config.uploads.profilePicture.url;
     this.allowedTypes = config.uploads.profilePicture.allowedTypes;
     this.maxSize = config.uploads.profilePicture.maxSize;
   }
@@ -227,5 +229,14 @@ export class ChangeProfilePictureComponent {
    */
   getImageUrl() {
     return this.user.profileImageURL;
+  }
+
+  /**
+   * called when a new uri is emitted by profile picture component
+   */
+  uriChange(newUri: string) {
+    let user = this.authService.getUser();
+    user.profileImageURL = newUri;
+    this.authService.setUser(user);
   }
 }
