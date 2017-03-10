@@ -9,7 +9,8 @@ import {
 } from '@angular/core';
 import { FileUploader } from 'ng2-file-upload';
 import {
-  ControlValueAccessor
+  ControlValueAccessor,
+  NG_VALUE_ACCESSOR
 } from '@angular/forms';
 
 @Component({

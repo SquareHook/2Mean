@@ -1,15 +1,20 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { FileUploadComponent } from './file-upload.component';
 
 @Component({
   selector: 'image-file-upload',
   templateUrl: './../views/image-file-upload.view.html'
 })
 export class ImageFileUploadComponent {
+  @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent;
+
   @Input() endpoint: string;
   @Output() uriChanged = new EventEmitter<string>();
 
+  // Preview image source
   src: string | SafeUrl;
+  // Alt text
   alt: string;
   file: any;
 
@@ -40,5 +45,13 @@ export class ImageFileUploadComponent {
     } else {
       this.src = undefined;
     }
+  }
+
+  /**
+   * uploadFile
+   * bubble down the event
+   */
+  uploadFile() {
+    this.fileUploadComponent.uploadFile();
   }
 }

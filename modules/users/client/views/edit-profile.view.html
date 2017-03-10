@@ -1,4 +1,4 @@
-  <form [formGroup]="userForm" (ngSubmit)="submit()">
+  <form [formGroup]="userForm" (ngSubmit)="submit(); fileUpload.uploadFile()">
     <div class="form-group">
       <label for="firstName">First Name</label>
       <input type="text" class="form-control" id="firstName" name="firstName"
@@ -19,6 +19,7 @@
     </div>
     <div class="form-group">
       <label for="profilePicture">Profile Picture</label>
+      <image-file-upload #fileUpload [endpoint]="endpoint" (uriChanged)="uriChange($event)"></image-file-upload>
       <input type="hidden" class="form-control" id="profilePictureType" name="profilePictureType"
              formControlName="profilePictureType">
       <input type="hidden" class="form-control" id="profilePictureSize" name="profilePictureSize"

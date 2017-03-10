@@ -1,5 +1,4 @@
 <form [formGroup]="userForm" (ngSubmit)="fileUpload.uploadFile(); upload()">
   <image-file-upload #fileUpload [endpoint]="endpoint" (uriChanged)="uriChange($event)"></image-file-upload>
-  <button type="submit" class="btn btn-primary"
-          [disabled]="!fileUpload.valid">Change Picture</button>
+  <button type="submit" class="btn btn-primary">Change Picture</button>
 </form>
