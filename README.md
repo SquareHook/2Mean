@@ -134,6 +134,9 @@ it.
 }
 ```
 
+There is also a file drop component that can be used similarly to the
+file select. This component is demoed on the edit user page.
+
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
 below is an example menu object for the articles module
