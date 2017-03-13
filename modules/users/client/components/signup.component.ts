@@ -120,7 +120,7 @@ export class SignupComponent implements AfterViewChecked {
     },
     'password': {
       'required': 'Password is required',
-      'strongPassword': 'Password must contain upper, lower case letter, digit, and symbol. It must be 8 characters long'
+      'strongPassword': 'Password must contain upper, lower case letter, digit, and symbol. It must be 8 characters long.'
     }
   };
 
