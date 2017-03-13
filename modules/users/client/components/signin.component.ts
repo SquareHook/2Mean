@@ -2,6 +2,7 @@
 import { Component, OnInit }from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router, ActivatedRoute }           from '@angular/router';
+import { NotificationsService } from 'angular2-notifications';
 
 /*  Angular2 Models */
 import { User }             from './../models/user.model';
@@ -18,6 +19,7 @@ export class SigninComponent implements OnInit {
   returnUrl: string;
 
   constructor(
+    private notificationsService: NotificationsService,
     private authService: AuthService, 
     private router: Router,
     private activatedRoute: ActivatedRoute
@@ -47,7 +49,12 @@ export class SigninComponent implements OnInit {
 
       // server has returned error
       if (error) {
-        console.log(error);
+        if (error.status === 400) {
+          this.notificationsService.error('Error', error._body);
+        } else if (error.status === 500) {
+          this.notificationsService.error('Error', 'Internal Server Error');
+        }
+
         this.loading = false;
       }
     });
