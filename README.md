@@ -35,6 +35,17 @@ Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
 hostname you use in your browser. Otherwise you will be unable to authenticate
 users.
 
+### Mongo
+Mongo can be configured with several environment variables. By default 2Mean
+will attempt to connect to a local mongo on port 27017 using 2Mean_development.
+These variables can be set to change this behavior:
+
+- `TOOMEAN_MONGO_HOST`, `TOOMEAN_MONGO_PORT`, and `TOOMEAN_MONGO_DB` can be
+  set to modify the default config.
+- `TOOMEAN_MONGO_CONNECTION_STRING` can be set to a full connection string.
+  this configuration is useful when connecting to a replica set or if the other
+  options are restrictive.
+
 ### AWS Access Keys
 
 To use aws-s3 file upload functionality, a valid access key must be installed
