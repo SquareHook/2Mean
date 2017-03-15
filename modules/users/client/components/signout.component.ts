@@ -3,10 +3,10 @@ import { Component, OnInit }from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router, ActivatedRoute }           from '@angular/router';
 /*  Angular2 Models */
-import { User }             from './../models/user.model.client';
+import { User }             from './../models/user.model';
 
 /*  Angular2 Services */
-import { AuthService }      from './../../../auth/client/auth.service.client';
+import { AuthService }      from './../../../auth/client/services/auth.service';
 
 @Component({
   templateUrl: './../views/signout.view.html'

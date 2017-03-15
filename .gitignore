@@ -25,3 +25,8 @@ modules/core/client/config/menus.json
 config/private/
 uploads
 .env
+
+#visual studio code
+.vscode
+
+coverage

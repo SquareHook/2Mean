@@ -56,18 +56,18 @@ var UserSchema = new Schema({
     }
   },
   profileImageURL: {
-    type: String,
-    default: 'modules/users/client/img/profile/default.png'
+    type: String
   },
   providerData: {},
   additionalProvidersData: {},
-  roles: {
-    type: [{
-      type: String,
-      enum: ['user', 'admin']
-    }],
-    default: ['user'],
-    required: 'Please provide at least one role'
+  role: {
+    type: String,
+    default: 'user',
+    required: 'Please provide a user role'
+  },
+  subroles:{
+    type:[String],
+    default:[]
   },
   updated: {
     type: Date,

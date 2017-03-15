@@ -35,6 +35,17 @@ Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
 hostname you use in your browser. Otherwise you will be unable to authenticate
 users.
 
+### Mongo
+Mongo can be configured with several environment variables. By default 2Mean
+will attempt to connect to a local mongo on port 27017 using 2Mean_development.
+These variables can be set to change this behavior:
+
+- `TOOMEAN_MONGO_HOST`, `TOOMEAN_MONGO_PORT`, and `TOOMEAN_MONGO_DB` can be
+  set to modify the default config.
+- `TOOMEAN_MONGO_CONNECTION_STRING` can be set to a full connection string.
+  this configuration is useful when connecting to a replica set or if the other
+  options are restrictive.
+
 ### AWS Access Keys
 
 To use aws-s3 file upload functionality, a valid access key must be installed
@@ -78,7 +89,57 @@ Optionally you can also enable the following environment variables:
 
 # Too Mean
 
+## Static Assets
+To include static assets (like images) in an Angular 2 component, you can
+do the following:
+
+```
+@Component({
+  template: '<img [src]="imageSource">'
+})
+export SomeComponent {
+  let imageSource = require('<image path>');
+}
+```
+
+Webpack will replace the required image with its path in the `dist` directory.
 
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
-//TODO: ADD FORMATTING OPTIONS
+below is an example menu object for the articles module
+```
+[{
+  "template": "Articles",
+  "state": "/articles",
+  "position": 2,
+  "roles": [],
+  "subitems": [
+  {
+    "template": "New",
+    "state": "/articles/new",
+    "roles": ["user"]
+  },
+  {
+    "template": "List",
+    "state": "/articles",
+    "roles": ["user"]
+  }]
+}]
+
+```
+* template is the name of the menu item
+* state is the routerLink
+* roles is an array of user roles who the menu item will render for
+* subitems will appear in a dropdown below the main menu item
+
+## Role Manager
+Admin users can configure roles in a tree structure to simplify
+granting permissions to certain resources. For example, creating a
+role called 'roleA' with parent 'user' would mean that the user role
+has access to everything roleA can access as well. 
+
+Users have one main role and an array of subroles depending on their
+main role's position in the role tree. 
+
+TODO: continue documentation once endpoints are dynamic and we have a 
+UI for managing what roles a user is in.

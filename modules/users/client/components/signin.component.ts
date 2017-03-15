@@ -2,11 +2,13 @@
 import { Component, OnInit }from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router, ActivatedRoute }           from '@angular/router';
+import { NotificationsService } from 'angular2-notifications';
+
 /*  Angular2 Models */
-import { User }             from './../models/user.model.client';
+import { User }             from './../models/user.model';
 
 /*  Angular2 Services */
-import { AuthService }      from './../../../auth/client/auth.service.client';
+import { AuthService }      from './../../../auth/client/services/auth.service';
 
 @Component({
   templateUrl: './../views/signin.view.html'
@@ -17,6 +19,7 @@ export class SigninComponent implements OnInit {
   returnUrl: string;
 
   constructor(
+    private notificationsService: NotificationsService,
     private authService: AuthService, 
     private router: Router,
     private activatedRoute: ActivatedRoute
@@ -33,13 +36,25 @@ export class SigninComponent implements OnInit {
       // server has returned data
       if (data) {
         // is there a return url
-        let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
-        this.router.navigateByUrl(redirect);
+        // honor query param first then authService
+        this.activatedRoute.queryParams.subscribe((params) => {
+          if (params['redirect']) {
+            this.router.navigateByUrl(params['redirect']);
+          } else {
+            let redirect = this.authService.redirect ? this.authService.redirect : 'profile';
+            this.router.navigateByUrl(redirect);
+          }
+        });
       }
 
       // server has returned error
       if (error) {
-        console.log(error);
+        if (error.status === 400) {
+          this.notificationsService.error('Error', error._body);
+        } else if (error.status === 500) {
+          this.notificationsService.error('Error', 'Internal Server Error');
+        }
+
         this.loading = false;
       }
     });

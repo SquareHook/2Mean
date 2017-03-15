@@ -28,6 +28,10 @@ var path = require('path');
  */
 var argon2 = require('argon2');
 
+/*
+* md5 for hashing 
+*/
+var md5 = require('md5');
 /**
  * config
  */
@@ -38,7 +42,7 @@ var config = require(path.resolve('config/config'));
  */
 function authenticationModule(logger) {
   // Key, 8 hours TTL
-  var keyTTL = 1000 * 60 * 60 * 8;
+  const keyTTL = 1000 * 60 * 60 * 8;
   var defaultPassword = "12345";
 
   // Check if Database has been populated yet.  If not, inject default user.
@@ -55,8 +59,12 @@ function authenticationModule(logger) {
           newUser.email = 'support@squarehook.com';
           newUser.username = 'squarehook';
           newUser.password = hash;
-          newUser.roles = [ 'user', 'admin' ];
-
+          newUser.role ='admin';
+          newUser.subroles = ['user'];
+          //generate profile image
+          let emailHash = md5(newUser.email.toLowerCase());
+          newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
+      
           newUser.save((err, data) => {
             if (err) {
               logger.error(err);
@@ -74,28 +82,40 @@ function authenticationModule(logger) {
    */
   function validateAPIKey(req, res, next) {
     if (!req.cookies || !req.cookies.apikey) {
-      return res.status(400).send('Unauthorized');
+      return res.status(401).send();
     }
 
     Keys.findOne({value: req.cookies.apikey})
-      .then((data) => {
-        // Store auth information for downstream logic.
-        req.auth = data;
 
-        // Look up user.
-        Users.findOne({_id: data.user})
-          .then((user) => {
-            // Store user for downstream logic.
-            req.user = user;
-            return next();
-          }, (err) => {
-            if (err) {
-              logger.error('Authenteication error looking up user referenced in key', err);
-            }
-          });
+      .then((data) => {
+        if (data) {
+          //if the cookie has expired remove the api key, update the user, and set the cookie
+           if(Date.now() - data.created > keyTTL)
+           {
+
+              return logout(req, res, next);
+           }
+
+          // Store auth information for downstream logic.
+          req.auth = data;
+
+          // Look up user.
+          Users.findOne({_id: data.user})
+            .then((user) => {
+              // Store user for downstream logic.
+              req.user = user;
+              return next();
+            }, (err) => {
+              if (err) {
+                logger.error('Authenteication error looking up user referenced in key', err);
+              }
+            });
+        } else {
+          return res.status(401).send();
+        }
       }, (error) => {
         logger.error('Authentication error looking up a key', error);
-        return res.status(400).send('Unauthorized');
+        return res.status(401).send();
       });
   }
 
@@ -150,6 +170,9 @@ function authenticationModule(logger) {
     });
   }
 
+
+
+
   /**
    * The main login logic.
    */
@@ -164,67 +187,81 @@ function authenticationModule(logger) {
       });
     } else {
       Users.findOne({username: creds.username})
+        .exec()
         .then((user) => {
-          // Create new key (even if valid one exists).
-          let key = new Keys();
+          if (user) {
+            // Create new key (even if valid one exists).
+            let key = new Keys();
 
-          let apikey = {
-            value: createKey(16),
-            created: new Date()
-          };
+            let apikey = {
+              value: createKey(16),
+              created: new Date()
+            };
 
-          argon2.verify(user.password, creds.password).then(match => {
-            if (!match) {
-              deferred.reject({
-                code: 401,
-                error: 'Incorrect Username/Password'
-              });
-            } else {
-              // Remove the old key from the Keys collection.
-              if (user.apikey && user.apikey.value) {
-                Keys.findOne({value: user.apikey.value})
-                  .then((data) => {
-                    data.remove();
-                  }, (err) => {
-                    logger.error('Error finding old key to remove', err.errmsg);
-                  });
+            argon2.verify(user.password, creds.password).then(match => {
+              if (!match) {
+                deferred.reject({
+                  code: 400,
+                  error: 'Incorrect Username/Password'
+                });
+              } else {
+                // Remove the old key from the Keys collection.
+                if (user.apikey && user.apikey.value) {
+                  Keys.findOne({value: user.apikey.value})
+                    .then((data) => {
+                      data.remove();
+                    }, (err) => {
+                      logger.error('Error finding old key to remove', err.errmsg);
+                    });
+                }
+    
+                // Update users reference to the key.
+                user.apikey.value = apikey.value;
+                user.apikey.created = apikey.created;
+    
+                user.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                logger.info('User logged in.', user.username);
+    
+                // Save the new key.
+                key.value = apikey.value;
+                key.created = apikey.created;
+                key.user = user._id;
+                //determine its roles
+                let keyRoles = [];
+                keyRoles.push(user.role);
+                keyRoles = keyRoles.concat(user.subroles);
+                key.roles = keyRoles;
+    
+                key.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                deferred.resolve({
+                  code: 200,
+                  data: {
+                    apikey: user.apikey.value,
+                    user: sanitizeUser(user)
+                  }
+                });
               }
-    
-              // Update users reference to the key.
-              user.apikey.value = apikey.value;
-              user.apikey.created = apikey.created;
-    
-              user.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              logger.info('User logged in.', user.username);
-    
-              // Save the new key.
-              key.value = apikey.value;
-              key.created = apikey.created;
-              key.user = user._id;
-              key.roles = user.roles;
-    
-              key.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              deferred.resolve({
-                code: 200,
-                data: {
-                  apikey: user.apikey.value,
-                  user: sanitizeUser(user)
-                }
-              });
-            }
-          }).catch(err => {
-            logger.error(err);
-          });
+            }).catch(err => {
+              logger.error(err);
+            });
+          } else {
+            logger.error('User not found');
+
+            deferred.reject({
+              code: 400,
+              error: 'Incorrect Username/Password'
+            });
+          }
         }, (error) => {
           logger.error('Auth Module error: Hit error querying for user.', error);
 
@@ -307,7 +344,7 @@ function authenticationModule(logger) {
    */
   function sanitizeUser(user) {
     return {
-      id: user._id,
+      _id: user._id,
       apikey: user.apikey,
       created: user.created,
       displayName: user.displayName,
@@ -315,7 +352,8 @@ function authenticationModule(logger) {
       firstName: user.firstName,
       lastName: user.lastName,
       profileImageURL: user.profileImageURL,
-      roles: user.roles,
+      role: user.role,
+      subroles: user.subroles,
       username: user.username
     }
   }

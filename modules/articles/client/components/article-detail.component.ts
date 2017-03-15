@@ -19,7 +19,7 @@ import {
 
 import {
   AuthService
-} from '../../../auth/client/auth.service.client';
+} from '../../../auth/client/services/auth.service';
 
 import 'rxjs/add/operator/switchMap';
 
@@ -53,7 +53,7 @@ export class ArticleDetailComponent implements OnInit {
   }
 
   private userIsOwner(): boolean {
-    return this.article && this.article.userId == this.authService.getUser().id;
+    return this.article && this.article.userId == this.authService.getUser()._id;
   }
 
   ngOnInit(): void {

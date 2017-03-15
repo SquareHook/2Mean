@@ -1,11 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 
-import { AuthService } from '../../../auth/client/auth.service.client';
+import { AuthService } from '../../../auth/client/services/auth.service';
 
 import { Subscription } from 'rxjs/Subscription';
 
-const menuJson = require('./../config/menus.json');
+import { Menu } from './../config/menus';
 
 /*
 *  The component that renders the main navigation bar
@@ -13,33 +13,39 @@ const menuJson = require('./../config/menus.json');
 @Component({
   selector: 'core-menu',
   providers: [],
-  templateUrl: 'core.component.client.html'
+  templateUrl: '../views/core.view.html'
 })
 
-export class CoreMenuComponent {
+export class CoreMenuComponent implements OnInit{
   menu: Array<any>;
   loggedIn: boolean;
   user: any;
+  isCollapsed: boolean;
 
   constructor(private router: Router, private authService: AuthService) {
     this.menu = [];
-    // Determine if logged in
-    this.loggedIn = this.authService.loggedIn;
-    this.setup();
-    this.user = authService.getUser();
+    this.isCollapsed = true;
+    
+    }
 
-    //update the menu when auth changes
-    authService.authChanged$.subscribe(
+    ngOnInit(): void
+    {
+      // Determine if logged in
+      this.loggedIn = this.authService.loggedIn;
+
+      this.user = this.authService.getUser();
+      this.setup();
+      //update the menu when auth changes
+      this.authService.authChanged$.subscribe(
       data => {
         this.loggedIn = data;
-        if(!this.loggedIn)
-        {
-          this.router.navigateByUrl('/signin');
-        }
-        this.user = authService.getUser();
+        this.user = this.authService.getUser();
         this.setup();
       });
-  }
+      
+    }
+    
+  
 
   /*
   * Adds items to the menu from the config file
@@ -48,10 +54,7 @@ export class CoreMenuComponent {
     this.menu = [];
     let tempMenu = [];
 
-    //do some formatting to get proper JSON
-    tempMenu = menuJson.replace("module.exports =", "");
-    tempMenu = tempMenu.slice(0, tempMenu.length - 1);
-    tempMenu = JSON.parse(tempMenu);
+    tempMenu = Menu;
 
     for (let item of tempMenu) {
       if (this.authorized(item)) {
@@ -97,7 +100,18 @@ export class CoreMenuComponent {
   private authorized(item: any): boolean {
     //if the item has one or more roles assigned, check authorization
     if (item.roles && item.roles.length > 0) {
-      return this.loggedIn;
+
+        if(this.user)
+        {
+         let intersection = item.roles.filter((n:string) => {return this.user.subroles.indexOf(n) != -1});
+         //return authorized if the user's role or on of their subroles is contained in the menu item's roles
+         return item.roles.indexOf(this.user.role) > -1 || intersection.length > 0;
+        }
+        else
+        {
+          return false;
+        }
+
     }
     return true;
   }

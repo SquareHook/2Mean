@@ -22,8 +22,8 @@ module.exports = {
         loaders: [
             { loader: 'raw', test: /\.(css|html)$/ },
             { exclude: [ /.*spec\.ts/, /node_modules/ ], loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ },
-            { test: /\.json$/, loaders: [ 'raw-loader', 'json-loader' ] },
-            { test: /\.less$/, loaders: ['style-loader', 'css-loader', 'less-loader' ], }
+            { test: /\.less$/, loaders: ['style-loader', 'css-loader', 'less-loader' ], },
+            { test: /\.(png|jpe?g|gif|svg)$/, loader: 'file-loader?name=/assets/images/[name].[ext]' }
         ],
     },
     output: {

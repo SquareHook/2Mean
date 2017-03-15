@@ -7,7 +7,7 @@ import { async, inject, TestBed } from '@angular/core/testing';
 import { User } from '../../users/client/models/user.model.client';
 
 /* Unit under test */
-import { AuthService } from './auth.service.client';
+import { AuthService } from './auth.service';
 
 describe('AuthService', () => {
   // Must set up testing environment

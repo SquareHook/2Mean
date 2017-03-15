@@ -10,7 +10,7 @@ import { Subject } from 'rxjs/Subject';
 /**
  * Get the user class model.
  */
-import { User } from '../../users/client/models/user.model.client';
+import { User } from '../../../users/client/models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.
@@ -24,6 +24,7 @@ import {
   RequestMethod,
   Headers
 } from '@angular/http';
+
 
 import { Observable } from 'rxjs/Rx';
 
@@ -78,7 +79,7 @@ export class AuthService {
    * @param {string}   password The password to auth with.
    * @param {function} cb       The callback to use to get results.
    */
-  login(username: string, password: string, cb: (err: Object, user: Object) =>  any) : void {
+  login(username: string, password: string, cb: (err: any, user: Object) =>  any) : void {
   
     let body = {
       username: username,
@@ -92,15 +93,15 @@ export class AuthService {
 
         this.user = new User();
         // Save the user information for use later.
-        this.user.id = body.user.id;
+        this.user._id = body.user._id;
         this.user.firstName = body.user.firstName;
         this.user.lastName = body.user.lastName;
         this.user.displayName = body.user.displayName;
         this.user.email = body.user.email;
         this.user.username = body.user.username;
         this.user.profileImageURL = body.user.profileImageURL;
-        this.user.roles = body.user.roles;
-
+        this.user.role = body.user.role;
+        this.user.subroles = body.user.subroles;
         this.saveUser();
         this.loggedIn = true;
 
@@ -112,7 +113,7 @@ export class AuthService {
 
         cb(null, this.user);
       }, (error: Response | any) => {
-        cb({ error: 401}, null);
+        cb(error, null);
       });
 
 
@@ -159,11 +160,11 @@ export class AuthService {
     this.apikey = null;
     this.loggedIn = false;
     this.authChanged(false);
+    localStorage.setItem('user', JSON.stringify(null));
   }
 
 
   getUser(): User {
-
     return JSON.parse(localStorage.getItem('user'));
   }
 

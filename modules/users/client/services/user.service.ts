@@ -6,7 +6,7 @@ import { Injectable, Inject } from '@angular/core';
 /**
  * Get the user class model.
  */
-import { User }               from '../models/user.model.client';
+import { User }               from '../models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.
@@ -34,7 +34,7 @@ import {
  */
 import { FileUploader }       from 'ng2-file-upload';
 
-import { Observable }         from 'rxjs/Rx';
+import { Observable, Observer }         from 'rxjs/Rx';
 
 /*
  * Reactive library.
@@ -72,6 +72,12 @@ export class UserService {
       .map(this.extractData);
   }
 
+  //list for searching and pagination
+  list(page: number, search: string) : Observable<Array<User>>
+  {
+    return this.http.get('api/users?page='+page +'&search='+search)
+    .map(this.extractData);
+  }
   create(newUser: User) : Observable<User> {
     return this.http.post('api/users', newUser)
       .map(this.extractData);
@@ -81,8 +87,14 @@ export class UserService {
     return this.http.put('api/users', updatedUser)
       .map(this.extractData);
   }
+  
+  //used to update user fields by admin users
+  adminUpdate(updatedUser: User) :Observable<User>{
+    return this.http.put('api/users/adminUpdate', updatedUser)
+    .map(this.extractData);
+  }
 
-  delete(userId: string) : Observable<User> {
+  delete(userId: string) : Observable<any> {
     return this.http.delete('api/users/' + userId)
       .map(this.extractData);
   }
@@ -90,6 +102,35 @@ export class UserService {
   register(newUser: User) : Observable<User> {
     return this.http.post('api/users/register', newUser)
       .map(this.extractData);
+  }
+
+  //returns a list of users given an array of user ids
+  readList(userList: Array<string>) : Observable<User> {
+    var csvList = userList.join(',');
+
+    var userFeed;
+
+    if (userList.length < 1) {
+      return Observable.from([]);
+    }
+
+    userFeed = Observable.create(
+      (observer: Observer<User>) => {
+        this.http.get('api/users/list/'+csvList)
+          .subscribe((data) => {
+            let responseArray = data.json();
+
+            responseArray.forEach((userItem: User) => {
+              if (userItem) {
+                observer.next(userItem);
+              }
+            });
+
+            observer.complete();
+          });
+      });
+
+    return userFeed;
   }
 
   /**

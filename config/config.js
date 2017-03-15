@@ -3,7 +3,7 @@
  */
 module.exports = {
   mongo: {
-    uri: 'mongodb://' + (process.env.TOOMEAN_MONGO_HOST || 'localhost') + ':' + (process.env.TOOMEAN_MONGO_PORT || '27017') + '/' + (process.env.TOOMEAN_MONGO_DB || '2Mean_' + process.env.NODE_ENV),
+    uri: process.env.TOOMEAN_MONGO_CONNECTION_STRING || ('mongodb://' + (process.env.TOOMEAN_MONGO_HOST || 'localhost') + ':' + (process.env.TOOMEAN_MONGO_PORT || '27017') + '/' + (process.env.TOOMEAN_MONGO_DB || '2Mean_' + process.env.NODE_ENV)),
     user: process.env.TOOMEAN_MONGO_USER,
     pass: process.env.TOOMEAN_MONGO_PASS
   },
