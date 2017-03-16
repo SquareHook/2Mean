@@ -6,6 +6,9 @@ import { FileUploadComponent } from './file-upload.component';
 @Component({
   selector: 'file-upload-drop',
   templateUrl: './../views/file-upload-drop.view.html',
+  styles: [
+    require('../styles/file-upload-drop.css')
+  ]
 })
 export class FileUploadDropComponent extends FileUploadComponent {
   // last state -> true for file over uploader, false otherwise

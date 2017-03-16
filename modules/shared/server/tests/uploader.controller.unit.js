@@ -217,6 +217,5 @@ describe('UploaderController', () => {
     it('should reject if the deleteObject fails', () => {
 
     });
-
   });
 });

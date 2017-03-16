@@ -9,7 +9,7 @@ const confit = require(path.resolve('config/config'));
 
 function uploadController(logger) {
   /**
-   * uploadLocal
+   * Uploads a file using the local strategy
    * @param {Object} config - same as config object passed to upload
    * @param {Object} config.local - strategy specific options
    * @param {string} config.local.dest - directory to upload relative to project root
@@ -17,11 +17,14 @@ function uploadController(logger) {
    * @returns {Promise} will resolve to the file's url
    */
   function uploadLocal(config) {
+    // init the multer object
     let upload = multer({
       storage: multer.diskStorage({
+        // callback for setting up the destination
         destination: (req, file, cb) => {
           cb(null, config.local.dest);
         },
+        // callback for setting up the name of the file
         filename: (req, file, cb) => {
           cb(null, config.newFileName);
         }
@@ -30,9 +33,11 @@ function uploadController(logger) {
       limits: config.local.limits
     }).single('file');
 
+    // the api url to access the file from
     let url = config.local.apiPrefix + config.newFileName;
 
     return new Promise((resolve, reject) => {
+      // use the multer object
       upload(config.req, config.res, (err) => {
         if (err) {
           logger.error(err);
@@ -44,7 +49,9 @@ function uploadController(logger) {
     })
     .then((newUrl) => {
       return new Promise((resolve, reject) => {
+        // check if old file needs to be deleted
         if (config.oldFileName) {
+          // fs.unlink aka delete
           fs.unlink(path.resolve(config.local.dest, oldFileName), (err) => {
             if (err) {
               logger.error('Error while deleting object locally', err);
@@ -62,7 +69,7 @@ function uploadController(logger) {
   }
 
   /**
-   * uploadS3
+   * Uploads a file using the s3 strategy
    * @param {Object} config - same as config object passed to upload
    * @param {Object} config.s3 - strategy specific options
    * @param {string} config.s3.bucket
@@ -70,8 +77,10 @@ function uploadController(logger) {
    * @returns {Promise} will resolve to the file's url
    */
   function uploadS3(config) {
+    // set up the aws object
     let s3 = new aws.S3();
 
+    // set up the multer object
     let upload = multer({
       storage: multerS3({
         s3: s3,
@@ -88,9 +97,11 @@ function uploadController(logger) {
       limits: config.s3.limits
     }).single('file');
 
+    // aws url
     let url = config.s3.dest + config.newFileName;
     
     return new Promise((resolve, reject) => {
+      // use the multer object
       upload(config.req, config.res, (err) => {
         if (err) {
           logger.error(err);
@@ -126,7 +137,7 @@ function uploadController(logger) {
   }
   
   /**
-   * upload
+   * Use one of the above upload strategies to upload a file
    * @param {Object} config
    * @param {string} oldFileURL - if replacing a file, defining this will delete the old file on success
    * @param {string} newFileName - if defined file will be called this. Otherwise it gets a random name
@@ -163,6 +174,7 @@ function uploadController(logger) {
     upload,
     uploadLocal,
     uploadS3,
+    // dummy route for making module loader work. TODO maybe use this to respond with info about files
     fileInfo: () => {}
   }
 }

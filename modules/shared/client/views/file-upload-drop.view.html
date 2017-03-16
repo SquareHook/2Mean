@@ -1,11 +1,3 @@
-<style>
-  .file-upload-drop {
-    border: dotted 3px lightgrey;
-  }
-  .file-is-over {
-    border: dotted 3px green;
-  }
-</style>
 <div ng2FileDrop
      [ngClass]="{ 'file-is-over': lastState }"
      (change)="fileChange($event)"
