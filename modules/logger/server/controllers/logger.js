@@ -52,7 +52,11 @@ function Logger() {
     logger = winston;
   } else {
     // Just load a dev logger.
-    logger = winston;
+    logger = new (winston.Logger) ({
+      transports: [
+        new (winston.transports.Console) ({ level: config.logger.level })
+      ]
+    });
   }
 
   return logger;
