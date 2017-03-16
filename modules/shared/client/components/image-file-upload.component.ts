@@ -3,12 +3,9 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { FileUploadComponent } from './file-upload.component';
 
 @Component({
-  selector: 'image-file-upload',
-  templateUrl: './../views/image-file-upload.view.html'
+  template: ''
 })
 export class ImageFileUploadComponent {
-  @ViewChild(FileUploadComponent) private fileUploadComponent: FileUploadComponent;
-
   @Input() endpoint: string;
   @Output() uriChanged = new EventEmitter<string>();
 
@@ -16,6 +13,7 @@ export class ImageFileUploadComponent {
   src: string | SafeUrl;
   // Alt text
   alt: string;
+  // file shared between the upload and preview
   file: any;
 
   constructor(
@@ -25,18 +23,16 @@ export class ImageFileUploadComponent {
   }
 
   /**
-   * uriChange
-   * @param {string} uri - uri sent by child component
    * Bubble up the new uri
+   * @param {string} uri - uri sent by child component
    */
   uriChange(uri: string) {
     this.uriChanged.emit(uri);
   }
 
   /**
-   * fileChange
-   * @param {File} file - file sent by the child component
    * Update the preview
+   * @param {File} file - file sent by the child component
    */
   fileChange(file: any) {
     if (file) {
@@ -48,10 +44,10 @@ export class ImageFileUploadComponent {
   }
 
   /**
-   * uploadFile
    * bubble down the event
+   * let children implement this
    */
   uploadFile() {
-    this.fileUploadComponent.uploadFile();
+
   }
 }

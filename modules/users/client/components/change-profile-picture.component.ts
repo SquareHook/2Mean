@@ -3,7 +3,7 @@ import {
   Component,
   Inject,
   Input,
-  OnInit 
+  OnInit
 } from '@angular/core';
 import { BrowserModule }          from '@angular/platform-browser';
 import { Router, NavigationExtras }                 from '@angular/router';

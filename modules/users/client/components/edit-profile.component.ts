@@ -1,9 +1,9 @@
-// TODO: move picture uploading into its own component and use that
 /* Vendor */
 import { 
-  Component, 
-  Inject, 
-  OnInit 
+  Component,
+  Inject,
+  OnInit,
+  ViewChild
 } from '@angular/core';
 import { BrowserModule }          from '@angular/platform-browser';
 import { Router }                 from '@angular/router';
@@ -32,6 +32,8 @@ import { maxSizeValidator }       from '../directives/max-size.directive';
 import { allowedTypesValidator }  from '../directives/allowed-types.directive';
 import { emailValidator }         from '../directives/valid-email.directive';
 
+import { ImageFileDropComponent } from '../../../shared/client/components/image-file-drop.component';
+
 @Component({
   templateUrl: './../views/edit-profile.view.html'
 })
@@ -58,7 +60,10 @@ export class EditProfileComponent implements OnInit {
   private formErrors: any;
   private validationMessages: any;
   private emailRe: RegExp;
-  
+
+  @ViewChild(ImageFileDropComponent)
+  private imageFileDropComponent: ImageFileDropComponent;
+
   constructor (
     private authService: AuthService,
     private userService: UserService,
@@ -124,6 +129,7 @@ export class EditProfileComponent implements OnInit {
     this.user = this.authService.getUser();
     this.userService.update(this.user).subscribe((user) => {
       this.authService.setUser(user);
+      this.imageFileDropComponent.uploadFile();
     }, error => {
       this.errorMessage = error._body;
       this.loading = false;
