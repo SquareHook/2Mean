@@ -32,6 +32,7 @@ export class FileUploadDropComponent extends FileUploadComponent {
         this.file = undefined;
       }
 
+      // tell parent and possibly form
       this.propogateChange(this.file);
       this.fileChanged.emit(this.file);
     }
