@@ -1,4 +1,3 @@
-
 /* Vendor */
 import { NgModule, OpaqueToken }              from '@angular/core';
 import { BrowserModule }         from '@angular/platform-browser';
@@ -6,7 +5,6 @@ import { HttpModule }            from '@angular/http';
 import { NgbModule }             from '@ng-bootstrap/ng-bootstrap';
 import { RouterModule, Routes }  from '@angular/router';
 import { FormsModule, ReactiveFormsModule }          from '@angular/forms';
-import { FileSelectDirective }  from 'ng2-file-upload';
 import { NotificationsService } from 'angular2-notifications';
 
 /* Config */
@@ -58,6 +56,10 @@ import { ValidEmailValidatorDirective } from './directives/valid-email.directive
 /* Routing */
 import { UsersRoutingModule }      from './config/user-routing.module';
 
+/* SharedModule containing
+ * file-upload
+ */
+import { SharedModule } from './../../shared/client/shared.module';
 
 @NgModule({
   imports:      [
@@ -65,10 +67,10 @@ import { UsersRoutingModule }      from './config/user-routing.module';
     NgbModule,
     FormsModule,
     ReactiveFormsModule,
-    UsersRoutingModule
+    UsersRoutingModule,
+    SharedModule
   ],
   declarations: [
-    FileSelectDirective,
     UsersComponent,
     SigninComponent,
     SignupComponent,

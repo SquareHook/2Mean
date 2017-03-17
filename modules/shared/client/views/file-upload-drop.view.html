@@ -1,0 +1,8 @@
+<div ng2FileDrop
+     [ngClass]="{ 'file-is-over': lastState }"
+     (change)="fileChange($event)"
+     (fileOver)="fileOver($event)"
+     class="well file-upload-drop"
+     [uploader]="uploader">
+  Drag a file here
+</div>

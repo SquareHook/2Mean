@@ -47,7 +47,6 @@ These variables can be set to change this behavior:
   options are restrictive.
 
 ### AWS Access Keys
-
 To use aws-s3 file upload functionality, a valid access key must be installed
 on your local system at (by default):
 
@@ -103,6 +102,51 @@ export SomeComponent {
 ```
 
 Webpack will replace the required image with its path in the `dist` directory.
+
+## File Uploader
+:warning: This feature is in development. It might break :warning:
+
+To use the included file uploader (built around 
+[ng2-file-upload](http://valor-software.com/ng2-file-upload/), 
+the `file-upload` and `image-file-upload` selectors can be used. Examples can
+be seen in the Users module `change-profile-picture` component. On the backend,
+the shared module exposes `uploader.upload`. This function can be used
+to store uploaded files to either the local file system or S3. It expects
+a config object. See the profile picture upload controller for how to use
+it. 
+
+### Sample configs:
+
+```
+{
+  strategy: 'local',
+  oldFileURL: '/api/blah/file.png',
+  local: {
+    dest: './uploads/blah/',
+    limits: {
+      maxSize: 1024
+    }
+  }
+}
+```
+
+```
+{
+  strategy: 's3',
+  oldFileURL: 'https://s3-us-west-2..../file.png',
+  s3: {
+    dest: 'https://...',
+    limits: {
+      maxSize: 1024
+    },
+    acl: 'public-read',
+    bucket: 'bucket_name'
+  }
+}
+```
+
+There is also a file drop component that can be used similarly to the
+file select. This component is demoed on the edit user page.
 
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 

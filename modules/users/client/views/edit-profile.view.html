@@ -19,11 +19,7 @@
     </div>
     <div class="form-group">
       <label for="profilePicture">Profile Picture</label>
-      <input type="file" class="form-control" id="profilePicture" name="profilePicture"
-             (change)="fileChange($event)"
-             maxSize allowedType accept="image/*"
-             ng2FileSelect [uploader]="this.userService.uploader"
-             formControlName="profilePicture">
+      <image-file-drop #fileUpload [endpoint]="endpoint" (uriChanged)="uriChange($event)"></image-file-drop>
       <input type="hidden" class="form-control" id="profilePictureType" name="profilePictureType"
              formControlName="profilePictureType">
       <input type="hidden" class="form-control" id="profilePictureSize" name="profilePictureSize"
