@@ -103,6 +103,7 @@ app.get('/api/test',
  * Setup the client application route.
  */
 
+// static route to serve app source and static assets (images)
 app.use(express.static(path.resolve('dist')));
 
 /**
@@ -120,3 +121,5 @@ http.createServer(app).listen(config.app.port_http, () => {
 https.createServer(https_options, app).listen(config.app.port_https, () => {
   console.log('Application started and listening on port' + config.app.port_https);
 });
+
+module.exports = app;

@@ -1,4 +1,4 @@
 module.exports = {
   models: [ 'Users' ],
-  dependencies: [ 'logger' ]
+  dependencies: [ 'logger', 'shared' ]
 };

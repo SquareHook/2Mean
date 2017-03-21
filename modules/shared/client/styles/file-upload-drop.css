@@ -1,0 +1,9 @@
+/* grey when no file is over
+ * green when a file is over
+ */
+.file-upload-drop {
+  border: dotted 3px lightgrey;
+}
+.file-is-over {
+  border: dotted 3px green;
+}
