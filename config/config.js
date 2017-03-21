@@ -49,7 +49,7 @@ module.exports = {
   },
   auth: {
     //                        UPPER      lower      digit      symbol
-    passwordStrengthRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[$-/:-?{-~~"^_`\]\[])(?=.{8,}))/,
+    passwordStrengthRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!-/:-@{-~~"^_`\\\]\[])(?=.{8,}))/,
     invalidPasswordMessage: 'Password must contain one of each of the following: upper case, lower case, digit, and symbol. The password must be at least eight characters long'
   },
   aws: {
