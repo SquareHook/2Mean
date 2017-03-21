@@ -32,7 +32,7 @@ var config = require(path.resolve('config/config'));
  * @return {Object} The winston logger object to use.
  */
 function Logger() {
-  var APPLICATION_NAME = config.logger.es.appName;
+  var APPLICATION_NAME = config.app.name;
 
   var logger;
 
