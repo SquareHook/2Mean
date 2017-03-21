@@ -14,6 +14,8 @@ var Elasticsearch = require('winston-elasticsearch');
 
 var elasticsearch = require('elasticsearch');
 
+const httpAwsEs = require('http-aws-es');
+
 /*
  * path to make resolving easier
  */
@@ -35,16 +37,46 @@ function Logger() {
   if (config.logger.es.host && config.logger.es.port) {
     // This is where we would look for environment 
     // variables to determine if the elasticsearch connector should be loaded.
+    let host = config.logger.es.host;
+    let port = config.logger.es.port;
+    let level = config.logger.es.level;
+    let apiVersion = config.logger.es.api_version;
+    let consistency = config.logger.es.consistency;
 
-    var client = new elasticsearch.Client({
-      host: config.logger.es.host + ':' + config.logger.es.port,
-      log: 'trace',
-      apiVersion: config.logger.es.apiVersion
-    });
+    let client;
+
+    if (config.logger.es.aws &&
+        config.aws.access_key_id &&
+        config.aws.secret_key &&
+        config.aws.default_region) {
+      // Use aws es service. (must sign requests using http-aws-es connection class
+      let accessKeyId = config.aws.access_key_id;
+      let secretKey = config.aws.secret_key;
+      let region = config.aws.default_region;
+
+      client = new elasticsearch.Client({
+        hosts: host + ':' + port,
+        connectionClass: httpAwsEs,
+        amazonES: {
+          region: region,
+          accessKey: accessKeyId,
+          secretKey: secretKey
+        },
+        log: level,
+        apiVersion: apiVersion
+      });
+    } else {
+      // use direct es connection
+      client = new elasticsearch.Client({
+        host: host + ':' + port,
+        log: level,
+        apiVersion: apiVersion
+      });
+    }
 
     var esTransportOpts = {
-      level: config.logger.es.level,
-      consistency: config.logger.es.consistency,
+      level: level,
+      consistency: consistency,
       client: client
     };
 
