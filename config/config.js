@@ -11,7 +11,7 @@ module.exports = {
     level: process.env.TOOMEAN_LOG_LEVEL || 'debug',
     es: {
       aws: process.env.TOOMEAN_ES_AWS || false,
-      level: process.env.TOOMEAN_LOG_LEVEL || 'info',
+      level: process.env.TOOMEAN_ES_LEVEL || 'info',
       host: process.env.TOOMEAN_ES_HOST || undefined,
       port: process.env.TOOMEAN_ES_PORT || undefined,
       apiVersion: process.env.TOOMEAN_ES_APIVERSION || '5.0',
