@@ -32,6 +32,8 @@ var config = require(path.resolve('config/config'));
  * @return {Object} The winston logger object to use.
  */
 function Logger() {
+  var APPLICATION_NAME = config.app.name;
+
   var logger;
 
   if (config.logger.es.host && config.logger.es.port) {
@@ -80,18 +82,33 @@ function Logger() {
       client: client
     };
 
-    winston.add(winston.transports.Elasticsearch, esTransportOpts);
-    logger = winston;
-  } else {
-    // Just load a dev logger.
-    logger = new (winston.Logger) ({
+    logger = new (winston.Logger)({
       transports: [
-        new (winston.transports.Console) ({ level: config.logger.level })
-      ]
+        new Elasticsearch(esTransportOpts)
+      ],
+      rewriters: [ addApplicationName ]
+    });
+  } else {
+    logger = new (winston.Logger)({
+      rewriters: [ addApplicationName ],
+      transports: [
+        new (winston.transports.Console)({ colorize: true })
+        ]
     });
   }
 
   return logger;
+
+  /**
+   * A rewriter function that will add the application name to all log entries.
+   */
+  function addApplicationName(level, msg, meta) {
+    if (!meta.appName) {
+      meta.appName = APPLICATION_NAME;
+    }
+
+    return meta;
+  }
 };
 
 module.exports = new Logger();
