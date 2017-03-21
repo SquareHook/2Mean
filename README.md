@@ -29,6 +29,9 @@ watch for changes and compile typescript when a change is detected.
 
 ## Configure
 
+### App Name
+set `TOOMEAN_APP_NAME` to define a name for the app in logs.
+
 ### Hostname
 If you are developing locally then you should be fine without this step.
 Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
@@ -85,6 +88,13 @@ Optionally you can also enable the following environment variables:
 - `TOOMEAN_ES_APIVERSION`
 - `TOOMEAN_ES_CONSISTENCY`
 - `TOOMEAN_LOG_LEVEL`
+
+To enable aws es service integration (signed requests) in addition to the above
+set:
+
+- `TOOMEAN_ES_AWS` to `true`
+- `AWS_ACCESS_KEY_ID` (see s3 section)
+- `AWS_SECRET_KEY`
 
 # Too Mean
 
