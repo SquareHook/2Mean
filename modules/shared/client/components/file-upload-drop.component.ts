@@ -27,7 +27,7 @@ export class FileUploadDropComponent extends FileUploadComponent {
         // way to directly get the File. Luckily javascript does not care
         // TS does
         // TODO suppress TS error or find other way to access the File
-        this.file = this.uploader.queue[this.uploader.queue.length-1].some;
+        this.file = this.uploader.queue[this.uploader.queue.length-1]._file;
       } else {
         this.file = undefined;
       }
