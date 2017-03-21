@@ -41,7 +41,8 @@ function Logger() {
     // variables to determine if the elasticsearch connector should be loaded.
     let host = config.logger.es.host;
     let port = config.logger.es.port;
-    let level = config.logger.es.level;
+    let appLevel = config.logger.level;
+    let esLevel = config.logger.es.level;
     let apiVersion = config.logger.es.api_version;
     let consistency = config.logger.es.consistency;
 
@@ -49,11 +50,11 @@ function Logger() {
 
     if (config.logger.es.aws &&
         config.aws.access_key_id &&
-        config.aws.secret_key &&
+        config.aws.secret_access_key &&
         config.aws.default_region) {
       // Use aws es service. (must sign requests using http-aws-es connection class
       let accessKeyId = config.aws.access_key_id;
-      let secretKey = config.aws.secret_key;
+      let secretKey = config.aws.secret_access_key;
       let region = config.aws.default_region;
 
       client = new elasticsearch.Client({
@@ -64,20 +65,20 @@ function Logger() {
           accessKey: accessKeyId,
           secretKey: secretKey
         },
-        log: level,
+        log: esLevel,
         apiVersion: apiVersion
       });
     } else {
       // use direct es connection
       client = new elasticsearch.Client({
         host: host + ':' + port,
-        log: level,
+        log: esLevel,
         apiVersion: apiVersion
       });
     }
 
     var esTransportOpts = {
-      level: level,
+      level: appLevel,
       consistency: consistency,
       client: client
     };
