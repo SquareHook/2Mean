@@ -113,7 +113,32 @@ export SomeComponent {
 
 Webpack will replace the required image with its path in the `dist` directory.
 
-## File Uploader
+## Shared Module Components
+There are several components in the shared module that can be used for common
+functionality. To be used, the shared module must be in the imports list of
+the module that will use them.
+
+### Spinner
+To use, use the `spinner` selector. Be sure to bind the `srMessage` property
+to set a message to be presented to screen readers. Below is an example usage:
+
+```
+@Component({
+  template: '<spinner *ngIf="loading" [srMessage]="'loading resource'"></spinner>
+})
+export class SampleComponent {
+  loading: boolean;
+
+  constructor() {
+    this.loading = true;
+    service.loadResource().subscribe(
+      (data) => { /* use resource */ },
+      (error) => {},
+      () => { this.loading = false; });
+  }
+}
+```
+### File Uploader
 :warning: This feature is in development. It might break :warning:
 
 To use the included file uploader (built around 
@@ -125,7 +150,7 @@ to store uploaded files to either the local file system or S3. It expects
 a config object. See the profile picture upload controller for how to use
 it. 
 
-### Sample configs:
+#### Sample configs:
 
 ```
 {
