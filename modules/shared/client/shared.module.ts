@@ -13,6 +13,9 @@ import { ImageFileUploadComponent } from './components/image-file-upload.compone
 import { ImageFileDropComponent } from './components/image-file-drop.component';
 import { ImageFileSelectComponent } from './components/image-file-select.component';
 
+// Spinner
+import { SpinnerComponent } from './components/spinner.component';
+
 @NgModule({
   imports: [
     CommonModule
@@ -25,11 +28,13 @@ import { ImageFileSelectComponent } from './components/image-file-select.compone
     FileUploadDropComponent,
     ImageFileUploadComponent,
     ImageFileDropComponent,
-    ImageFileSelectComponent
+    ImageFileSelectComponent,
+    SpinnerComponent
   ],
   exports: [
     ImageFileSelectComponent,
-    ImageFileDropComponent
+    ImageFileDropComponent,
+    SpinnerComponent
   ]
 })
 export class SharedModule {}
