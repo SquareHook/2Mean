@@ -337,7 +337,6 @@ function userCrudController(logger, shared) {
 
       // should only send a password if it is to be updated
       if (user.password) {
-        console.log(user.password);
         authHelpers.hashPassword(user.password).then((hash) => {
           updateDef.$set.password = hash;
           resolve(updateDef);
