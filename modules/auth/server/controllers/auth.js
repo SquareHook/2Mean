@@ -24,11 +24,6 @@ var q = require('q');
 var path = require('path');
 
 /*
- * argon2 for password checking
- */
-var argon2 = require('argon2');
-
-/*
 * md5 for hashing 
 */
 var md5 = require('md5');
@@ -40,36 +35,36 @@ var config = require(path.resolve('config/config'));
 /**
  * Main business logic for handling requests.
  */
-function authenticationModule(logger) {
+function authenticationModule(logger, shared) {
   // Key, 8 hours TTL
   const keyTTL = 1000 * 60 * 60 * 8;
+  var authHelpers = shared.authHelpers;
+
   var defaultPassword = "12345";
 
   // Check if Database has been populated yet.  If not, inject default user.
   Users.count({}, (err, c) => {
     if (c < 1) {
-      argon2.generateSalt().then(salt => {
-        argon2.hash(defaultPassword, salt).then(hash => {
-          let newUser = new Users();
-          logger.info('Users collection is empty, adding default user...');
+      authHelpers.hashPassword(defaultPassword).then((hash) => {
+        let newUser = new Users();
+        logger.info('Users collection is empty, adding default user...');
 
-          newUser.firstName = 'Admin';
-          newUser.lastName = 'User';
-          newUser.displayName = 'Squarehook';
-          newUser.email = 'support@squarehook.com';
-          newUser.username = 'squarehook';
-          newUser.password = hash;
-          newUser.role ='admin';
-          newUser.subroles = ['user'];
-          //generate profile image
-          let emailHash = md5(newUser.email.toLowerCase());
-          newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
+        newUser.firstName = 'Admin';
+        newUser.lastName = 'User';
+        newUser.displayName = 'Squarehook';
+        newUser.email = 'support@squarehook.com';
+        newUser.username = 'squarehook';
+        newUser.password = hash;
+        newUser.role ='admin';
+        newUser.subroles = ['user'];
+        //generate profile image
+        let emailHash = md5(newUser.email.toLowerCase());
+        newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
       
-          newUser.save((err, data) => {
-            if (err) {
-              logger.error(err);
-            }
-          });
+        newUser.save((err, data) => {
+          if (err) {
+            logger.error(err);
+          }
         });
       });
     }
@@ -198,7 +193,7 @@ function authenticationModule(logger) {
               created: new Date()
             };
 
-            argon2.verify(user.password, creds.password).then(match => {
+            authHelpers.verifyPassword(user.password, creds.password).then((match) => {
               if (!match) {
                 deferred.reject({
                   code: 400,

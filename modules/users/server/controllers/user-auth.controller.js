@@ -35,11 +35,6 @@ var path = require('path');
 var fs = require('fs');
 
 /*
- * argon2 password hashing algorithm
- */
-var argon2 = require('argon2');
-
-/*
  * application config
  */
 var config = require(path.resolve('config/config'));
@@ -49,9 +44,12 @@ var md5 = require('md5');
 /**
  * Main business logic for handling requests.
  */
-function userAuthController(logger) {
+function userAuthController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
+
+  var authHelpers = shared.authHelpers;
+
   /**
    * Registers a new user with bare minimum roles.
    *
@@ -82,71 +80,68 @@ function userAuthController(logger) {
         error: 'Invalid password: ' + config.auth.invalidPasswordMessage
       });
     } else {
-      // get password and salt
-      argon2.generateSalt().then(salt => {
-        argon2.hash(newUser.password, salt).then(hash => {
-          newUser.password = hash;
+      authHelpers.hashPassword(newUser.password).then((hash) => {
+        newUser.password = hash;
       
-          // save the user
-          newUser.save((err, data) => {
-            if (err) {
-              let errors = extractMongooseErrors(err.errors);
-              let validation = _.find(errors, (o) => {
-                return (o.name === 'ValidatorError'); 
+        // save the user
+        newUser.save((err, data) => {
+          if (err) {
+            let errors = extractMongooseErrors(err.errors);
+            let validation = _.find(errors, (o) => {
+              return (o.name === 'ValidatorError'); 
+            });
+
+            if (validation) {
+              logger.error('Validation error on registering a new user', validation);
+              deferred.reject({
+                code: 400,
+                error: validation.message
               });
+            } else {
+              // check for specific codes to provide feedback to ui
+              let errObj = err.toJSON();
+              let code = errObj.code;
+              let errmsg = errObj.errmsg;
 
-              if (validation) {
-                logger.error('Validation error on registering a new user', validation);
-                deferred.reject({
-                  code: 400,
-                  error: validation.message
-                });
-              } else {
-                // check for specific codes to provide feedback to ui
-                let errObj = err.toJSON();
-                let code = errObj.code;
-                let errmsg = errObj.errmsg;
+              // user already exists
+              // 11000 code is from mongoose
+              if (code === 11000) {
+                let errmsgList = errmsg.split(' ');
+                // index is the duplicate key
+                let index = errmsgList[errmsgList.indexOf('index:')+1];
 
-                // user already exists
-                // 11000 code is from mongoose
-                if (code === 11000) {
-                  let errmsgList = errmsg.split(' ');
-                  // index is the duplicate key
-                  let index = errmsgList[errmsgList.indexOf('index:')+1];
+                // TODO implement email-password login and registration
+                // confirmation emails. Otherwise usernames could be enumerated
+                // with this endpoint. Until then send back generic error
+                // message
 
-                  // TODO implement email-password login and registration
-                  // confirmation emails. Otherwise usernames could be enumerated
-                  // with this endpoint. Until then send back generic error
-                  // message
-
-                  if (index === 'username_1') {
-                    deferred.reject({
-                      code: 500, 
-                      error: 'Username is taken'
-                    });
-                  } else {
-                    deferred.reject({
-                      code: 500,
-                      error: 'Internal Server Error'
-                    });
-                  }
+                if (index === 'username_1') {
+                  deferred.reject({
+                    code: 500, 
+                    error: 'Username is taken'
+                  });
                 } else {
-                  logger.error('Creating User Error', err.errmsg);
                   deferred.reject({
                     code: 500,
                     error: 'Internal Server Error'
                   });
                 }
-
+              } else {
+                logger.error('Creating User Error', err.errmsg);
+                deferred.reject({
+                  code: 500,
+                  error: 'Internal Server Error'
+                });
               }
-            } else {
-              logger.info('User created: ' + newUser.username);
-              deferred.resolve({
-                code: 201,
-                data: data
-              });
+
             }
-          });
+          } else {
+            logger.info('User created: ' + newUser.username);
+            deferred.resolve({
+              code: 201,
+              data: data
+            });
+          }
         });
       });
     }
@@ -171,9 +166,6 @@ function userAuthController(logger) {
    * @returns {void}
    */
   function changePassword(req, res, next) {
-    // set up deferred promise
-    var deferred = q.defer();
-
     // this is the user injected by the auth middleware
     var user = req.user;
     
@@ -183,80 +175,53 @@ function userAuthController(logger) {
     // this is the password the user wants to change to
     let newPassword = req.body.newPassword;
 
-    // check user's password is correct
-    argon2.verify(user.password, oldPassword).then(match => {
+    return authHelpers.verifyPassword(user.password, oldPassword).then((match) => {
       if (match) {
         // check password strength
         if (!isStrongPassword(newPassword)) {
-          deferred.reject({
-            code: 400,
-            error: { message: 'Invalid password: ' + 
-                     config.auth.invalidPasswordMessage }
-          });
+          throw new Error('Invalid password');
         } else {
-          // generate new hash
-          argon2.generateSalt().then(salt => {
-            argon2.hash(newPassword, salt).then(hash => {
-              user.password = hash;
-
-              user.save((err, data) => {
-                if (err) {
-                  let errors = extractMongooseErrors(err.errors);
-                  let validation = _.fild(errors, (o) => {
-                    return (o.name === 'ValidatorError');
-                  });
-
-                  if (validation) {
-                    // Mongoose error
-                    logger.error('Validation error on changing user password', validation);
-                    deferred.reject({
-                      code: 400,
-                      error: { message: validation.message }
-                    });
-                  } else {
-                    // unknown error. log it
-                    logger.error('Changing password Error', err.errors);
-                    deferred.reject({
-                      code: 500,
-                      error: { message: 'Internal Server Error' }
-                    });
-                  }
-                } else {
-                  // Sucess
-                  logger.debug('User password changed ' + user.username);
-                  deferred.resolve({
-                    code: 201,
-                    data: data
-                  });
-                }
-              });
-            });
-          });
+          return authHelpers.hashPassword(newPassword);
         }
       } else {
-        // Passwords do not match
-        logger.info('Invalid password used change password', { username: user.username, _id: user._id.toString() });
-        deferred.reject({
-          code: 401,
-          error: { message: 'Incorrect Username/Password' }
-        });
+        throw new Error('Incorrect password');
       }
-    }).catch(err => {
-      // Error from argon.verify
-      logger.error(err);
-      deferred.reject({
-        code: 500,
-        error: { message: 'Internal Server error' }
-      });
-    });
-    
+    }).then((hash) => {
+      // password has been hashed save it to the user
+      user.password = hash;
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
+      return user.save();
+    }).then((savedUser) => {
+      // user has been saved
+      res.status(200).send(savedUser);
+    }).catch((error) => {
+      // something rejected or threw up
+      // extract any mongoose errors
+      let errors = extractMongooseErrors(error.errors);
+      let validation = _.filter(errors, (o) => {
+        return o.name === 'ValidatorError';
       });
+
+      if (validation.length) {
+        // error is from mong
+        res.status(400).send({
+          message: error.message
+        });
+      } else if (error.message === 'Invalid password') {
+        // user sent an invalid new password
+        res.status(400).send({
+          message: 'Invalid password: ' + config.auth.invalidPasswordMessage
+        });
+      } else if (error.message === 'Incorrect password') {
+        // user sent wrong old password
+        logger.info('Incorrect password', { username: user.username });
+        res.status(400).send({ message: 'Incorrect Username/Password' });
+      } else {
+        // not sure what went wrong
+        logger.error('Error changing password', error);
+        res.status(500).send();
+      }
+    });
   }
 
   // --------------------------- Private Function Definitions ----------------------------

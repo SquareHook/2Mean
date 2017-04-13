@@ -10,7 +10,7 @@ var UserAuthController = require('./controllers/user-auth.controller');
 function User([logger, shared]) {
   var userCrudController = new UserCrudController(logger);
   var userProfileController = new UserProfileController(logger, shared);
-  var userAuthController = new UserAuthController(logger);
+  var userAuthController = new UserAuthController(logger, shared);
 
   return {
     crud: userCrudController,
