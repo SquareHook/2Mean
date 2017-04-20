@@ -16,6 +16,9 @@ import { ImageFileSelectComponent } from './components/image-file-select.compone
 // Spinner
 import { SpinnerComponent } from './components/spinner.component';
 
+// Logger
+import { LoggerService } from './services/logger.service';
+
 @NgModule({
   imports: [
     CommonModule
@@ -35,6 +38,9 @@ import { SpinnerComponent } from './components/spinner.component';
     ImageFileSelectComponent,
     ImageFileDropComponent,
     SpinnerComponent
+  ],
+  providers: [
+    LoggerService
   ]
 })
 export class SharedModule {}
