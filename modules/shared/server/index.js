@@ -12,7 +12,7 @@ function Shared([logger]) {
 
   return {
     uploader: uploaderController,
-    clientLogger: clientLoggerController
+    clientLogger: clientLoggerController,
     authHelpers: authHelpers
   };
 };

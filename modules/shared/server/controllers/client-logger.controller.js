@@ -11,7 +11,15 @@ module.exports = function(logger) {
       logger.log(req.body.level, req.body.args);
       res.status(204).send();
     } else {
-      res.status(400).send({ message: 'missing log level' });
+      // send a nice client error if possible
+      if (!req.body.level) {
+        res.status(400).send({ message: 'missing log level' });
+      } else if (!req.body.args) {
+        res.status(400).send({ message: 'missing log message' });
+      } else {
+        // otherwise shrug
+        res.status(400).send();
+      }
     }
   }
 

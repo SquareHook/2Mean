@@ -23,13 +23,10 @@ export class LoggerService {
     this.http.post(apiEndpoint, { level: level, args: args })
       .map((res) => {
         return res.json();
-      }).subscribe((data) => {
-        console.log(data);
-      }, (error) => {
-        console.log(error);
-      }, () => {
-
-      });
+      }).subscribe((data) => {},
+        (error) => {
+          console.log(error);
+        });
   }
 
   silly(args: any) {
