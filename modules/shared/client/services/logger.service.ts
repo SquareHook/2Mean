@@ -1,18 +1,18 @@
 import { Injectable } from '@angular/core';
 import { Http } from '@angular/http';
 
+const apiEndpoint = '/api/logger';
+const levels = {
+  error: 0,
+  warn: 1,
+  info: 2,
+  verbose: 3,
+  debug: 4,
+  silly: 5
+};
+
 @Injectable()
 export class LoggerService {
-  const apiEndpoint = '/api/logger';
-  const levels = {
-    error: 0,
-    warn: 1,
-    info: 2,
-    verbose: 3,
-    debug: 4,
-    silly: 5
-  };
-
   constructor(
     private http: Http
   ) {
@@ -23,30 +23,33 @@ export class LoggerService {
     this.http.post(apiEndpoint, { level: level, args: args })
       .map((res) => {
         return res.json();
-      });
+      }).subscribe((data) => {},
+        (error) => {
+          console.log(error);
+        });
   }
 
   silly(args: any) {
-    sendToLog('silly', args);
+    this.sendToLog('silly', args);
   }
 
   debug(args: any) {
-    sendToLog('debug', args);
+    this.sendToLog('debug', args);
   }
 
   verbose(args: any) {
-    sendToLog('verbose', args);
+    this.sendToLog('verbose', args);
   }
 
   info(args: any) {
-    sendToLog('info', args);
+    this.sendToLog('info', args);
   }
 
   warn(args: any) {
-    sendToLog('warn', args);
+    this.sendToLog('warn', args);
   }
 
   error(args: any) {
-    sendToLog('error', args);
+    this.sendToLog('error', args);
   }
 }

@@ -8,7 +8,6 @@ const ChunkWebpack = webpack.optimize.CommonsChunkPlugin;
 const rootDir = path.resolve(__dirname, '../..');
 
 module.exports = {
-    debug: true,
     devServer: {
         contentBase: path.resolve(rootDir, 'modules/app/client'),
         port: 3000
@@ -20,8 +19,8 @@ module.exports = {
     },
     module: {
         loaders: [
-            { loader: 'raw', test: /\.(css|html)$/ },
-            { exclude: [ /.*spec\.ts/, /node_modules/ ], loaders: ['ts', 'angular2-template-loader'], test: /\.ts$/ },
+            { loader: 'raw-loader', test: /\.(css|html)$/ },
+            { exclude: [ /.*spec\.ts/, /node_modules/ ], loaders: ['ts-loader', 'angular2-template-loader'], test: /\.ts$/ },
             { test: /\.less$/, loaders: ['style-loader', 'css-loader', 'less-loader' ], },
             { test: /\.(png|jpe?g|gif|svg)$/, loader: 'file-loader?name=/assets/images/[name].[ext]' }
         ],
@@ -43,6 +42,6 @@ module.exports = {
         })
     ],
     resolve: {
-        extensions: [ '', '.js', '.ts', '.less' ]
+        extensions: [ '.js', '.ts', '.less' ]
     }
 };
