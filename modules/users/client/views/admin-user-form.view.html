@@ -40,6 +40,11 @@
         </span>
       </div>
       <div class="form-group">
+        <label for="user.password">Password</label>
+        <input type="password" class="form-control" [(ngModel)]="user.password"
+               placeholder="Password" name="user.password" autocomplete="new-password">
+      </div>
+      <div class="form-group">
           <span class="form-info">
              Created: {{user.created | date}}
           </span>

@@ -93,6 +93,7 @@ export class AdminUserForm {
         userId: this.user._id,
         roleId: this.user.role
       };
+
       this.roleService.updateUserRole(updateObj).subscribe(data => {
         this.notificationsService.info('User Updated', 'The user has been updated', );
       }, error => {
