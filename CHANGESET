@@ -1,3 +1,8 @@
+v0.9.2:
+4/13/2017
+  - Refactored password hashing
+  - Added field in admin user form to change password
+
 v0.9.1:
 4/13/2017
   - client side logger

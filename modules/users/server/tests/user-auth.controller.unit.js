@@ -7,7 +7,7 @@ var sinon = require('sinon');
 require('sinon-mongoose');
 require('sinon-as-promised');
 
-var argon2 = require('argon2');
+const MockSharedModule = require('./testbench/mock.shared.module');
 var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
 var ObjectID = require('mongodb').ObjectID;
@@ -23,8 +23,7 @@ describe('UserAuthController', () => {
   var userController;
   var req, res, next;
   var mockLogger;
-  var generateSaltStub;
-  var hashStub;
+  var mockSharedModule;
   var saveStub;
   var statusStub;
   var sendStub;
@@ -80,7 +79,9 @@ describe('UserAuthController', () => {
     next = () => {
     };
 
-    userController = new UserController(mockLogger);
+    mockSharedModule = new MockSharedModule(mockLogger);
+
+    userController = new UserController(mockLogger, mockSharedModule);
   });
 
   afterEach(() => {
@@ -96,20 +97,16 @@ describe('UserAuthController', () => {
     };
 
     beforeEach(() => {
-      // argon2 stubs
-      generateSaltStub = sinon.stub(argon2, 'generateSalt');
-      hashStub = sinon.stub(argon2, 'hash');
+      hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
 
-      generateSaltStub.returns(Promise.resolve('salt'));
-      hashStub.returns(Promise.resolve('hash'));
+      hashPasswordStub.resolves('hash');
 
       //mongoose stubs
       saveStub = sinon.stub(Users.prototype, 'save');
     });
 
     afterEach(() => {
-      generateSaltStub.restore();
-      hashStub.restore();
+      hashPasswordStub.restore();
 
       saveStub.restore();
     });
@@ -125,14 +122,13 @@ describe('UserAuthController', () => {
         .constructor.name.should.equal('Promise');
     });
 
-    it('should use argon2 to salt and hash the password', () => {
+    it('should use authHelpers.hashPassword to hash the password', () => {
       req.body = validReqBody;
       saveStub.callsArgWith(0, null, { username: 'testuser' });
 
       return userController.register(req, res, next)
         .then((data) => {
-          generateSaltStub.called.should.equal(true);
-          hashStub.called.should.equal(true);
+          hashPasswordStub.args.should.deep.equal([[ req.body.password ]]);
         });
     });
 
@@ -181,6 +177,169 @@ describe('UserAuthController', () => {
         .then((data) => {
           statusStub.calledWith(400).should.equal(true);
         });
+    });
+  });
+
+  describe('#changePassword', () => {
+    const oldPassword = '123';
+    const newPassword = 'abcABC123-';
+    const invalidPassword = '123';
+
+    const validReqBody = {
+      oldPassword: oldPassword,
+      newPassword: newPassword
+    };
+
+    const match = true;
+    const hash = 'hash';
+
+    let hashPasswordStub, verifyPasswordStub;
+
+    beforeEach(() => {
+      req.body = validReqBody;
+      req.body.newPassword = newPassword;
+      req.user = mockUser;
+      req.user.save = saveStub;
+
+      hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
+      verifyPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'verifyPassword');
+    });
+
+    afterEach(() => {
+      hashPasswordStub.restore();
+      verifyPasswordStub.restore();
+    });
+
+    function setupAllResolve() {
+      setupVerifyResolves();
+      setupHashResolves();
+      setupSaveResolves();
+    }
+
+    function setupVerifyResolves() {
+      verifyPasswordStub.resolves(match);
+    }
+
+    function setupHashResolves() {
+      hashPasswordStub.resolves(hash);
+    }
+
+    function setupSaveResolves() {
+      saveStub.resolves(mockUser);
+    }
+
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.changePassword(req, res, next).constructor.name.should.equal('Promise');
+    });
+
+    it('should use authHelpers.verifyPassword', () => {
+      setupAllResolve();
+
+      return userController.changePassword(req, res, next).then((data) => {
+        verifyPasswordStub.args.should.deep.equal([[ mockUser.password, oldPassword ]]);
+      });
+    });
+
+    it('should use authHelpers.hashPassword', () => {
+      setupAllResolve();
+
+      return userController.changePassword(req, res, next).then((data) => {
+        hashPasswordStub.args.should.deep.equal([[ newPassword ]]);
+      });
+    });
+
+    it('should use user.save', () => {
+      setupAllResolve();
+      
+      return userController.changePassword(req, res, next).then((data) => {
+        saveStub.called.should.equal(true);
+      });
+    });
+
+    it('should 200 with updated user on success', () => {
+      setupAllResolve();
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 200 ]]);
+        sendStub.args.should.deep.equal([[ mockUser ]]);
+      });
+    });
+
+    it('should 400 on weak password', () => {
+      setupVerifyResolves();
+      req.body.newPassword = invalidPassword;
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        let args = sendStub.args;
+        args.length.should.equal(1);
+        args[0].length.should.equal(1);
+        args[0][0].message.should.contain('Invalid password');
+      });
+    });
+
+    it('should 400 on wrong old password', () => {
+      verifyPasswordStub.resolves(false);
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { message: 'Incorrect Username/Password' } ]]);
+      });
+    });
+
+    it('should 400 if save validator errors', () => {
+      const validatorError = {
+        name: 'ValidationError',
+        message: 'Something is invalid',
+        errors: [ { name: 'ValidatorError' } ]
+      };
+
+      setupVerifyResolves();
+      setupHashResolves();
+      saveStub.rejects(validatorError);
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { message: validatorError.message } ]]);
+      });
+    });
+
+    it('should 500 if save fails', () => {
+      const saveError = new Error('save error');
+
+      setupVerifyResolves();
+      setupHashResolves();
+      saveStub.rejects(saveError);
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should 500 if verify fails', () => {
+      const matchError = new Error('match error');
+
+      verifyPasswordStub.rejects(matchError);
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should 500 if hash fails', () => {
+      const hashError = new Error('hash error');
+
+      setupVerifyResolves();
+      hashPasswordStub.rejects(hashError);
+
+      return userController.changePassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
     });
   });
 });

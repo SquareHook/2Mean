@@ -24,11 +24,14 @@ var md5 = require('md5');
 /**
  * Main business logic for handling requests.
  */
-function userCrudController(logger) {
+function userCrudController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
+
+  let authHelpers = shared.authHelpers;
+
   /**
    * Reads a user from the database if the permissions are adequate.
    *
@@ -318,39 +321,38 @@ function userCrudController(logger) {
       res.status(403).send({ success: false, message: "Forbidden" });
       return;
     }
+
     let deferred = q.defer();
     let user = req.body;
-    //note that this doesn't affect user roles
-    let updateDef = {
-      $set: {
-        firstName: user.firstName,
-        lastName: user.lastName,
-        updated: new Date()
-      }
-    };
-    //send update to mongo
-    Users.update({ _id: req.body._id }, updateDef, (err, data) => {
-      if (err) {
-        logger.error('Error updating user', err);
-        deferred.reject({
-          code: 500,
-          error: 'Internal Server Error'
-        });
-      }
-      else {
-        deferred.resolve({
-          code: 200,
-          data: data
-        });
-      }
-    });
 
-    return deferred.promise
-     .then((data) => {
-       res.status(data.code).send(data.data);
-      }, (error) => {
-       res.status(error.code).send(error.error);
-      });
+    return new Promise((resolve, reject) => {
+      //note that this doesn't affect user roles
+      let updateDef = {
+        $set: {
+          firstName: user.firstName,
+          lastName: user.lastName,
+          updated: new Date()
+        }
+      };
+
+      // should only send a password if it is to be updated
+      if (user.password) {
+        authHelpers.hashPassword(user.password).then((hash) => {
+          updateDef.$set.password = hash;
+          resolve(updateDef);
+        }).catch((error) => { reject(error); });
+      } else {
+        resolve(updateDef);
+      }
+    }).then((updateDef) => {
+      //send update to mongo
+      return Users.update({ _id: req.body._id }, updateDef).exec();
+    }).then((updatedUsers) => {
+      res.status(200).send(updatedUsers);
+    }).catch((error) => {
+      logger.error('Error updating user', error);
+      res.status(500).send();
+    });
    }
 
   /*
