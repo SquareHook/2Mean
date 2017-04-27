@@ -10,8 +10,6 @@ import { User }             from './../models/user.model';
 /*  Angular2 Services */
 import { AuthService }      from './../../../auth/client/services/auth.service';
 
-import { LoggerService } from '../../../shared/client/services/logger.service';
-
 @Component({
   templateUrl: './../views/signin.view.html'
 })
@@ -24,8 +22,7 @@ export class SigninComponent implements OnInit {
     private notificationsService: NotificationsService,
     private authService: AuthService, 
     private router: Router,
-    private activatedRoute: ActivatedRoute,
-    private logger: LoggerService
+    private activatedRoute: ActivatedRoute
   ) { 
   }
 
@@ -39,12 +36,6 @@ export class SigninComponent implements OnInit {
     this.authService.login(this.model.userName, this.model.password, (error, data) => {
       // server has returned data
       if (data) {
-    this.logger.silly('Silly');
-    this.logger.debug('Debug');
-    this.logger.verbose('Verbose');
-    this.logger.info('Info');
-    this.logger.warn('Warn');
-    this.logger.error('Error');
         // is there a return url
         // honor query param first then authService
         this.activatedRoute.queryParams.subscribe((params) => {
