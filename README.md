@@ -183,6 +183,16 @@ it.
 There is also a file drop component that can be used similarly to the
 file select. This component is demoed on the edit user page.
 
+### Email
+Set the `TOOMEAN_EMAIL_PROVIDER` environment variable to one of the following
+
+#### `ses`
+Use the aws-ses service. Set `TOOMEAN_AWS_SES_ENABLED=true` and
+`TOOMEAN_AWS_SES_FROM=<from email>`. The from email must be verified in SES.
+
+#### `sendmail`
+TODO
+
 ## Add Menu item:
 inside of app-client/module-name/config create a file called menu.json 
 below is an example menu object for the articles module
