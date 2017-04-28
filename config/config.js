@@ -55,6 +55,16 @@ module.exports = {
   aws: {
     access_key_id: process.env.AWS_ACCESS_KEY_ID,
     secret_access_key: process.env.AWS_SECRET_ACCESS_KEY,
-    default_region: process.env.AWS_DEFAULT_REGION
+    default_region: process.env.AWS_DEFAULT_REGION,
+    ses: {
+      // enables or disables ses functionality
+      enabled: process.env.AWS_SES_ENABLED || false,
+      // email address to send ses messages from. this must be verified in ses
+      from: process.env.AWS_SES_FROM || undefined
+    }
+  },
+  // controls emails for user verification and shared module send functionality
+  email: {
+    provider: process.env.TOOMEAN_EMAIL_PROVIDER || undefined,
   }
 };
