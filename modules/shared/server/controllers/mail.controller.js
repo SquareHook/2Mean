@@ -51,7 +51,7 @@ function MailController(logger) {
     // wrap callback in promise
     return new Promise((resolve, reject) => {
       // use SES transporter to send the message
-      transporter.sendMail(email, (err, info) => {
+      transporter.sendMail(email.asObject(), (err, info) => {
         if (err) {
           reject(err);
         } else {
