@@ -27,13 +27,20 @@ describe('UserAuthController', () => {
   var saveStub;
   var statusStub;
   var sendStub;
+  let mockUser;
     
-  const mockUser = {
+  const token ='abc';
+
+  const mockUserData = {
     _id: new ObjectID('012345678901234567890123'),
     username: 'testuser',
     email: 'test@example.com',
     password: 'hash',
-    roles: ['user']
+    roles: ['user'],
+    verified: false,
+    verification: {
+      token: token
+    }
   };
 
   const mockAdmin = {
@@ -62,6 +69,9 @@ describe('UserAuthController', () => {
    * if a particular test needs more they can add it to the mocks.
    */
   beforeEach(() => {
+    mockUser = JSON.parse(JSON.stringify(mockUserData));
+    mockUser.verification.expires = Date.now() + 500;
+
     req = {
     };
 
@@ -82,11 +92,15 @@ describe('UserAuthController', () => {
     mockSharedModule = new MockSharedModule(mockLogger);
 
     userController = new UserController(mockLogger, mockSharedModule);
+
+    //mongoose stubs
+    saveStub = sinon.stub(Users.prototype, 'save');
   });
 
   afterEach(() => {
     // statusStub and sendStub are anonymous stubs so the do not have to be
     // restored
+    saveStub.restore();
   });
 
   describe('#register', () => {
@@ -98,17 +112,12 @@ describe('UserAuthController', () => {
 
     beforeEach(() => {
       hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
-
+      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUnique
       hashPasswordStub.resolves('hash');
-
-      //mongoose stubs
-      saveStub = sinon.stub(Users.prototype, 'save');
     });
 
     afterEach(() => {
       hashPasswordStub.restore();
-
-      saveStub.restore();
     });
     
     it('should return a promise', () => {
@@ -124,7 +133,7 @@ describe('UserAuthController', () => {
 
     it('should use authHelpers.hashPassword to hash the password', () => {
       req.body = validReqBody;
-      saveStub.callsArgWith(0, null, { username: 'testuser' });
+      saveStub.callsArgWith(0, null, mockUser);
 
       return userController.register(req, res, next)
         .then((data) => {
@@ -132,9 +141,18 @@ describe('UserAuthController', () => {
         });
     });
 
+    it('should use authHelpers.generateUniqueToken', () => {
+      req.body = validReqBody;
+      saveStub.callsArgWith(0, null, mockUser);
+
+      return userController.register(req, res, next).then((data) => {
+        generateUniqueTokenStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
     it('should try to save the user', () => {
       req.body = validReqBody;
-      saveStub.callsArgWith(0, null, { username: 'testuser' });
+      saveStub.callsArgWith(0, null, mockUser);
 
       return userController.register(req, res, next)
         .then((data) => {
@@ -339,6 +357,87 @@ describe('UserAuthController', () => {
       return userController.changePassword(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+  });
+
+  describe('#verifyEmail', () => {
+    beforeEach(() => {
+      req.user = mockUser;
+      req.query = {
+        token: token
+      };
+
+      req.user.save = saveStub;
+    });
+
+    afterEach(() => {
+    });
+
+    function setupSaveResolves() {
+      saveStub.resolves(mockUser);
+    }
+
+    it('should return a promise', () => {
+      setupSaveResolves();
+
+      userController.verifyEmail(req, res, next).constructor.name
+        .should.equal('Promise');
+    });
+
+    it('should use user.save', () => {
+      setupSaveResolves();
+
+      return userController.verifyEmail(req, res, next).then((data) => {
+        saveStub.called.should.equal(true);
+      });
+    });
+
+    it('should set the user as verified and remove the ttl', () => {
+      setupSaveResolves();
+
+      mockUser.verified.should.equal(false);
+      
+      return userController.verifyEmail(req, res, next).then((data) => {
+        mockUser.verified.should.equal(true);
+        should.not.exist(mockUser.verification.expires);
+      });
+    });
+
+    it('should send a 204 on success', () => {
+      setupSaveResolves();
+
+      return userController.verifyEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 204 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 400 if the user and token don\'t match', () => {
+      req.query.token = 'xyz';
+
+      return userController.verifyEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { message: 'Token invalid' } ]]);
+      });
+    });
+
+    it('should send a 500 if the save fails', () => {
+      saveStub.rejects(new Error('save failed'));
+
+      return userController.verifyEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 400 if the ttl has passed', () => {
+      // set expire time to some time in the past
+      mockUser.verification.expires = Date.now() - 100000;
+
+      return userController.verifyEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { message: 'Token has expired' } ]]);
       });
     });
   });

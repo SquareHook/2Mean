@@ -1,45 +1,45 @@
 /**
  * Database handle.
  */
-var mongoose = require('mongoose');
-var ObjectId = mongoose.Schema.ObjectId;
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Schema.ObjectId;
 
 /**
  * User model.
  */
-var Users = mongoose.model('User');
+const Users = mongoose.model('User');
 
 /**
  * Key model.
  */
-var Keys = mongoose.model('Keys');
+const Keys = mongoose.model('Keys');
 
 /**
  * Q promise library.
  */
-var q = require('q');
+const q = require('q');
 
 /*
  * Underscore/Lodash functionality.
  */
-var _ = require('lodash');
+const _ = require('lodash');
 
 /*
  * path for resolving files
  */
-var path = require('path');
+const path = require('path');
 
 /*
  * fs for unlinking files
  */
-var fs = require('fs');
+const fs = require('fs');
 
 /*
  * application config
  */
-var config = require(path.resolve('config/config'));
+const config = require(path.resolve('config/config'));
 
-var md5 = require('md5');
+const md5 = require('md5');
 
 /**
  * Main business logic for handling requests.
@@ -83,6 +83,10 @@ function userAuthController(logger, shared) {
       authHelpers.hashPassword(newUser.password).then((hash) => {
         newUser.password = hash;
       
+        newUser.verification = {
+          token: authHelpers.generateUniqueToken()
+        };
+
         // save the user
         newUser.save((err, data) => {
           if (err) {
@@ -137,6 +141,12 @@ function userAuthController(logger, shared) {
             }
           } else {
             logger.info('User created: ' + newUser.username);
+            sendEmailVerificationEmail(newUser).then((data) => {
+
+            }).catch((error) => {
+
+            });
+
             deferred.resolve({
               code: 201,
               data: data
@@ -224,6 +234,41 @@ function userAuthController(logger, shared) {
     });
   }
 
+  /**
+   * verifies that the user has access to the email they registered with
+   * @param {Object} req
+   * @param {Object} res
+   * @param {Function} next
+   * @return {Promise}
+   */
+  function verifyEmail(req, res, next) {
+    let token = req.query.token;
+    let user = req.user;
+
+    return new Promise((resolve, reject) => {
+      if (user.verification.token !== token) {
+        reject(new Error('Token invalid'));
+      } else if (Date.now() > user.verification.expires) {
+        reject(new Error('Token has expired'));
+      } else {
+        user.verification.expires = undefined;
+        user.verified = true;
+
+        resolve(user.save());
+      }
+    }).then((savedUser) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Token has expired') {
+        res.status(400).send({ message: 'Token has expired' });
+      } else if (error.message === 'Token invalid') {
+        res.status(400).send({ message: 'Token invalid' });
+      } else {
+        res.status(500).send();
+      }
+    });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
   function extractMongooseErrors(error) {
@@ -285,11 +330,26 @@ function userAuthController(logger, shared) {
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
+  /**
+   * sends a verification email to the user
+   * @param {Object} user
+   * @return {Promise}
+   */
+  function sendEmailVerificationEmail(user) {
+    const url = 'http://' + config.app.host + config.app.port === 80 ? '' : config.app.port + '/verifyEmail;token=' + user.verification.token;
+    console.log(url);
+
+    return new Promise((resolve) => {
+      resolve();
+    });
+  }
+
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
     register              : register,
-    changePassword        : changePassword
+    changePassword        : changePassword,
+    verifyEmail: verifyEmail
   };
 }
 

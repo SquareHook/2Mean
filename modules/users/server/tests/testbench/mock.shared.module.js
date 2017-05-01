@@ -7,6 +7,9 @@ module.exports = function(logger) {
         },
         verifyPassword: function verifyPassword(hash, clear) {
 
+        },
+        generateUniqueToken: function generateUniqueToken() {
+        
         }
       }
     })(logger)

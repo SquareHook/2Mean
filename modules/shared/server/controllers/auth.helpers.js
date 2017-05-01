@@ -5,6 +5,9 @@
 // password hasher
 const argon2 = require('argon2');
 
+// unique string generator
+const uuid = require('uuid');
+
 let AuthHelpers = function () {
   /**
    * hashes the plaintext password
@@ -35,9 +38,19 @@ let AuthHelpers = function () {
     });
   }
 
+  /**
+   * generates a unique token for use in email verification and password
+   * reset verification
+   * @returns {String}
+   */
+  function generateUniqueToken() {
+    return uuid.v4();
+  }
+
   return {
     hashPassword: hashPassword,
-    verifyPassword: verifyPassword
+    verifyPassword: verifyPassword,
+    generateUniqueToken: generateUniqueToken
   }
 }
 
