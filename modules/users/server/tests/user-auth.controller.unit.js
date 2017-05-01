@@ -112,7 +112,8 @@ describe('UserAuthController', () => {
 
     beforeEach(() => {
       hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
-      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUnique
+      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
+
       hashPasswordStub.resolves('hash');
     });
 
