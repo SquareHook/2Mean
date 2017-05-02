@@ -99,7 +99,7 @@ export class UserService {
       .map(this.extractData);
   }
 
-  register(newUser: User) : Observable<User> {
+  register(newUser: User) : Observable<any> {
     return this.http.post('api/users/register', newUser)
       .map(this.extractData);
   }
@@ -178,6 +178,22 @@ export class UserService {
    */
   clearUploaderQueue() : void {
     this.uploader.clearQueue();
+  }
+
+  /**
+   * send a verification get request
+   */
+  verifyEmail(token: string) : Observable<any> {
+    return this.http.get('api/users/verifyEmail?token=' + token)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a new verification email be sent
+   */
+  requestVerificationEmail() : Observable<any> {
+    return this.http.get('api/users/requestVerificationEmail')
+      .map(this.extractData);
   }
 
   /**

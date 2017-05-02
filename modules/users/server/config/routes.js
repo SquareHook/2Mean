@@ -6,6 +6,18 @@ module.exports = [
     secure: true
   },
   {
+    route: '/users/verifyEmail',
+    type: 'GET',
+    method: 'auth.verifyEmail',
+    secure: true
+  },
+  {
+    route: '/users/requestVerificationEmail',
+    type: 'GET',
+    method: 'auth.requestVerificationEmail',
+    secure: true
+  },
+  {
     route: '/users/:userId',
     type: 'GET',
     method: 'crud.read',
@@ -65,10 +77,4 @@ module.exports = [
     method: 'auth.changePassword',
     secure: true
   },
-  {
-    route: '/users/verifyEmail',
-    type: 'GET',
-    method: 'auth.verifyEmail',
-    secure: true
-  }
 ];

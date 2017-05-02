@@ -68,5 +68,6 @@ module.exports = {
   // controls emails for user verification and shared module send functionality
   email: {
     provider: process.env.TOOMEAN_EMAIL_PROVIDER || undefined,
+    from: process.env.TOOMEAN_EMAIL_FROM || undefined
   }
 };

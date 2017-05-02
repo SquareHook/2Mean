@@ -36,6 +36,8 @@ import {
   SettingsComponent
 } from './../components/settings.component';
 import { AdminUsersComponent } from './../components/admin-users.component';
+import { VerifyEmailComponent } from '../components/verify-email.component';
+
 /* this defines the global users routes */
 const usersRoutes: Routes = [
   // Authentication
@@ -88,6 +90,10 @@ const usersRoutes: Routes = [
         outlet: 'profile'
       }
     ]
+  },
+  {
+    path: 'verifyEmail',
+    component: VerifyEmailComponent
   }
 ];
 

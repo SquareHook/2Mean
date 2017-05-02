@@ -243,6 +243,22 @@ function userAuthController(logger, shared) {
     });
   }
 
+  function requestVerifcationEmail(req, res, next) {
+    let user = req.user;
+    
+    user.verification.token = authHelpers.generateUniqueToken();
+    user.verification.expires = Date.now() + config.app.emailVerificationTTL;
+
+    return user.save().then((savedUser) => {
+      return sendEmailVerificationEmail(savedUser);
+    }).then((mailInfo) => {
+      res.status(204).send();
+    }).catch((error) => {
+      logger.error(error);
+      res.status(500).send();
+    });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
   function extractMongooseErrors(error) {
@@ -314,12 +330,12 @@ function userAuthController(logger, shared) {
     const subject = 'Verification Email';
     const to = user.email;
     const from = config.email.from;
-    const message = 'Verify your email by going here: ' + url;
+    const text= 'Verify your email by going here: ' + url;
 
     const emailParams = {
       from: from,
       to: to,
-      message: message,
+      text: text,
       subject: subject
     };
 
@@ -331,7 +347,8 @@ function userAuthController(logger, shared) {
   return {
     register              : register,
     changePassword        : changePassword,
-    verifyEmail: verifyEmail
+    verifyEmail: verifyEmail,
+    requestVerificationEmail: requestVerifcationEmail
   };
 }
 

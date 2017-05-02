@@ -41,6 +41,8 @@ function MailController(logger) {
    * @returns {Promise}
    */
   function sendMailSES(email) {
+    aws.config.update({ region: config.aws.default_region });
+
     // create a new SES transport
     let transporter = nodemailer.createTransport({
       SES: new aws.SES({

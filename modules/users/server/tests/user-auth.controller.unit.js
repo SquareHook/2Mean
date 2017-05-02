@@ -20,7 +20,8 @@ const proxyquire = require('proxyquire');
 const mockConfig = {
   app: {
     port: 80,
-    host: 'blahblah.com'
+    host: 'blahblah.com',
+    emailVerificationTTL: 100000
   },
   email: {
     from: 'don\'t care'
@@ -43,8 +44,8 @@ describe('UserAuthController', () => {
   let mockUser;
   let sendMailStub;
     
-  const token ='abc';
-
+  const token = 'abc123';
+  
   const mockUserData = {
     _id: new ObjectID('012345678901234567890123'),
     username: 'testuser',
@@ -63,6 +64,23 @@ describe('UserAuthController', () => {
     email: 'admin@example.com',
     password: 'hash',
     roles: [ 'admin', 'user' ]
+  };
+
+  const sendMailInfo = {
+    envelope: {
+      from: 'don\'t care',
+      to: mockUserData.email
+    },
+    messageId: 'messageId'
+  };
+
+  const sendMailError = new Error('send mail failed');
+  
+  const mailParams = {
+    to: 'test@example.com',
+    from: 'don\'t care',
+    subject: 'Verification Email',
+    text: 'Verify your email by going here: http://' + mockConfig.app.host + '/verifyEmail;token=' + token
   };
 
   before(() => {
@@ -118,23 +136,6 @@ describe('UserAuthController', () => {
   });
 
   describe('#register', () => {
-    const token = 'abc123';
-    const sendMailInfo = {
-      envelope: {
-        from: 'don\'t care',
-        to: mockUserData.email
-      },
-      messageId: 'messageId'
-    };
-
-    const sendMailError = new Error('send mail failed');
-    const mailParams = {
-      to: 'test@example.com',
-      from: 'don\'t care',
-      subject: 'Verification Email',
-      message: 'Verify your email by going here: http://' + mockConfig.app.host + '/verifyEmail;token=' + token
-    };
-
     var validReqBody = {
       username: 'testuser',
       email: 'test@example.com',
@@ -211,7 +212,7 @@ describe('UserAuthController', () => {
 
       return userController.register(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 201 ]]);
-        sendStub.args.should.deep.equal([[ { user: mockuser } ]]);
+        sendStub.args.should.deep.equal([[ { user: mockUser } ]]);
       });
     });
 
@@ -512,6 +513,116 @@ describe('UserAuthController', () => {
         saveStub.called.should.equal(false);
         statusStub.args.should.deep.equal([[ 400 ]]);
         sendStub.args.should.deep.equal([[ { message: 'Token has expired' } ]]);
+      });
+    });
+  });
+
+  describe('#requestVerificationEmail', () => {
+    beforeEach(() => {
+      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
+      sendMailStub = sinon.stub(mockSharedModule.mail, 'sendMail');
+
+      req.user = mockUser;
+      req.user.save = saveStub;
+
+      generateUniqueTokenStub.returns('abc123');
+    });
+
+    afterEach(() => {
+      generateUniqueTokenStub.restore();
+    });
+
+    function setupSaveResolves() {
+      saveStub.resolves(mockUser);
+    }
+
+    function setupSendMailResolves() {
+      sendMailStub.resolves(sendMailInfo);
+    }
+
+    function setupAllResolve() {
+      setupSaveResolves();
+      setupSendMailResolves();
+    }
+
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.requestVerificationEmail(req, res, next)
+        .constructor.name.should.equal('Promise');
+    });
+
+    it('should use user.save', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        saveStub.called.should.equal(true);
+      });
+    });
+
+    it('should set up a new token and ttl', () => {
+      let oldTTL, newTTL, oldToken, newToken;
+      oldToken = 'old';
+      oldTTL = Date.now() - 10000;
+
+      mockUser.verification.token = oldToken;
+      mockUser.verification.expires = oldTTL;
+
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        newToken = mockUser.verification.token;
+        newTTL = mockUser.verification.expires;
+
+        should.exist(newToken);
+        newToken.should.not.equal(oldToken);
+
+        should.exist(oldToken);
+        newTTL.should.be.above(oldTTL);
+      });
+    });
+
+    it('should send a 204 on success', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 204 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 500 if the save fails', () => {
+      saveStub.rejects(new Error('Save failed'));
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use authHelpers.generateUniqueToken', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        generateUniqueTokenStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use shared.sendMail to send the verification email', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        sendMailStub.args.should.deep.equal([[ mailParams ]]);
+      });
+    });
+
+    it('should send a 500 if sendmail fails', () => {
+      setupSaveResolves();
+      sendMailStub.rejects(sendMailError);
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
       });
     });
   });

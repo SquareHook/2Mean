@@ -349,7 +349,8 @@ function authenticationModule(logger, shared) {
       profileImageURL: user.profileImageURL,
       role: user.role,
       subroles: user.subroles,
-      username: user.username
+      username: user.username,
+      verified: user.verified
     }
   }
 
