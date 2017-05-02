@@ -80,7 +80,7 @@ describe('UserAuthController', () => {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Verification Email',
-    text: 'Verify your email by going here: http://' + mockConfig.app.host + '/verifyEmail;token=' + token
+    text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port + '/verifyEmail;token=' + token
   };
 
   before(() => {
@@ -621,6 +621,173 @@ describe('UserAuthController', () => {
       sendMailStub.rejects(sendMailError);
 
       return userController.requestVerificationEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+  });
+  
+  describe('#requestChangePasswordEmail', () => {
+    let findMock;
+
+    beforeEach(() => {
+      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
+      sendMailStub = sinon.stub(mockSharedModule.mail, 'sendMail');
+      usersMock = sinon.mock(Users);
+
+      req.query = {
+        token: token
+      };
+
+      req.user = mockUser;
+      req.user.save = saveStub;
+
+      generateUniqueTokenStub.returns('abc123');
+    });
+
+    afterEach(() => {
+      generateUniqueTokenStub.restore();
+      usersMock.restore();
+    });
+
+    function setupSaveResolves() {
+      saveStub.resolves(mockUser);
+    }
+
+    function setupSendMailResolves() {
+      sendMailStub.resolves(sendMailInfo);
+    }
+
+    function setupFindResolves() {
+      usersMock.expects('find')
+        .chain('exec')
+        .resolves([ mockUser ]);
+    }
+
+    function setupAllResolve() {
+      setupSaveResolves();
+      setupSendMailResolves();
+      setupFindResolves();
+    }
+
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.requestChangePasswordEmail(req, res, next)
+        .constructor.name.should.equal('Promise');
+    });
+
+    it('should use user.save', () => {
+      setupAllResolve();
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        saveStub.called.should.equal(true);
+      });
+    });
+
+    it('should set up a new token and ttl', () => {
+      let oldTTL, newTTL, oldToken, newToken;
+      oldToken = 'old';
+      oldTTL = Date.now() - 10000;
+
+      mockUser.passwordChange.token = oldToken;
+      mockUser.passwordChange.expires = oldTTL;
+
+      setupAllResolve();
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        newToken = mockUser.passwordChange.token;
+        newTTL = mockUser.passwordChange.expires;
+
+        should.exist(newToken);
+        newToken.should.not.equal(oldToken);
+
+        should.exist(oldToken);
+        newTTL.should.be.above(oldTTL);
+      });
+    });
+
+    it('should send a 204 on success', () => {
+      setupAllResolve();
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 204 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 500 if the save fails', () => {
+      saveStub.rejects(new Error('Save failed'));
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use authHelpers.generateUniqueToken', () => {
+      setupAllResolve();
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        generateUniqueTokenStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use shared.sendMail to send the verification email', () => {
+      setupAllResolve();
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        sendMailStub.args.should.deep.equal([[ mailParams ]]);
+      });
+    });
+
+    it('should send a 500 if sendmail fails', () => {
+      setupSaveResolves();
+      sendMailStub.rejects(sendMailError);
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 400 if token is missing', () => {
+      req.query = {};
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Missing token' } ]]);
+      });
+    });
+
+    it('should use Users.find', () => {
+      usersMock.expects('find')
+        .withExactArgs({ 'passwordChange.token': token })
+        .chain('exec')
+        .resolves(mockUser);
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        usersMock.verifiy().should.equal(true);
+      });
+    });
+
+    it('should send 400 if the token is not found', () => {
+      usersMock.expects('find')
+        .chain('exec')
+        .resolves([]);
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Token not found' } ]]);
+      });
+    });
+
+    it('should send a 500 if the find fails', () => {
+      usersMock.expects('find')
+        .chain('exec')
+        .rejects(new Error('Not found'));
+
+      return userController.requestChangePasswordEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
       });

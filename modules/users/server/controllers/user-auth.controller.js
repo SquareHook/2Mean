@@ -259,6 +259,34 @@ function userAuthController(logger, shared) {
     });
   }
 
+  function requestChangePasswordEmail(req, res, next) {
+    return new Promise((resolve, reject) => {
+      if (req.query.token) {
+        resolve(Users.find({ token: req.query.toke }).exec());
+      } else {
+        reject(new Error('Missing token'));
+      }
+    }).then((user) => {
+      user.passwordChange.token = authHelpers.genreateUniqueToken();
+      user.verification.expires = Date.now() + config.app.emailVerificationTTL;
+
+      return user.save();
+    }).then((savedUser) => {
+      return sendPasswordChangeEmail(savedUser);
+    }).then((mailInfo) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing token') {
+        res.status(400).send({ error: 'Missing token' });
+      } else if (error.message === 'Token not found') {
+        res.status(400).send({ error: 'Token not found' });
+      } else {
+        logger.error('Error in User.auth#requestChangePasswordEmail', error);
+        res.status(500).send();
+      }
+    });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
   function extractMongooseErrors(error) {
@@ -326,11 +354,33 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendEmailVerificationEmail(user) {
-    const url = 'http://' + config.app.host + (config.app.port == 80 ? '' : config.app.port) + '/verifyEmail;token=' + user.verification.token;
+    const url = 'http://' + config.app.host + ':' + config.app.port + '/verifyEmail;token=' + user.verification.token;
     const subject = 'Verification Email';
     const to = user.email;
     const from = config.email.from;
     const text= 'Verify your email by going here: ' + url;
+
+    const emailParams = {
+      from: from,
+      to: to,
+      text: text,
+      subject: subject
+    };
+
+    return shared.mail.sendMail(emailParams);
+  }
+
+  /**
+   * sends a password change email to the user
+   * @param {Object} user
+   * @return {Promise}
+   */
+  function sendPasswordChangeEmail(user) {
+    const url = 'http://' + config.app.host + ':' + config.app.port + '/changePassword;token=' + user.changePasswordToken;
+    const subject = 'Change Password';
+    const to = user.email;
+    const from = config.email.from;
+    const text = 'Change your password by going here: ' + url;
 
     const emailParams = {
       from: from,
@@ -348,7 +398,8 @@ function userAuthController(logger, shared) {
     register              : register,
     changePassword        : changePassword,
     verifyEmail: verifyEmail,
-    requestVerificationEmail: requestVerifcationEmail
+    requestVerificationEmail: requestVerifcationEmail,
+    requestChangePasswordEmail: requestChangePasswordEmail
   };
 }
 
