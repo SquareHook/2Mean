@@ -64,5 +64,11 @@ module.exports = [
     type: 'PUT',
     method: 'auth.changePassword',
     secure: true
+  },
+  {
+    route: '/users/verifyEmail',
+    type: 'GET',
+    method: 'auth.verifyEmail',
+    secure: true
   }
 ];

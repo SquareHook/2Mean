@@ -25,11 +25,6 @@ const q = require('q');
 const _ = require('lodash');
 
 /*
- * path for resolving files
- */
-const path = require('path');
-
-/*
  * fs for unlinking files
  */
 const fs = require('fs');
@@ -37,7 +32,7 @@ const fs = require('fs');
 /*
  * application config
  */
-const config = require(path.resolve('config/config'));
+const config = require('../../../../config/config');
 
 const md5 = require('md5');
 
@@ -69,99 +64,78 @@ function userAuthController(logger, shared) {
     var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
 
     let newUser = mapUser(body);
+
     newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = 'user';
-    
-    if (!isStrongPassword(newUser.password)) {
-      deferred.reject({
-        code: 400,
-        error: 'Invalid password: ' + config.auth.invalidPasswordMessage
-      });
-    } else {
-      authHelpers.hashPassword(newUser.password).then((hash) => {
-        newUser.password = hash;
+
+    return new Promise((resolve, reject) => {
+      if (!isStrongPassword(newUser.password)) {
+        reject(new Error('Invalid password'));
+      } else {
+        resolve(authHelpers.hashPassword(newUser.password));
+      }
+    }).then((hash) => {
+      newUser.password = hash;
       
-        newUser.verification = {
-          token: authHelpers.generateUniqueToken()
-        };
+      newUser.verification = {
+        token: authHelpers.generateUniqueToken()
+      };
 
-        // save the user
-        newUser.save((err, data) => {
-          if (err) {
-            let errors = extractMongooseErrors(err.errors);
-            let validation = _.find(errors, (o) => {
-              return (o.name === 'ValidatorError'); 
-            });
+      // save the user
+      return newUser.save();
+    }).then((savedUser) => {
+      logger.info('User created: ' + newUser.username);
 
-            if (validation) {
-              logger.error('Validation error on registering a new user', validation);
-              deferred.reject({
-                code: 400,
-                error: validation.message
-              });
-            } else {
-              // check for specific codes to provide feedback to ui
-              let errObj = err.toJSON();
-              let code = errObj.code;
-              let errmsg = errObj.errmsg;
-
-              // user already exists
-              // 11000 code is from mongoose
-              if (code === 11000) {
-                let errmsgList = errmsg.split(' ');
-                // index is the duplicate key
-                let index = errmsgList[errmsgList.indexOf('index:')+1];
-
-                // TODO implement email-password login and registration
-                // confirmation emails. Otherwise usernames could be enumerated
-                // with this endpoint. Until then send back generic error
-                // message
-
-                if (index === 'username_1') {
-                  deferred.reject({
-                    code: 500, 
-                    error: 'Username is taken'
-                  });
-                } else {
-                  deferred.reject({
-                    code: 500,
-                    error: 'Internal Server Error'
-                  });
-                }
-              } else {
-                logger.error('Creating User Error', err.errmsg);
-                deferred.reject({
-                  code: 500,
-                  error: 'Internal Server Error'
-                });
-              }
-
-            }
-          } else {
-            logger.info('User created: ' + newUser.username);
-            sendEmailVerificationEmail(newUser).then((data) => {
-
-            }).catch((error) => {
-
-            });
-
-            deferred.resolve({
-              code: 201,
-              data: data
-            });
-          }
+      return sendEmailVerificationEmail(newUser).then((mailInfo) => {
+        res.status(201).send({ user: savedUser });
+      }).catch((error) => {
+        logger.error('Error sending verification email', error);
+        res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
+      });
+    }).catch((error) => {
+      if (error.errors) {
+        let errors = extractMongooseErrors(err.errors);
+        let validation = _.find(errors, (o) => {
+          return (o.name === 'ValidatorError');
         });
-      });
-    }
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+        if (validation) {
+          logger.error('Validation error on registering a new user', validation);
+          res.status(400).send({ error: validation.message });
+        } else {
+          // check for specific codes to provide feedback to ui
+          let errObj = err.toJSON();
+          let code = errObj.code;
+          let errmsg = errObj.errmsg;
+
+          // user already exists
+          // 11000 code is from mongoose
+          if (code === 11000) {
+            let errmsgList = errmsg.split(' ');
+            // index is the duplicate key
+            let index = errmsgList[errmsgList.indexOf('index:')+1];
+
+            // TODO implement email-password login and registration
+            // confirmation emails. Otherwise usernames could be enumerated
+            // with this endpoint. Until then send back generic error
+            // message
+
+            if (index === 'username_1') {
+              res.status(500).send({ error: 'Username is taken' });
+            } else {
+              res.status(500).send();
+            }
+          }
+        }
+      } else if (error.message === 'Invalid password') {
+        res.status(400).send({ error: 'Invalid password: ' + config.auth.invalidPasswordMessage });
+      } else {
+        logger.error('Error in User.auth#register', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -336,12 +310,20 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendEmailVerificationEmail(user) {
-    const url = 'http://' + config.app.host + config.app.port === 80 ? '' : config.app.port + '/verifyEmail;token=' + user.verification.token;
-    console.log(url);
+    const url = 'http://' + config.app.host + (config.app.port == 80 ? '' : config.app.port) + '/verifyEmail;token=' + user.verification.token;
+    const subject = 'Verification Email';
+    const to = user.email;
+    const from = config.email.from;
+    const message = 'Verify your email by going here: ' + url;
 
-    return new Promise((resolve) => {
-      resolve();
-    });
+    const emailParams = {
+      from: from,
+      to: to,
+      message: message,
+      subject: subject
+    };
+
+    return shared.mail.sendMail(emailParams);
   }
 
   // --------------------------- Revealing Module Section ----------------------------

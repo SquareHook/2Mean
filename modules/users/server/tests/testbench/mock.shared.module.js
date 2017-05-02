@@ -12,6 +12,13 @@ module.exports = function(logger) {
         
         }
       }
+    })(logger),
+    mail: (function(logger) {
+      return {
+        sendMail: function sendMail(params) {
+
+        }
+      }
     })(logger)
   }
 };
