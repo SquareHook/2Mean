@@ -89,12 +89,18 @@ function userAuthController(logger, shared) {
     }).then((savedUser) => {
       logger.info('User created: ' + newUser.username);
 
-      return sendEmailVerificationEmail(newUser).then((mailInfo) => {
-        res.status(201).send({ user: savedUser });
-      }).catch((error) => {
-        logger.error('Error sending verification email', error);
-        res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
-      });
+      if (config.app.requireEmailVerification) {
+        return sendEmailVerificationEmail(newUser).then((mailInfo) => {
+          res.status(201).send({ user: savedUser });
+        }).catch((error) => {
+          logger.error('Error sending verification email', error);
+          res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
+        });
+      } else {
+        return new Promise((resolve, reject) => {
+          res.status(201).send({ user: savedUser });
+        });
+      }
     }).catch((error) => {
       if (error.errors) {
         let errors = extractMongooseErrors(err.errors);

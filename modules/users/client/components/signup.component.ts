@@ -47,7 +47,7 @@ export class SignupComponent implements AfterViewChecked {
       .subscribe(
         user => {
           if (user.message === 'Verification email not sent') {
-            this.notificationsService.warn('Warning', 'Verification email not sent');
+            this.notificationsService.warn('Warning', 'Account created but verification link not sent. Try again later');
           } else {
             this.notificationsService.success('Info', 'Verification email sent. Follow the link in it to verify your email');
           }

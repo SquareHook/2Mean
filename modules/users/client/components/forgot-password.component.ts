@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { NotificationsService } from 'angular2-notifications';
+import { Router } from '@angular/router';
 
 import { UserService } from '../services/user.service';
 
@@ -12,7 +13,8 @@ export class ForgotPasswordComponent {
 
   constructor(
     private userService: UserService,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    private router: Router
   ) {
 
   }
@@ -20,6 +22,7 @@ export class ForgotPasswordComponent {
   requestResetLink() {
     this.userService.requestResetPasswordEmail(this.email).subscribe((data) => {
       this.notificationsService.success('Email Sent', 'Check your inbox and follow the link in the email');
+      this.router.navigateByUrl('/signin');
     }, (error) => {
       console.log(error);
       let body;

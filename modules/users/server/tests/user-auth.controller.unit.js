@@ -21,7 +21,8 @@ const mockConfig = {
   app: {
     port_http: 80,
     host: 'blahblah.com',
-    emailVerificationTTL: 100000
+    emailVerificationTTL: 100000,
+    requireEmailVerification: true
   },
   email: {
     from: 'don\'t care'
@@ -641,6 +642,8 @@ describe('UserAuthController', () => {
       req.query = {
         email: mockUser.email
       };
+
+      mockUser.verified = true;
 
       req.user = mockUser;
       req.user.save = saveStub;
