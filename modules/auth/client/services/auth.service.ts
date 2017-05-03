@@ -91,17 +91,7 @@ export class AuthService {
       .subscribe((res: Response) => {
         let body = res.json();
 
-        this.user = new User();
-        // Save the user information for use later.
-        this.user._id = body.user._id;
-        this.user.firstName = body.user.firstName;
-        this.user.lastName = body.user.lastName;
-        this.user.displayName = body.user.displayName;
-        this.user.email = body.user.email;
-        this.user.username = body.user.username;
-        this.user.profileImageURL = body.user.profileImageURL;
-        this.user.role = body.user.role;
-        this.user.subroles = body.user.subroles;
+        this.user = body.user;
         this.saveUser();
         this.loggedIn = true;
 

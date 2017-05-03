@@ -451,6 +451,10 @@ function userCrudController(logger, shared) {
     // cheat a deep copy with JSON
     let sanitized = JSON.parse(JSON.stringify(user));
     sanitized.password = undefined;
+    // remove the token. The user has to look at their email. no cheating
+    sanitized.verification.token = undefined;
+    // remove password rest token
+    sanitized.resetPassword.token = undefined;
 
     return sanitized;
   }

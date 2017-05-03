@@ -1,3 +1,7 @@
+<div class="alert alert-danger" *ngIf="!user.verified">
+  Your email has not been verified. Click
+  <a [routerLink]="['/', 'verifyEmail']">here</a> to do that now
+</div>
 <div class="row">
   <div class="col-sm-3 col-md-3">
     <p>Hello {{ user.displayName || user.username }}</p>

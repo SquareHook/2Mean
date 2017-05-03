@@ -99,7 +99,7 @@ export class UserService {
       .map(this.extractData);
   }
 
-  register(newUser: User) : Observable<User> {
+  register(newUser: User) : Observable<any> {
     return this.http.post('api/users/register', newUser)
       .map(this.extractData);
   }
@@ -178,6 +178,46 @@ export class UserService {
    */
   clearUploaderQueue() : void {
     this.uploader.clearQueue();
+  }
+
+  /**
+   * send a verification get request
+   */
+  verifyEmail(token: string) : Observable<any> {
+    return this.http.get('api/users/verifyEmail?token=' + token)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a new verification email be sent
+   */
+  requestVerificationEmail() : Observable<any> {
+    return this.http.get('api/users/requestVerificationEmail')
+      .map(this.extractData);
+  }
+
+  /**
+   * send the password and token to reset a password
+   * @param {string} password
+   * @param {string} token
+   */
+  resetPassword(password: string, token: string) : Observable<any> {
+    let body = {
+      password: password,
+      token: token
+    };
+
+    return this.http.post('api/users/resetPassword', body)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a password reset email to be sent
+   * @param {string} email - the email the user claims to have
+   */
+  requestResetPasswordEmail(email: string) : Observable<any> {
+    return this.http.get('api/users/requestChangePasswordEmail?email=' + email)
+      .map(this.extractData);
   }
 
   /**

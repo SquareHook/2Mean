@@ -8,6 +8,8 @@ require('sinon-as-promised');
 
 const argon2 = require('argon2');
 
+const uuid = require('uuid');
+
 const AuthHelpers = require('./../controllers/auth.helpers');
 
 describe('AuthHelpers', () => {
@@ -164,6 +166,24 @@ describe('AuthHelpers', () => {
       }).catch((error) => {
         error.should.equal(matchError);
       });
+    });
+  });
+
+  describe('#generateUniqueToken', () => {
+    let uuidV4Stub;
+
+    beforeEach(() => {
+      uuidV4Stub = sinon.stub(uuid, 'v4');
+    });
+
+    afterEach(() => {
+      uuidV4Stub.restore();
+    });
+
+    it('should use uuid.v4', () => {
+      uuidV4Stub.returns('uuid');
+
+      authHelpers.generateUniqueToken().should.equal('uuid');
     });
   });
 });

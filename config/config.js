@@ -24,7 +24,10 @@ module.exports = {
     port_http: process.env.TOOMEAN_APP_PORT || 3080,
     port_https: process.env.TOOMEAN_APP_HTTPS_PORT || 3443,
     // TODO in production default to true
-    force_https: process.env.TOOMEAN_APP_FORCE_HTTPS || false
+    force_https: process.env.TOOMEAN_APP_FORCE_HTTPS || false,
+    // default is 15 minutes
+    requireEmailVerification: process.env.TOOMEAN_APP_REQUIRE_EMAIL_VERIFICATION || false,
+    emailVerificationTTL: process.env.TOOMEAN_APP_EMAIL_VERIFICATION_TTL || 15 * 60 * 1000
   },
   uploads: {
     root: 'uploads',
@@ -66,5 +69,6 @@ module.exports = {
   // controls emails for user verification and shared module send functionality
   email: {
     provider: process.env.TOOMEAN_EMAIL_PROVIDER || undefined,
+    from: process.env.TOOMEAN_EMAIL_FROM || undefined
   }
 };

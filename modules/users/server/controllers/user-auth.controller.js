@@ -1,45 +1,40 @@
 /**
  * Database handle.
  */
-var mongoose = require('mongoose');
-var ObjectId = mongoose.Schema.ObjectId;
+const mongoose = require('mongoose');
+const ObjectId = mongoose.Schema.ObjectId;
 
 /**
  * User model.
  */
-var Users = mongoose.model('User');
+const Users = mongoose.model('User');
 
 /**
  * Key model.
  */
-var Keys = mongoose.model('Keys');
+const Keys = mongoose.model('Keys');
 
 /**
  * Q promise library.
  */
-var q = require('q');
+const q = require('q');
 
 /*
  * Underscore/Lodash functionality.
  */
-var _ = require('lodash');
-
-/*
- * path for resolving files
- */
-var path = require('path');
+const _ = require('lodash');
 
 /*
  * fs for unlinking files
  */
-var fs = require('fs');
+const fs = require('fs');
 
 /*
  * application config
  */
-var config = require(path.resolve('config/config'));
+const config = require('../../../../config/config');
 
-var md5 = require('md5');
+const md5 = require('md5');
 
 /**
  * Main business logic for handling requests.
@@ -69,89 +64,85 @@ function userAuthController(logger, shared) {
     var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
 
     let newUser = mapUser(body);
+
     newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = 'user';
-    
-    if (!isStrongPassword(newUser.password)) {
-      deferred.reject({
-        code: 400,
-        error: 'Invalid password: ' + config.auth.invalidPasswordMessage
-      });
-    } else {
-      authHelpers.hashPassword(newUser.password).then((hash) => {
-        newUser.password = hash;
+
+    return new Promise((resolve, reject) => {
+      if (!isStrongPassword(newUser.password)) {
+        reject(new Error('Invalid password'));
+      } else {
+        resolve(authHelpers.hashPassword(newUser.password));
+      }
+    }).then((hash) => {
+      newUser.password = hash;
       
-        // save the user
-        newUser.save((err, data) => {
-          if (err) {
-            let errors = extractMongooseErrors(err.errors);
-            let validation = _.find(errors, (o) => {
-              return (o.name === 'ValidatorError'); 
-            });
+      newUser.verification = {
+        token: authHelpers.generateUniqueToken(),
+        expires: Date.now() + config.app.emailVerificationTTL
+      };
 
-            if (validation) {
-              logger.error('Validation error on registering a new user', validation);
-              deferred.reject({
-                code: 400,
-                error: validation.message
-              });
-            } else {
-              // check for specific codes to provide feedback to ui
-              let errObj = err.toJSON();
-              let code = errObj.code;
-              let errmsg = errObj.errmsg;
+      // save the user
+      return newUser.save();
+    }).then((savedUser) => {
+      logger.info('User created: ' + newUser.username);
 
-              // user already exists
-              // 11000 code is from mongoose
-              if (code === 11000) {
-                let errmsgList = errmsg.split(' ');
-                // index is the duplicate key
-                let index = errmsgList[errmsgList.indexOf('index:')+1];
-
-                // TODO implement email-password login and registration
-                // confirmation emails. Otherwise usernames could be enumerated
-                // with this endpoint. Until then send back generic error
-                // message
-
-                if (index === 'username_1') {
-                  deferred.reject({
-                    code: 500, 
-                    error: 'Username is taken'
-                  });
-                } else {
-                  deferred.reject({
-                    code: 500,
-                    error: 'Internal Server Error'
-                  });
-                }
-              } else {
-                logger.error('Creating User Error', err.errmsg);
-                deferred.reject({
-                  code: 500,
-                  error: 'Internal Server Error'
-                });
-              }
-
-            }
-          } else {
-            logger.info('User created: ' + newUser.username);
-            deferred.resolve({
-              code: 201,
-              data: data
-            });
-          }
+      if (config.app.requireEmailVerification) {
+        return sendEmailVerificationEmail(newUser).then((mailInfo) => {
+          res.status(201).send({ user: savedUser });
+        }).catch((error) => {
+          logger.error('Error sending verification email', error);
+          res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
         });
-      });
-    }
+      } else {
+        return new Promise((resolve, reject) => {
+          res.status(201).send({ user: savedUser });
+        });
+      }
+    }).catch((error) => {
+      if (error.errors) {
+        let errors = extractMongooseErrors(err.errors);
+        let validation = _.find(errors, (o) => {
+          return (o.name === 'ValidatorError');
+        });
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+        if (validation) {
+          logger.error('Validation error on registering a new user', validation);
+          res.status(400).send({ error: validation.message });
+        } else {
+          // check for specific codes to provide feedback to ui
+          let errObj = err.toJSON();
+          let code = errObj.code;
+          let errmsg = errObj.errmsg;
+
+          // user already exists
+          // 11000 code is from mongoose
+          if (code === 11000) {
+            let errmsgList = errmsg.split(' ');
+            // index is the duplicate key
+            let index = errmsgList[errmsgList.indexOf('index:')+1];
+
+            // TODO implement email-password login and registration
+            // confirmation emails. Otherwise usernames could be enumerated
+            // with this endpoint. Until then send back generic error
+            // message
+
+            if (index === 'username_1') {
+              res.status(500).send({ error: 'Username is taken' });
+            } else {
+              res.status(500).send();
+            }
+          }
+        }
+      } else if (error.message === 'Invalid password') {
+        res.status(400).send({ error: 'Invalid password: ' + config.auth.invalidPasswordMessage });
+      } else {
+        logger.error('Error in User.auth#register', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -224,6 +215,166 @@ function userAuthController(logger, shared) {
     });
   }
 
+  /**
+   * verifies that the user has access to the email they registered with
+   * @param {Object} req
+   * @param {Object} res
+   * @param {Function} next
+   * @return {Promise}
+   */
+  function verifyEmail(req, res, next) {
+    let token = req.query.token;
+    let user = req.user;
+
+    return new Promise((resolve, reject) => {
+      if (!user) {
+        reject(new Error('Not authorized'));
+      } else if (user.verification.token !== token) {
+        reject(new Error('Token invalid'));
+      } else if (Date.now() > user.verification.expires) {
+        reject(new Error('Token has expired'));
+      } else {
+        user.verification.expires = undefined;
+        user.verified = true;
+
+        resolve(user.save());
+      }
+    }).then((savedUser) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Token has expired') {
+        res.status(400).send({ message: 'Token has expired' });
+      } else if (error.message === 'Token invalid') {
+        res.status(400).send({ message: 'Token invalid' });
+      } else if (error.message === 'Not authorized') {
+        res.status(401).send();
+      } else {
+        logger.error('Error verifying email: ', error);
+        res.status(500).send();
+      }
+    });
+  }
+
+  /**
+   * request that a new verification email with a new token is sent
+   */
+  function requestVerifcationEmail(req, res, next) {
+    let user = req.user;
+    
+    user.verification.token = authHelpers.generateUniqueToken();
+    user.verification.expires = Date.now() + config.app.emailVerificationTTL;
+
+    return user.save().then((savedUser) => {
+      return sendEmailVerificationEmail(savedUser);
+    }).then((mailInfo) => {
+      res.status(204).send();
+    }).catch((error) => {
+      logger.error(error);
+      res.status(500).send();
+    });
+  }
+
+  /**
+   * request that a new password reset email with a new token is sent
+   */
+  function requestChangePasswordEmail(req, res, next) {
+    return new Promise((resolve, reject) => {
+      if (req.query.email) {
+        resolve(Users.find({ email: req.query.email }).exec());
+      } else {
+        reject(new Error('Missing email'));
+      }
+    }).then((users) => {
+      let user;
+
+      if (users.length === 1) {
+        user = users[0];
+      } else {
+        // email is unique so can safely assume that only other case is zero
+        throw new Error('Email not found');
+      }
+
+      if (!user.verified) {
+        throw new Error('User has not verified email');
+      }
+
+      user.resetPassword = {
+        token: authHelpers.generateUniqueToken(),
+        expires: Date.now() + config.app.emailVerificationTTL
+      };
+
+      return user.save();
+    }).then((savedUser) => {
+      return sendPasswordChangeEmail(savedUser);
+    }).then((mailInfo) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing email') {
+        res.status(400).send({ error: 'Missing email' });
+      } else if (error.message === 'Email not found') {
+        res.status(400).send({ error: 'Email not found' });
+      } else if (error.message === 'User has not verified email') {
+        res.status(400).send({ error: 'User has not verified email' });
+      } else {
+        logger.error('Error in User.auth#requestChangePasswordEmail', error);
+        res.status(500).send();
+      }
+    });
+  }
+
+  /**
+   * change a forgotten password
+   */
+  function resetPassword(req, res, next) {
+    let user;
+    
+    return new Promise((resolve, reject) => {
+      if (!req.body.password) {
+        reject(new Error('Missing password'));
+      } else if (!req.body.token) {
+        reject(new Error('Missing token'));
+      } else if (isStrongPassword(req.body.password)) {
+        resolve(Users.find({ 'resetPassword.token': req.body.token }).exec());
+      } else {
+        reject(new Error('Password invalid'));
+      }
+    }).then((users) => {
+      if (users.length === 1) {
+        user = users[0];
+      } else {
+        throw new Error('Token invalid');
+      }
+      
+      if (Date.now() > user.resetPassword.expires) {
+        throw new Error('Token has expired');
+      }
+
+      return shared.authHelpers.hashPassword(req.body.password);
+    }).then((hashed) => {
+      user.password = hashed;
+      user.resetPassword = {};
+
+      return user.save();
+    }).then((savedUser) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing token') {
+        res.status(400).send({ error: 'Missing token' });
+      } else if (error.message === 'Missing password') {
+        res.status(400).send({ error: 'Missing password' });
+      } else if (error.message === 'Token invalid') {
+        res.status(400).send({ error: 'Token invalid' });
+      } else if (error.message === 'Password invalid') {
+        res.status(400).send({ error: 'Password invalid' });
+      } else if (error.message === 'Token has expired') {
+        res.status(400).send({ error: 'Token has expired' });
+      } else {
+        logger.error('Error in User.auth#resetPassword', error);
+        res.status(500).send();
+      }
+    });
+  }
+
   // --------------------------- Private Function Definitions ----------------------------
 
   function extractMongooseErrors(error) {
@@ -285,11 +436,59 @@ function userAuthController(logger, shared) {
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
+  /**
+   * sends a verification email to the user
+   * @param {Object} user
+   * @return {Promise}
+   */
+  function sendEmailVerificationEmail(user) {
+    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/verifyEmail;token=' + user.verification.token;
+    const subject = 'Verification Email';
+    const to = user.email;
+    const from = config.email.from;
+    const text= 'Verify your email by going here: ' + url;
+
+    const emailParams = {
+      from: from,
+      to: to,
+      text: text,
+      subject: subject
+    };
+
+    return shared.mail.sendMail(emailParams);
+  }
+
+  /**
+   * sends a password change email to the user
+   * @param {Object} user
+   * @return {Promise}
+   */
+  function sendPasswordChangeEmail(user) {
+    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/changePassword;token=' + user.resetPassword.token;
+    const subject = 'Change Password';
+    const to = user.email;
+    const from = config.email.from;
+    const text = 'Change your password by going here: ' + url;
+
+    const emailParams = {
+      from: from,
+      to: to,
+      text: text,
+      subject: subject
+    };
+
+    return shared.mail.sendMail(emailParams);
+  }
+
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
     register              : register,
-    changePassword        : changePassword
+    changePassword        : changePassword,
+    verifyEmail: verifyEmail,
+    requestVerificationEmail: requestVerifcationEmail,
+    requestChangePasswordEmail: requestChangePasswordEmail,
+    resetPassword: resetPassword
   };
 }
 

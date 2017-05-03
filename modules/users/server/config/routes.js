@@ -6,6 +6,30 @@ module.exports = [
     secure: true
   },
   {
+    route: '/users/verifyEmail',
+    type: 'GET',
+    method: 'auth.verifyEmail',
+    secure: true
+  },
+  {
+    route: '/users/requestVerificationEmail',
+    type: 'GET',
+    method: 'auth.requestVerificationEmail',
+    secure: true
+  },
+  {
+    route: '/users/resetPassword',
+    type: 'POST',
+    method: 'auth.resetPassword',
+    secure: false
+  },
+  {
+    route: '/users/requestChangePasswordEmail',
+    type: 'GET',
+    method: 'auth.requestChangePasswordEmail',
+    secure: false
+  },
+  {
     route: '/users/:userId',
     type: 'GET',
     method: 'crud.read',
@@ -64,5 +88,5 @@ module.exports = [
     type: 'PUT',
     method: 'auth.changePassword',
     secure: true
-  }
+  },
 ];

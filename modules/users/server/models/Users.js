@@ -3,6 +3,7 @@
 /**
  * Module dependencies.
  */
+const config = require('../../../../config/config');
 var mongoose = require('mongoose'),
   Schema = mongoose.Schema;
 
@@ -77,12 +78,32 @@ var UserSchema = new Schema({
     type: Date,
     default: Date.now
   },
-  /* For reset password */
-  resetPasswordToken: {
-    type: String
+  /* For verify email */
+  verified: {
+    type: Boolean,
+    default: false
   },
-  resetPasswordExpires: {
-    type: Date
+  verification: {
+    token: {
+      type: String
+    },
+    expires: {
+      type: Date,
+      default: () => {
+        // use configured ttl
+        return Date.now() + config.app.emailVerificationTTL;
+      }
+    }
+  }, resetPassword: {
+    token: {
+      type: String
+    },
+    expires: {
+      type: Date,
+      default: () => {
+        return Date.now() + config.app.emailVerificationTTL;
+      }
+    }
   }
 });
 

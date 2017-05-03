@@ -184,6 +184,13 @@ There is also a file drop component that can be used similarly to the
 file select. This component is demoed on the edit user page.
 
 ### Email
+If you are going to send email for any reason, it is recommended that you
+verify users email. This can be done by setting `TOOMEAN_APP_EMAIL_VERIFICATION_REQUIRED=true`.
+This will prevent users with un verified emails from accessing secure endpoints.
+Additionally it will try to send a verification email when the user registers
+and enable password reset emails. This requires an email provider to be
+configured:
+
 Set the `TOOMEAN_EMAIL_PROVIDER` environment variable to one of the following
 
 #### `ses`
