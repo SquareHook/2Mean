@@ -19,7 +19,7 @@ var Users = mongoose.model('User');
 const proxyquire = require('proxyquire');
 const mockConfig = {
   app: {
-    port: 80,
+    port_http: 80,
     host: 'blahblah.com',
     emailVerificationTTL: 100000
   },
@@ -80,14 +80,14 @@ describe('UserAuthController', () => {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Verification Email',
-    text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port + '/verifyEmail;token=' + token
+    text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/verifyEmail;token=' + token
   };
 
   const passwordMailParams = {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Change Password',
-    text: 'Change your password by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port + '/changePassword;token=' + token
+    text: 'Change your password by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/changePassword;token=' + token
   };
 
   before(() => {

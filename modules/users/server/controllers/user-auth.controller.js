@@ -80,7 +80,8 @@ function userAuthController(logger, shared) {
       newUser.password = hash;
       
       newUser.verification = {
-        token: authHelpers.generateUniqueToken()
+        token: authHelpers.generateUniqueToken(),
+        expires: Date.now() + config.app.emailVerificationTTL
       };
 
       // save the user
@@ -220,7 +221,9 @@ function userAuthController(logger, shared) {
     let user = req.user;
 
     return new Promise((resolve, reject) => {
-      if (user.verification.token !== token) {
+      if (!user) {
+        reject(new Error('Not authorized'));
+      } else if (user.verification.token !== token) {
         reject(new Error('Token invalid'));
       } else if (Date.now() > user.verification.expires) {
         reject(new Error('Token has expired'));
@@ -237,7 +240,10 @@ function userAuthController(logger, shared) {
         res.status(400).send({ message: 'Token has expired' });
       } else if (error.message === 'Token invalid') {
         res.status(400).send({ message: 'Token invalid' });
+      } else if (error.message === 'Not authorized') {
+        res.status(401).send();
       } else {
+        logger.error('Error verifying email: ', error);
         res.status(500).send();
       }
     });
@@ -282,6 +288,10 @@ function userAuthController(logger, shared) {
         throw new Error('Email not found');
       }
 
+      if (!user.verified) {
+        throw new Error('User has not verified email');
+      }
+
       user.resetPassword = {
         token: authHelpers.generateUniqueToken(),
         expires: Date.now() + config.app.emailVerificationTTL
@@ -297,6 +307,8 @@ function userAuthController(logger, shared) {
         res.status(400).send({ error: 'Missing email' });
       } else if (error.message === 'Email not found') {
         res.status(400).send({ error: 'Email not found' });
+      } else if (error.message === 'User has not verified email') {
+        res.status(400).send({ error: 'User has not verified email' });
       } else {
         logger.error('Error in User.auth#requestChangePasswordEmail', error);
         res.status(500).send();
@@ -424,7 +436,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendEmailVerificationEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port + '/verifyEmail;token=' + user.verification.token;
+    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/verifyEmail;token=' + user.verification.token;
     const subject = 'Verification Email';
     const to = user.email;
     const from = config.email.from;
@@ -446,7 +458,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendPasswordChangeEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port + '/changePassword;token=' + user.resetPassword.token;
+    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/changePassword;token=' + user.resetPassword.token;
     const subject = 'Change Password';
     const to = user.email;
     const from = config.email.from;

@@ -99,7 +99,8 @@ function authenticationModule(logger, shared) {
             .then((user) => {
               // Store user for downstream logic.
               req.user = user;
-              return next();
+
+              return checkEmailVerified(req, res, next);
             }, (err) => {
               if (err) {
                 logger.error('Authenteication error looking up user referenced in key', err);
@@ -112,6 +113,24 @@ function authenticationModule(logger, shared) {
         logger.error('Authentication error looking up a key', error);
         return res.status(401).send();
       });
+  }
+
+  /**
+   * if config requires email verification for secure endpoints, check the
+   * user is verified
+   */
+  function checkEmailVerified(req, res, next) {
+    if (config.app.requireEmailVerification && 
+        req.path !== '/api/users/verifyEmail' &&
+        req.path !== '/api/users/requestVerificationEmail') {
+      if (req.user.verified) {
+        return next();
+      } else {
+        return res.status(403).send({ error: 'Email not verified' });
+      }
+    } else {
+      return next()
+    }
   }
 
   /**

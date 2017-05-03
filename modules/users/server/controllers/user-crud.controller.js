@@ -453,6 +453,8 @@ function userCrudController(logger, shared) {
     sanitized.password = undefined;
     // remove the token. The user has to look at their email. no cheating
     sanitized.verification.token = undefined;
+    // remove password rest token
+    sanitized.resetPassword.token = undefined;
 
     return sanitized;
   }

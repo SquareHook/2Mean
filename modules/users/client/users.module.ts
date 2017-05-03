@@ -42,6 +42,7 @@ import { AdminUsersComponent } from './components/admin-users.component';
 import { AdminUserForm} from './components/admin-user-form.component';
 import { VerifyEmailComponent } from './components/verify-email.component';
 import { ForgotPasswordComponent } from './components/forgot-password.component';
+import { ResetPasswordComponent } from './components/reset-password.component';
 
 /* Services */
 import { UserService }          from './services/user.service';
@@ -90,7 +91,8 @@ import { SharedModule } from './../../shared/client/shared.module';
     AdminUsersComponent,
     AdminUserForm,
     VerifyEmailComponent,
-    ForgotPasswordComponent
+    ForgotPasswordComponent,
+    ResetPasswordComponent
   ],
   providers: [ 
     { provide: USERS_CONFIG, useValue: USERS_DI_CONFIG },

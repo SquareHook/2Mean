@@ -38,6 +38,7 @@ import {
 import { AdminUsersComponent } from './../components/admin-users.component';
 import { VerifyEmailComponent } from '../components/verify-email.component';
 import { ForgotPasswordComponent } from '../components/forgot-password.component';
+import { ResetPasswordComponent } from '../components/reset-password.component';
 
 /* this defines the global users routes */
 const usersRoutes: Routes = [
@@ -99,6 +100,10 @@ const usersRoutes: Routes = [
   {
     path: 'forgot-password',
     component: ForgotPasswordComponent
+  },
+  {
+    path: 'reset-password',
+    component: ResetPasswordComponent
   }
 ];
 

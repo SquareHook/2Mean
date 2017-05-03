@@ -197,10 +197,26 @@ export class UserService {
   }
 
   /**
-   * requests a password reset email to be sent
+   * send the password and token to reset a password
+   * @param {string} password
+   * @param {string} token
    */
-  requestPasswordResetEmail() : Observable<any> {
-    return this.http.get('api/users/requestPasswordResetEmail')
+  resetPassword(password: string, token: string) : Observable<any> {
+    let body = {
+      password: password,
+      token: token
+    };
+
+    return this.http.post('api/users/resetPassword', body)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a password reset email to be sent
+   * @param {string} email - the email the user claims to have
+   */
+  requestResetPasswordEmail(email: string) : Observable<any> {
+    return this.http.get('api/users/requestChangePasswordEmail?email=' + email)
       .map(this.extractData);
   }
 

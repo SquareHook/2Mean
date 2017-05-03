@@ -18,6 +18,18 @@ module.exports = [
     secure: true
   },
   {
+    route: '/users/resetPassword',
+    type: 'POST',
+    method: 'auth.resetPassword',
+    secure: false
+  },
+  {
+    route: '/users/requestChangePasswordEmail',
+    type: 'GET',
+    method: 'auth.requestChangePasswordEmail',
+    secure: false
+  },
+  {
     route: '/users/:userId',
     type: 'GET',
     method: 'crud.read',
