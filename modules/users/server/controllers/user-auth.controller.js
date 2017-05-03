@@ -243,6 +243,9 @@ function userAuthController(logger, shared) {
     });
   }
 
+  /**
+   * request that a new verification email with a new token is sent
+   */
   function requestVerifcationEmail(req, res, next) {
     let user = req.user;
     
@@ -259,16 +262,30 @@ function userAuthController(logger, shared) {
     });
   }
 
+  /**
+   * request that a new password reset email with a new token is sent
+   */
   function requestChangePasswordEmail(req, res, next) {
     return new Promise((resolve, reject) => {
-      if (req.query.token) {
-        resolve(Users.find({ token: req.query.toke }).exec());
+      if (req.query.email) {
+        resolve(Users.find({ email: req.query.email }).exec());
       } else {
-        reject(new Error('Missing token'));
+        reject(new Error('Missing email'));
       }
-    }).then((user) => {
-      user.passwordChange.token = authHelpers.genreateUniqueToken();
-      user.verification.expires = Date.now() + config.app.emailVerificationTTL;
+    }).then((users) => {
+      let user;
+
+      if (users.length === 1) {
+        user = users[0];
+      } else {
+        // email is unique so can safely assume that only other case is zero
+        throw new Error('Email not found');
+      }
+
+      user.resetPassword = {
+        token: authHelpers.generateUniqueToken(),
+        expires: Date.now() + config.app.emailVerificationTTL
+      };
 
       return user.save();
     }).then((savedUser) => {
@@ -276,12 +293,65 @@ function userAuthController(logger, shared) {
     }).then((mailInfo) => {
       res.status(204).send();
     }).catch((error) => {
-      if (error.message === 'Missing token') {
-        res.status(400).send({ error: 'Missing token' });
-      } else if (error.message === 'Token not found') {
-        res.status(400).send({ error: 'Token not found' });
+      if (error.message === 'Missing email') {
+        res.status(400).send({ error: 'Missing email' });
+      } else if (error.message === 'Email not found') {
+        res.status(400).send({ error: 'Email not found' });
       } else {
         logger.error('Error in User.auth#requestChangePasswordEmail', error);
+        res.status(500).send();
+      }
+    });
+  }
+
+  /**
+   * change a forgotten password
+   */
+  function resetPassword(req, res, next) {
+    let user;
+    
+    return new Promise((resolve, reject) => {
+      if (!req.body.password) {
+        reject(new Error('Missing password'));
+      } else if (!req.body.token) {
+        reject(new Error('Missing token'));
+      } else if (isStrongPassword(req.body.password)) {
+        resolve(Users.find({ 'resetPassword.token': req.body.token }).exec());
+      } else {
+        reject(new Error('Password invalid'));
+      }
+    }).then((users) => {
+      if (users.length === 1) {
+        user = users[0];
+      } else {
+        throw new Error('Token invalid');
+      }
+      
+      if (Date.now() > user.resetPassword.expires) {
+        throw new Error('Token has expired');
+      }
+
+      return shared.authHelpers.hashPassword(req.body.password);
+    }).then((hashed) => {
+      user.password = hashed;
+      user.resetPassword = {};
+
+      return user.save();
+    }).then((savedUser) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing token') {
+        res.status(400).send({ error: 'Missing token' });
+      } else if (error.message === 'Missing password') {
+        res.status(400).send({ error: 'Missing password' });
+      } else if (error.message === 'Token invalid') {
+        res.status(400).send({ error: 'Token invalid' });
+      } else if (error.message === 'Password invalid') {
+        res.status(400).send({ error: 'Password invalid' });
+      } else if (error.message === 'Token has expired') {
+        res.status(400).send({ error: 'Token has expired' });
+      } else {
+        logger.error('Error in User.auth#resetPassword', error);
         res.status(500).send();
       }
     });
@@ -376,7 +446,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendPasswordChangeEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port + '/changePassword;token=' + user.changePasswordToken;
+    const url = 'http://' + config.app.host + ':' + config.app.port + '/changePassword;token=' + user.resetPassword.token;
     const subject = 'Change Password';
     const to = user.email;
     const from = config.email.from;
@@ -399,7 +469,8 @@ function userAuthController(logger, shared) {
     changePassword        : changePassword,
     verifyEmail: verifyEmail,
     requestVerificationEmail: requestVerifcationEmail,
-    requestChangePasswordEmail: requestChangePasswordEmail
+    requestChangePasswordEmail: requestChangePasswordEmail,
+    resetPassword: resetPassword
   };
 }
 

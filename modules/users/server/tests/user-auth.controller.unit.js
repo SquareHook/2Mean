@@ -76,11 +76,18 @@ describe('UserAuthController', () => {
 
   const sendMailError = new Error('send mail failed');
   
-  const mailParams = {
+  const verifyMailParams = {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Verification Email',
     text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port + '/verifyEmail;token=' + token
+  };
+
+  const passwordMailParams = {
+    to: 'test@example.com',
+    from: 'don\'t care',
+    subject: 'Change Password',
+    text: 'Change your password by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port + '/changePassword;token=' + token
   };
 
   before(() => {
@@ -127,12 +134,16 @@ describe('UserAuthController', () => {
 
     //mongoose stubs
     saveStub = sinon.stub(Users.prototype, 'save');
+    
+    generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
+    generateUniqueTokenStub.returns(token);
   });
 
   afterEach(() => {
     // statusStub and sendStub are anonymous stubs so the do not have to be
     // restored
     saveStub.restore();
+    generateUniqueTokenStub.restore();
   });
 
   describe('#register', () => {
@@ -144,18 +155,15 @@ describe('UserAuthController', () => {
 
     beforeEach(() => {
       hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
-      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
       sendMailStub = sinon.stub(mockSharedModule.mail, 'sendMail');
 
       hashPasswordStub.resolves('hash');
-      generateUniqueTokenStub.returns(token);
       
       req.body = JSON.parse(JSON.stringify(validReqBody));
     });
 
     afterEach(() => {
       hashPasswordStub.restore();
-      generateUniqueTokenStub.restore();
       sendMailStub.restore();
     });
 
@@ -252,7 +260,7 @@ describe('UserAuthController', () => {
       setupAllResolve();
 
       return userController.register(req, res, next).then((data) => {
-        sendMailStub.args.should.deep.equal([[ mailParams ]]);
+        sendMailStub.args.should.deep.equal([[ verifyMailParams ]]);
       });
     });
 
@@ -519,17 +527,13 @@ describe('UserAuthController', () => {
 
   describe('#requestVerificationEmail', () => {
     beforeEach(() => {
-      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
       sendMailStub = sinon.stub(mockSharedModule.mail, 'sendMail');
 
       req.user = mockUser;
       req.user.save = saveStub;
-
-      generateUniqueTokenStub.returns('abc123');
     });
 
     afterEach(() => {
-      generateUniqueTokenStub.restore();
     });
 
     function setupSaveResolves() {
@@ -612,7 +616,7 @@ describe('UserAuthController', () => {
       setupAllResolve();
 
       return userController.requestVerificationEmail(req, res, next).then((data) => {
-        sendMailStub.args.should.deep.equal([[ mailParams ]]);
+        sendMailStub.args.should.deep.equal([[ verifyMailParams ]]);
       });
     });
 
@@ -631,22 +635,18 @@ describe('UserAuthController', () => {
     let findMock;
 
     beforeEach(() => {
-      generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
       sendMailStub = sinon.stub(mockSharedModule.mail, 'sendMail');
       usersMock = sinon.mock(Users);
 
       req.query = {
-        token: token
+        email: mockUser.email
       };
 
       req.user = mockUser;
       req.user.save = saveStub;
-
-      generateUniqueTokenStub.returns('abc123');
     });
 
     afterEach(() => {
-      generateUniqueTokenStub.restore();
       usersMock.restore();
     });
 
@@ -690,14 +690,16 @@ describe('UserAuthController', () => {
       oldToken = 'old';
       oldTTL = Date.now() - 10000;
 
-      mockUser.passwordChange.token = oldToken;
-      mockUser.passwordChange.expires = oldTTL;
+      mockUser.resetPassword = {
+        token: oldToken,
+        expires: oldTTL
+      };
 
       setupAllResolve();
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
-        newToken = mockUser.passwordChange.token;
-        newTTL = mockUser.passwordChange.expires;
+        newToken = mockUser.resetPassword.token;
+        newTTL = mockUser.resetPassword.expires;
 
         should.exist(newToken);
         newToken.should.not.equal(oldToken);
@@ -717,6 +719,7 @@ describe('UserAuthController', () => {
     });
 
     it('should send a 500 if the save fails', () => {
+      setupFindResolves();
       saveStub.rejects(new Error('Save failed'));
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
@@ -733,16 +736,17 @@ describe('UserAuthController', () => {
       });
     });
     
-    it('should use shared.sendMail to send the verification email', () => {
+    it('should use shared.sendMail to send the password reset email', () => {
       setupAllResolve();
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
-        sendMailStub.args.should.deep.equal([[ mailParams ]]);
+        sendMailStub.args.should.deep.equal([[ passwordMailParams ]]);
       });
     });
 
     it('should send a 500 if sendmail fails', () => {
       setupSaveResolves();
+      setupFindResolves();
       sendMailStub.rejects(sendMailError);
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
@@ -751,34 +755,37 @@ describe('UserAuthController', () => {
       });
     });
 
-    it('should send a 400 if token is missing', () => {
+    it('should send a 400 if email is missing', () => {
       req.query = {};
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 400 ]]);
-        sendStub.args.should.deep.equal([[ { error: 'Missing token' } ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Missing email' } ]]);
       });
     });
 
     it('should use Users.find', () => {
+      setupSaveResolves();
+      setupSendMailResolves();
       usersMock.expects('find')
-        .withExactArgs({ 'passwordChange.token': token })
+        .withExactArgs({ email: req.query.email })
         .chain('exec')
-        .resolves(mockUser);
+        .resolves([ mockUser ]);
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
-        usersMock.verifiy().should.equal(true);
+        usersMock.verify().should.equal(true);
       });
     });
 
-    it('should send 400 if the token is not found', () => {
+    it('should send 204 if the user is not found', () => {
+      // we dont want someone to be able to enumerate emails
       usersMock.expects('find')
         .chain('exec')
         .resolves([]);
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 400 ]]);
-        sendStub.args.should.deep.equal([[ { error: 'Token not found' } ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Email not found' } ]]);
       });
     });
 
@@ -788,6 +795,188 @@ describe('UserAuthController', () => {
         .rejects(new Error('Not found'));
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+  });
+  
+  describe('#resetPassword', () => {
+    const newPassword = 'abcABC123-';
+    const weakPassword = 'abc';
+    const hash = 'hash';
+
+    beforeEach(() => {
+      req.user = mockUser;
+      req.body = {
+        password: newPassword,
+        token: token
+      };
+      
+      mockUser.save = saveStub;
+
+      mockUser.resetPassword = {
+        token: token,
+        expires: Date.now() + 500
+      };
+
+      hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
+      usersMock = sinon.mock(Users);
+    });
+
+    afterEach(() => {
+      hashPasswordStub.restore();
+      usersMock.restore();
+    });
+
+    function setupSaveResolves() {
+      saveStub.resolves(mockUser);
+    }
+
+    function setupFindResolves() {
+      usersMock.expects('find')
+        .chain('exec')
+        .resolves([ mockUser ]);
+    }
+
+    function setupHashResolves() {
+      hashPasswordStub.resolves(hash);
+    }
+
+    function setupAllResolve() {
+      setupSaveResolves();
+      setupFindResolves();
+      setupHashResolves();
+    }
+
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.resetPassword(req, res, next).constructor.name
+        .should.equal('Promise');
+    });
+
+    it('should use user.save', () => {
+      setupAllResolve();
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        saveStub.called.should.equal(true);
+      });
+    });
+
+    it('should use users.find', () => {
+      setupSaveResolves();
+      setupHashResolves();
+      usersMock.expects('find')
+        .withExactArgs({ 'resetPassword.token': token })
+        .chain('exec')
+        .resolves([ mockUser ]);
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        usersMock.verify().should.equal(true);
+      });
+    });
+
+    it('should use authHelpers.hashPassword', () => {
+      setupAllResolve();
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        hashPasswordStub.args.should.deep.equal([[ newPassword ]]);
+      });
+    });
+
+    it('should remove the token and ttl and set the new password on success', () => {
+      setupAllResolve();
+      
+      return userController.resetPassword(req, res, next).then((data) => {
+        mockUser.password.should.equal(hash);
+        mockUser.resetPassword.should.deep.equal({});
+      });
+    });
+
+    it('should send a 204 on success', () => {
+      setupAllResolve();
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 204 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 400 if password is missing', () => {
+      req.body.password = undefined;
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Missing password' } ]]);
+      });
+    });
+
+    it('should send a 400 if token is missing', () => {
+      req.body.token = undefined;
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Missing token' } ]]);
+      });
+    });
+
+    it('should send a 400 if a user with the token is not found', () => {
+      usersMock.expects('find').chain('exec').resolves([]);
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Token invalid' } ]]);
+      });
+    })
+
+    it('should send a 400 if the password is too weak', () => {
+      req.body.password = weakPassword;
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Password invalid' } ]]);
+      });
+    });
+
+    it('should send a 400 if the ttl has passed', () => {
+      setupAllResolve();
+      mockUser.resetPassword = {
+        token: token,
+        expires: Date.now() - 100000
+      };
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.args.should.deep.equal([[ { error: 'Token has expired' } ]]);
+      });
+    });
+
+    it('should send a 500 if find fails', () => {
+      usersMock.expects('find').chain('exec').rejects(new Error('Find failed'));
+
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 500 if save fails', () => {
+      setupFindResolves();
+      saveStub.rejects(new Error('Save failed'));
+      
+      return userController.resetPassword(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 500 if hashPassword fails', () => {
+      setupFindResolves();
+      setupSaveResolves();
+      hashPasswordStub.rejects(new Error('HashPassword failed'));
+
+      return userController.resetPassword(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
       });

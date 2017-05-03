@@ -197,6 +197,14 @@ export class UserService {
   }
 
   /**
+   * requests a password reset email to be sent
+   */
+  requestPasswordResetEmail() : Observable<any> {
+    return this.http.get('api/users/requestPasswordResetEmail')
+      .map(this.extractData);
+  }
+
+  /**
    * mapping helper function
    */
   private extractData(res: Response | any) {

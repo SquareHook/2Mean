@@ -94,13 +94,16 @@ var UserSchema = new Schema({
         return Date.now() + config.app.emailVerificationTTL;
       }
     }
-  },
-  /* For reset password */
-  resetPasswordToken: {
-    type: String
-  },
-  resetPasswordExpires: {
-    type: Date
+  }, resetPassword: {
+    token: {
+      type: String
+    },
+    expires: {
+      type: Date,
+      default: () => {
+        return Date.now() + config.app.emailVerificationTTL;
+      }
+    }
   }
 });
 
