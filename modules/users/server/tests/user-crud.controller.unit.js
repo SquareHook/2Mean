@@ -16,6 +16,8 @@ var Keys = require('./../../../auth/server/models/Keys');
 var User = require('./../models/Users');
 var Users = mongoose.model('User');
 
+const MockSharedModule = require('./testbench/mock.shared.module');
+
 /* UUT */
 var UserController = require('./../controllers/user-crud.controller');
     
@@ -28,13 +30,22 @@ describe('UserCrudController', () => {
   var saveStub;
   var statusStub;
   var sendStub;
+  let mockSharedModule;
     
   const mockUser = {
     _id: new ObjectID('012345678901234567890123'),
     username: 'testuser',
     email: 'test@example.com',
     password: 'hash',
-    roles: ['user']
+    roles: ['user'],
+    verification: {
+      token: 'blahblah',
+      expires: Date.now()
+    },
+    resetPassword: {
+      token: 'blahblah',
+      expires: Date.now()
+    }
   };
 
   const mockAdmin = {
@@ -80,7 +91,12 @@ describe('UserCrudController', () => {
     next = () => {
     };
 
-    userController = new UserController(mockLogger);
+    mockSharedModule = new MockSharedModule(mockLogger);
+    userController = new UserController(mockLogger, mockSharedModule);
+      
+    req.user = mockUser;
+    mockUser.save = sinon.stub();
+    saveStub = mockUser.save;
   });
 
   afterEach(() => {
@@ -88,231 +104,138 @@ describe('UserCrudController', () => {
     // restored
   });
 
-  describe('#Read', () => {
-    var findOneStub;
+  describe('#read', () => {
+    let usersMock;
 
     beforeEach(() => {
-      findOneStub = sinon.stub(Users, 'findOne');
+      usersMock = sinon.mock(Users);
+      
+      req.params = {
+        userId: mockUser._id
+      };
     });
 
     afterEach(() => {
-      findOneStub.restore();
+      usersMock.restore();
     });
-    
+
+    function setupAllResolve() {
+      setupFindOneResolves();
+    }
+
+    function setupFindOneResolves() {
+      usersMock.expects('findOne')
+        .chain('exec')
+        .resolves(mockUser);
+    }
+
     it('should return a promise', () => {
-      req.params = { userId: mockUser._id };
-      req.user = mockUser;
-
-      userController.read(req, res, next)
-        .constructor.name.should.equal('Promise');
+      userController.read(req, res, next).constructor.name.should.equal('Promise');
     });
 
-    it('should require an id in the url', () => {
-      req.params = {};
-      req.user = mockUser;
-      
-      userController.read(req, res, next);
-          statusStub.args.should.deep.equal([ [ 400 ] ]);
-          sendStub.args.should.deep.equal([ ['Malformed request' ] ]);
+    it('should use Users.findOne', () => {
+      usersMock.expects('findOne')
+        .withExactArgs({ _id: mockUser._id })
+        .chain('exec')
+        .resolves(mockUser);
+
+      return userController.read(req, res, next).then((data) => {
+        usersMock.verify().should.equal(true);
+      });
     });
 
-    it('should send an error if it fails to retrive the user', () => {
-      const id = '98765432109876543210';
-      req.params = { userId: id };
-      req.user = mockUser;
+    it('should let a user read itself', () => {
+      setupAllResolve();
 
-      //TODO what does this error look like?
-      findOneStub.returns(Promise.reject('Oh gosh an error'));
-      
-      statusStub.called.should.equal(true);
-      statusStub.args.should.deep.equal([ [ 500 ] ]);
-
-      sendStub.called.should.equal(true);
-      sendStub.args.should.deep.equal([ [ 'Error retrieving user information' ] ]);
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 200 ]]);
+      });
     });
 
-    it('should allow users to get their own User objects', () => {
-      const id = mockUser._id;
-      req.params = { userId: id };
-      req.user = mockUser;
-
-      findOneStub.returns(Promise.resolve(mockUser));
-
-      userController.read(req, res, next);
-
-      statusStub.called.should.equal(true);
-      sendStub.called.should.equal(true);
-      statusStub.args.should.deep.equal([ [ 200 ] ]);
-      sendStub.args.should.deep.equal([ [ mockUser ] ]);
-    });
-
-    it('should allow admin user to get User objects', () => {
-      const id = mockUser._id;
-      req.params = { userId: id };
+    it('should let an authorized user read it', () => {
+      setupAllResolve();
       req.user = mockAdmin;
 
-      findOneStub.returns(Promise.resolve(mockUser));
-
-      userController.read(req, res, next);
-
-      statusStub.called.should.equal(true);
-      statusStub.args.should.deep.equal([ [ 200 ] ]);
-
-      sendStub.called.should.equal(true);
-      sendStub.args.should.deep.equal([ [ mockUser ] ]);
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 200 ]]);
+      });
     });
 
-    it('should not let users without admin role get other Users', () => {
-      const id = mockAdmin._id;
-      req.params = { userId: id };
-      req.user = mockUser;
+    it('should send a 200 and the sanitized user on success', () => {
+      setupAllResolve();
 
-      userController.read(req, res, next);
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 200 ]]);
+        
+        sendStub.args.length.should.equal(1);
+        sendStub.args[0].length.should.equal(1);
 
-      statusStub.called.should.equal(true);
-      statusStub.args.should.deep.equal([ [ 401 ] ]);
-      
-      sendStub.called.should.equal(true);
-      sendStub.args.should.deep.equal([ [ 'Unauthorized' ] ]);
+        let sanitized = sendStub.args[0][0];
+        should.not.exist(sanitized.password);
+        should.not.exist(sanitized.verification.token);
+        should.not.exist(sanitized.resetPassword.token);
+      });
+    });
+
+    it('should send a 403 if not authorized', () => {
+      usersMock.expects('findOne')
+        .chain('exec')
+        .resolves(mockAdmin);
+
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 403 ]]);
+      });
+    });
+
+    it('should send a 404 if not found', () => {
+      usersMock.expects('findOne')
+        .chain('exec')
+        .resolves(null);
+
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 404 ]]);
+      });
+    });
+
+    it('should send a 500 if findOne fails', () => {
+      usersMock.expects('findOne')
+        .chain('exec')
+        .rejects(new Error('findOne failed'));
+
+      return userController.read(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+      });
     });
   });
 
-  describe('#create', () => {
-    var saveStub;
+  describe('#list', () => {
+    let findStub;
 
     beforeEach(() => {
-      saveStub = sinon.stub(Users.prototype, 'save');
+
     });
 
     afterEach(() => {
-      saveStub.restore();
+
     });
 
     it('should return a promise', () => {
-      req.user = mockAdmin;
-      req.body = {
-        username: 'new',
-        email: 'test@test.com',
-        password: '1234abcABC-'
-      };
 
-      userController.create(req, res, next)
-        .constructor.name.should.equal('Promise');
     });
 
-    it('should not allow users without the right role to create a user', () => {
-      req.user = mockUser
-      req.body = {
-        username: 'new',
-        password: '1234abcABC-',
-        email: 'new@test.com'
-      };
+    it('should use Users.find sort and paginate', () => {
 
-      return userController.create(req, res, next)
-        .then((data) => {
-          saveStub.called.should.equal(false);
-          statusStub.args.should.deep.equal([ [ 401 ] ]);
-          sendStub.args.should.deep.equal([ [ 'Unauthorized' ] ]);
-        });
     });
 
-    it('should use the save method to make a new user', () => {
-      req.user = mockAdmin;
-      req.body = {
-        username: 'new',
-        password: '1234abcABC-',
-        email: 'new@test.com'
-      };
+    it('should sanitize users', () => {
 
-      saveStub.callsArgWith(0, null, req.body);
-
-      return userController.create(req, res, next)
-        .then((data) => {
-          saveStub.called.should.equal(true);
-          statusStub.args.should.deep.equal([ [ 201 ] ]);
-          sendStub.args.should.deep.equal([ [ req.body ] ]);
-        });
     });
 
-    it('should send an error if the user cannot be saved', () => {
-      req.user = mockAdmin;
-      req.body = {
-        username: 'new',
-        password: '1234abcABC-',
-        email: 'new@test.com'
-      };
+    it('should send a 200 and a list on success', () => {
 
-      saveStub.callsArgWith(0, 'ERROR', null);
-
-      return userController.create(req, res, next)
-        .then((data) => {
-          saveStub.called.should.equal(true);
-          statusStub.args.should.deep.equal([ [ 500 ] ]);
-          sendStub.args.should.deep.equal([ [ 'Internal Server Error' ] ]);
-        });
-    });
-  });
-
-  describe('#delete', () => {
-    var findOneStub;
-    var mockQuery;
-    var removeStub;
-
-    beforeEach(() => {
-      findOneStub = sinon.stub(Users, 'findOne');
-      removeStub = sinon.stub();
-      
-      findOneStub.returns(removeStub);
-      
-      mockQuery.remove = removeStub;
     });
 
-    afterEach(() => {
-      findOneStub.restore();
-    });
-
-    it('should return a Promise', () => {
-      req.user = mockAdmin;
-      req.params = { userId: mockUser._id };
-
-      userController.deleteUser(req, res, next)
-        .constructor.name.should.equal('Promise');
-    });
-
-    it('should not allow users without the right role delete a user', () => {
-      req.user = mockUser;
-      // regular user is definately not allowed to delete admin
-      req.params = { userId: mockAdmin._id };
-
-      return userController.deleteUser(req, res, next)
-        .then((data) => {
-          
-        });
-    });
-
-    it('should find the user then remove it', () => {
-      req.user = mockAdmin;
-      req.params = { userId: mockUser._id };
-
-      //TODO what gets sent as data?
-      return removeStub.callsArgWith(0, null, mockUser)
-        .then((data) => {
-          findOneStub.called.should.equal(true);
-          removeStub.called.should.equal(true);
-
-          statusStub.args.should.deep.equal([ [ 200 ] ]);
-          sendStub.args.should.deep.equal([ [ 'User Deleted' ] ]);
-        });
-    });
-
-    it('should handle find errors', () => {
-      req.user = mockAdmin;
-      req.params = { userId: mockUser._id };
-
-      return 
-    });
-
-    it('should handle removal errors', () => {
+    it('should send a 500 if Users.find fails', () => {
 
     });
   });
