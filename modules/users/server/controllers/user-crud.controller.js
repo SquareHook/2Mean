@@ -145,10 +145,12 @@ function userCrudController(logger, shared) {
         reject(new Error('Forbidden'));
       }
     }).then((savedUser) => {
-      logger.info('User created', { username: newUser.username });
+      logger.info('User created', { username: savedUser.username });
       res.status(201).send(sanitizeUser(savedUser));
     }).catch((error) => {
-      if (error.message === 'Forbidden') {
+      if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else if (error.message === 'Forbidden') {
         res.status(403).send();
       } else {
         logger.error('Error user.crud#create', error);
@@ -173,7 +175,13 @@ function userCrudController(logger, shared) {
 
     var deferred = q.defer();
 
-    return Users.findOne({ _id: updates._id }).exec().then((foundUser) => {
+    return new Promise((resolve, reject) => {
+      if (updates._id) {
+        resolve(Users.findOne({ _id: updates._id }).exec())
+      } else {
+        reject(new Error('Missing user._id'));
+      }
+    }).then((foundUser) => {
       if (foundUser) {
         // update the found user
         mapOverUser(updates, foundUser);
@@ -187,8 +195,10 @@ function userCrudController(logger, shared) {
     }).then((savedUser) => {
       res.status(200).send(sanitizeUser(savedUser));
     }).catch((error) => {
-      if (error.errors) {
-        res.status(400).send(error.errors);
+      if (error.message === 'Missing user._id') {
+        res.status(400).send({ error: error.message });
+      } else if (error.errors) {
+        res.status(400).send({ error: error.errors });
       } else if (error.message === 'Not found') {
         res.status(404).send();
       } else {
@@ -247,7 +257,7 @@ function userCrudController(logger, shared) {
         res.status(403).send();
       } else {
         logger.error('Error user.crud#deleteUser', error);
-        res.status(500);
+        res.status(500).send();
       }
     });
   }
