@@ -302,6 +302,7 @@ function userCrudController(logger, shared) {
     }).then((updatedUsers) => {
       res.status(200).send(updatedUsers);
     }).catch((error) => {
+      console.log(error);
       logger.error('Error updating user', error);
       res.status(500).send();
     });

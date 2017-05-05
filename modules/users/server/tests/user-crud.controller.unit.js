@@ -679,4 +679,115 @@ describe('UserCrudController', () => {
       });
     });
   });
+
+  describe('#adminUpdate', () => {
+    let hashPasswordStub;
+
+    beforeEach(() => {
+      req.body = {
+        _id: 'look at me',
+        firstName: 'first',
+        lastName: 'last'
+      };
+
+      hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
+    });
+
+    afterEach(() => {
+      hashPasswordStub.restore();
+    });
+
+    function setupAllResolve() {
+      setupHashPasswordResolves();
+      setupUpdateResolves();
+    }
+
+    function setupHashPasswordResolves() {
+      hashPasswordStub.resolves('hash');
+    }
+
+    function setupUpdateResolves() {
+      usersMock.expects('update')
+        .chain('exec')
+        .resolves([ mockUser ]);
+    }
+    
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.adminUpdate(req, res, next).constructor.name
+        .should.equal('Promise');
+    });
+
+    it('should use authHelpers.hashPassword if password is to be updated', () => {
+      setupAllResolve();
+
+      req.body.password = 'newpass';
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        hashPasswordStub.args.should.deep.equal([[ 'newpass' ]]);
+      });
+    });
+
+    it('should not use authHelpers.hashPassword if password is not to be updated', () => {
+      setupAllResolve();
+
+      req.body.password = undefined;
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        hashPasswordStub.args.should.deep.equal([]);
+      });
+    });
+
+    it('should use Users.update', () => {
+      setupHashPasswordResolves();
+      usersMock.expects('update')
+        .withExactArgs({ _id: 'look at me' }, { $set: { firstName: 'first', lastName: 'last', updated: new Date() } })
+        .chain('exec')
+        .resolves([ mockUser ]);
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        usersMock.verify().should.equal(true);
+      });
+    });
+
+    it('should send a 200 and the sanitized user on success', () => {
+      setupAllResolve();
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 200 ]]);
+        
+        sendStub.args.length.should.equal(1);
+        sendStub.args[0].length.should.equal(1);
+        sendStub.args[0][0].length.should.equal(1);
+
+        should.not.exist(sendStub.args[0][0][0].password);
+        should.not.exist(sendStub.args[0][0][0].verification.token);
+        should.not.exist(sendStub.args[0][0][0].resetPassword.token);
+      });
+    });
+
+    it('should send a 500 if hash fails', () => {
+      req.body.password = 'newpass';
+
+      hashPasswordStub.rejects(new Error('hash failed'));
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should send a 500 if update fails', () => {
+      setupHashPasswordResolves();
+      usersMock.expects('update')
+        .chain('exec')
+        .rejects(new Error('update failed'));
+
+      return userController.adminUpdate(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+        sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+  });
 });
