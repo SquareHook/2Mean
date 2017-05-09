@@ -1,0 +1,80 @@
+
+#landing-page {
+	font-family: 'Dosis', sans-serif;
+	font-size: 40px;
+	line-height: 1em;
+
+	h1, h2, h3, h4, h5, h6, p, li, a {
+		font-family: 'Dosis', sans-serif;
+	}
+}
+
+.page-header {
+	h1, h2, h3, h4, h5, h6, p {
+		text-align: center;
+	}
+}
+
+.landing-body {
+	display: flex;
+	flex-flow: column nowrap;
+	justiy-content: flex-start;
+	align-items: center;
+}
+
+.landing-stack {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: center;
+	width: 100%;
+	margin: 0 5px;
+}
+
+.stack-img,
+.stack-text,
+.stack-letter {
+	display: flex;
+	flex-flow: row nowrap;
+	justify-content: center;
+	align-items: center;
+	flex: 0 0 auto;
+}
+
+.stack-letter {
+	flex-basis: 0.75em;
+	font-size: 3em;
+	line-height: 1em;
+}
+
+.stack-img {
+	height: 3em;
+	width: 3em;
+	flex-basis: 3em;
+	img {
+		max-height: 100%;
+	}
+}
+
+.stack-text {
+	width: 3.2em;
+    font-size: 1.5em;
+    justify-content: flex-start;
+}
+
+@media screen and (max-width: 980px) {
+	#landing-page {
+		font-size: 32px;
+	}
+}
+
+@media screen and (max-width: 767px) {
+	#landing-page {
+		font-size: 20px;
+	}
+}
+
+@media screen and (max-width: 400px) {
+	#landing-page {
+		font-size: 16px;
+	}
+}
