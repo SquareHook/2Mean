@@ -218,6 +218,7 @@ sup {
   display: flex;
   flex-flow: row nowrap;
   justify-content: space-between;
+  align-items: center;
 
   &.column {
     flex-flow: column nowrap;
@@ -276,7 +277,7 @@ too-mean {
 }
 
 too-mean > .container {
-    margin-top: 50px;
+    margin-top: 20px;
     margin-bottom: 80px;
     flex-grow: 1;
 }
@@ -560,6 +561,14 @@ nav.bg-primary {
 .card-body {
   padding: 20px;
   border: 1px solid rgba(0, 0, 0, 0.125); 
+
+  p, ul {
+    margin-bottom: 0;
+  }
+
+  ul:last-child {
+    margin-bottom: 20px;
+  }
 }
 
 .card-small {
@@ -574,7 +583,62 @@ nav.bg-primary {
 
   .card-body {
     padding: 10px;
+
+    &.compact {
+      padding-top: 3px;
+      padding-bottom: 3px;
+    }
   }
+}
+
+.card-wrapper {
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: flex-start;
+}
+
+img.card-img-top {   
+    width: auto;
+    display: block;
+    margin: auto;
+}
+
+.card {
+    .host-card {
+        border-width: 2px;
+    }
+}
+
+
+
+.card-inverse {
+    background-color: rgba(155,155,155,1);
+
+    &.card-warning {
+        background-color: #f0ad4e;
+        border-color: #f0ad4e;
+    }
+
+    &.card-danger {
+        background-color: #d9534f;
+        border-color: #d9534f;
+    }
+
+    &.card-success {
+        background-color: #5cb85c;
+        border-color: #5cb85c;
+    }
+}
+
+.card-deck {
+    margin-left: -10px;
+    margin-right: -10px;
+
+    .card,
+    .card:not(:last-child),
+    .card:not(:first-child) {
+        margin: 10px;
+    }
 }
 
 /***************** Form *********************/
