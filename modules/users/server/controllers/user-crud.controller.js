@@ -39,30 +39,43 @@ function userCrudController(logger, shared) {
    * @param {Response} res  The Express response object.
    * @param {Next} next     The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
   function read(req, res, next) {
     var user = req.user;
 
     var id = req.params.userId || null; 
 
-    if (!id) {
-      return res.status(400).send('Malformed request');
-    }
-
-    if (isSelf(user, id) || isAuthorized(user, 'read')) {
-      // Read from User database
-      Users.findOne({_id: id})
-        .then((user) => {
-          res.status(201).send(user);
-        }, (error) => {
-
-          logger.error('User Module Error: Reading User from Database', error);
-          res.status(500).send('Error retrieving user information');
-        });
-    } else {
-      return res.status(401).send('Unauthorized');
-    }
+    return new Promise((resolve, reject) => {
+      if (!id) {
+        // missing id
+        reject(new Error('Malformed request'));
+      } else if (isSelf(user, id) || isAuthorized(user, 'read')) {
+        // check if allowed
+        resolve(Users.findOne({ _id: id }).exec());
+      } else {
+        // not allowed
+        reject(new Error('Forbidden'));
+      }
+    }).then((foundUser) => {
+      if (foundUser) {
+        res.status(200).send(sanitizeUser(user));
+      } else {
+        throw new Error('Not found');
+      }
+    }).catch((error) => {
+      // handle errors. message sent depends on error message
+      if (error.message === 'Malformed request') {
+        res.status(400).send({ error: error.message });
+      } else if(error.message === 'Forbidden') {
+        res.status(403).send();
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else {
+        logger.error('Error user.crud#read', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -71,58 +84,40 @@ function userCrudController(logger, shared) {
   *
   * @param {Request} req   The Express request object.
   * @param {Response} res  The Express response object.
-  * @param {Next} next     The Express next (middleware) function.
+  * @param {Function} next     The Express next (middleware) function.
   *
-  * @return {void}
+  * @return {Promise}
   */
-  function list(req, res)
-  {
+  function list(req, res, next) {
     let page = req.query.page || 1;
     let search = req.query.search || "";
     let skip = (page - 1) * pageLimit;
     let queryObj;
+
     if (search === "") {
       queryObj = {};
-    }
-    else {
+    } else {
       queryObj = {
         'username': new RegExp('[a-z]*'+search +'+?', 'i')
       };
     }
 
-    var deferred = q.defer();
- 
-    Users.find(queryObj, (err, users) => {
-      if (err) {
-        logger.error(err);
-        deferred.reject({
-          code: 500,
-          error: 'Internal Server Error'
-        });
-      }
-      else {
-        let sanitized = [];
-        for(let i in users)
-        {
-          sanitized.push(sanitizeUser(users[i]));
-        }
-        deferred.resolve({
-          code: 200,
-          data: sanitized
-        })
-      }
-    })
+    return Users.find(queryObj)
       .sort('username')
       .skip(skip)
-      .limit(pageLimit);
+      .limit(pageLimit)
+      .exec()
+      .then((foundUsers) => {
+        let sanitized = [];
 
+        for (let i in foundUsers) {
+          sanitized.push(sanitizeUser(foundUsers[i]));
+        }
 
-    return deferred.promise
-      .then((data) => {
-        
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
+        res.status(200).send(sanitized);
+      }).catch((error) => {
+        logger.error('Error user.crud#list', error);
+        res.status(500).send();
       });
   }
 
@@ -133,49 +128,35 @@ function userCrudController(logger, shared) {
    * @param {Response} res  The Express response object.
    * @param {Next} next     The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
   function create(req, res, next) {
     var user = req.user;
 
     var body = req.body;
 
-    var deferred = q.defer();
+    return new Promise((resolve, reject) => {
+      if (isAuthorized(user, 'create')) {
+        let newUser = mapUser(body);
+        newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
-    if (isAuthorized(user, 'create')) {
-      let newUser = mapUser(body);
-      newUser.profileImageURL = generateProfileImageURL(newUser.email);
-
-      newUser.save((err, data) => {
-        if (err) {
-          // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
-          logger.error('Creating User Error', err);
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        } else {
-          logger.info('User created: ' + newUser.username);
-          deferred.resolve({
-            code: 201,
-            data: data
-          });
-        }
-
-      });
-    } else {
-      deferred.reject({
-        code: 401,
-        error: 'Unauthorized'
-      });
-    }
-
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+        resolve(newUser.save());
+      } else {
+        reject(new Error('Forbidden'));
+      }
+    }).then((savedUser) => {
+      logger.info('User created', { username: savedUser.username });
+      res.status(201).send(sanitizeUser(savedUser));
+    }).catch((error) => {
+      if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else if (error.message === 'Forbidden') {
+        res.status(403).send();
+      } else {
+        logger.error('Error user.crud#create', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -185,77 +166,46 @@ function userCrudController(logger, shared) {
    * @param {Response} res  The Express response object.
    * @param {Next}     next The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
   function update(req, res, next) {
     var user = req.user;
 
-    var existingUser = mapUser(req.body);
+    var updates = req.body;
 
     var deferred = q.defer();
 
-    // validate the body.
-    if (!existingUser.email) {
-      deferred.reject({
-        code: 400,
-        error: 'Malformed request.  Email needed.'
-      });
-    } else {
-      Users.findById(existingUser._id)
-        .then((modifiedUser) => {
-          // findOne will resolve to null (no error) if no document found
-          if (modifiedUser) {
-            var keys = Object.keys(Users.schema.obj);
-
-            for (var i in keys) {
-              if (existingUser[keys[i]]) {
-                // save to existing user's id
-                if (keys[i] !== '_id') {
-                  modifiedUser[keys[i]] = existingUser[keys[i]];
-                }
-              }
-            }
-            modifiedUser.updated = new Date();
-
-            modifiedUser.save((err, data) => {
-              if (err) {
-                logger.error('Error updating user', err);
-
-                deferred.reject({
-                  code: 500,
-                  error: 'Internal Server Error'
-                });
-              } else {
-                deferred.resolve({
-                  code: 200,
-                  data: sanitizeUser(data)
-                });
-              }
-            });
-          } else {
-            logger.error('Error updating user, user does not exist');
-            // trying to change a non existent user
-            deferred.reject({
-              code: 500,
-              error: { message: 'Internal Server Error' }
-            });
-          }
-        }, (err) => {
-          logger.error('Error looking up user in User collection: ', err);
-
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        });
-    }
-
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+    return new Promise((resolve, reject) => {
+      if (updates._id) {
+        resolve(Users.findOne({ _id: updates._id }).exec())
+      } else {
+        reject(new Error('Missing user._id'));
+      }
+    }).then((foundUser) => {
+      if (foundUser) {
+        // update the found user
+        mapOverUser(updates, foundUser);
+        
+        foundUser.updated = new Date();
+      
+        return foundUser.save();
+      } else {
+        throw new Error('Not found');
+      }
+    }).then((savedUser) => {
+      res.status(200).send(sanitizeUser(savedUser));
+    }).catch((error) => {
+      if (error.message === 'Missing user._id') {
+        res.status(400).send({ error: error.message });
+      } else if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else {
+        logger.error('Error user.crud#update', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -271,12 +221,14 @@ function userCrudController(logger, shared) {
   function readList(req, res) {
     var userList = req.params.userList.split(',');
 
-    getListOfUsers(userList)
-      .then((data) => {
-        res.status(200).send(data);
-      },
-      (error) => {
-        res.status(500).send('Internal Server Error');
+    return Users.find({ _id: { $in: userList } })
+      .select(this.SANITIZED_SELECTION)
+      .exec()
+      .then((foundUsers) => {
+        res.status(200).send(foundUsers);
+      }).catch((error) => {
+        logger.error('Error user.crud#readList', error);
+        res.status(500).send();
       });
   }
 
@@ -291,23 +243,23 @@ function userCrudController(logger, shared) {
    */
   function deleteUser(req, res, next) {
     var userId = req.params.userId;
-    if (isAuthorized(req.user, 'delete')) {
-      Users.findOne({_id: userId}).remove((err, data) => {
-        if (err) {
-          logger.error('Error removing user', err);
-          res.status(500).send({success: false, message: "Internal Server Error"});
-        } else {
-          if(data.result.ok && data.result.n > 0)
-          {
-            res.status(200).send({success: true, message: "Deleted user with id: " + userId});
-          }
-          else
-          {
-            res.status(200).send({success: false, messsage: "Unable to delete user with id: " + userId});
-          }
-        }
-      });
-    }
+    
+    return new Promise((resolve, reject) => {
+      if (isAuthorized(req.user, 'delete')) {
+        resolve(Users.findOne({ _id: userId }).remove());
+      } else {
+        reject(new Error('Forbidden'));
+      }
+    }).then((result) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Forbidden') {
+        res.status(403).send();
+      } else {
+        logger.error('Error user.crud#deleteUser', error);
+        res.status(500).send();
+      }
+    });
   }
 
 
@@ -350,6 +302,7 @@ function userCrudController(logger, shared) {
     }).then((updatedUsers) => {
       res.status(200).send(updatedUsers);
     }).catch((error) => {
+      console.log(error);
       logger.error('Error updating user', error);
       res.status(500).send();
     });
@@ -412,16 +365,6 @@ function userCrudController(logger, shared) {
    * @return {Array<Users>}
    */
   function getListOfUsers(userIdList) {
-    return new Promise((resolve, reject) => {
-      Users.find({ '_id': { '$in': userIdList } })
-        .select(this.SANITIZED_SELECTION)
-        .then((data) => {
-          resolve(data);
-        },
-        (error) => {
-          reject(error);
-        });
-    });
   }
   
   /*
@@ -452,9 +395,13 @@ function userCrudController(logger, shared) {
     let sanitized = JSON.parse(JSON.stringify(user));
     sanitized.password = undefined;
     // remove the token. The user has to look at their email. no cheating
-    sanitized.verification.token = undefined;
+    if (sanitized.verification) {
+      sanitized.verification.token = undefined;
+    }
     // remove password rest token
-    sanitized.resetPassword.token = undefined;
+    if (sanitized.resetPassword) {
+      sanitized.resetPassword.token = undefined;
+    }
 
     return sanitized;
   }
@@ -490,6 +437,21 @@ function userCrudController(logger, shared) {
   function generateProfileImageURL(email) {
     let hash = md5(email.toLowerCase());
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
+  }
+    
+  /**
+   * @param {Object} updates 
+   * @param {Object} user
+   */
+  function mapOverUser(updates, user) {
+    let schemaFields = Users.schema.obj;
+
+    for (let index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
+      if (updates[realIndex]) {
+        user[realIndex] = updates[realIndex];
+      }
+    }
   }
 
   // --------------------------- Revealing Module Section ----------------------------

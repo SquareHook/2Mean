@@ -126,7 +126,7 @@ export class EditProfileComponent implements OnInit {
    */
   submit () : void {
     this.loading = true;
-    this.user = this.authService.getUser();
+    
     this.userService.update(this.user).subscribe((user) => {
       this.authService.setUser(user);
       this.imageFileDropComponent.uploadFile();
