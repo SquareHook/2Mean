@@ -16,13 +16,16 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/catch';
 import 'rxjs/add/operator/do';
 
+import { AuthService } from './auth.service';
+
 @Injectable()
 export class AuthHttpService extends Http {
   constructor (
     backend: ConnectionBackend,
     options: RequestOptions,
     private router: Router,
-    private notificationsService: NotificationsService
+    private notificationsService: NotificationsService,
+    private authService: AuthService
   ) {
     super(backend, options);
   }
@@ -35,6 +38,19 @@ export class AuthHttpService extends Http {
    */
   request (url: string|Request, options?: RequestOptionsArgs) : Observable<Response> {
     let req = super.request(url, options).do((res: Response) => {
+      let userUpdated = res.headers.get('user-updated');
+
+      // header might not be set (signin) if not dont worry about it
+      if (userUpdated) {
+        let currentUser = this.authService.getUser();
+        
+        console.log(userUpdated);
+        console.log(Date.parse(currentUser.updated));
+        if (userUpdated !== "" + Date.parse(currentUser.updated)) {
+          this.authService.updateUser();
+        }
+      }
+
       return res;
     }, (res: Response) => {
       if (res.status === 401) {

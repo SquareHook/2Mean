@@ -9,4 +9,5 @@ export class User {
   profileImageURL: string = null;
   subroles: Array<string> = null;
   role:string = null;
+  updated: string = null;
 }

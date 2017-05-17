@@ -1,7 +1,7 @@
 /**
  * Angular 2 core injectable object for creating services.
  */
-import { Injectable } from '@angular/core';
+import { Injectable, Injector } from '@angular/core';
 
 import { Md5 } from 'ts-md5/dist/md5';
 
@@ -49,7 +49,11 @@ export class AuthService {
   // Observable streams
   authChanged$ = this.authChangedSource.asObservable();
 
-  constructor(private http: Http) {
+  private http: Http;
+  constructor(injector: Injector) {
+    setTimeout(() => {
+      this.http = injector.get(Http);
+    });
 
     this.user = this.getUser();
     
@@ -169,6 +173,12 @@ export class AuthService {
     this.authChangedSource.next(data);
   }
 
+  updateUser() {
+    this.http.get('api/users/' + this.user._id).subscribe((res: Response) => {
+      let data = res.json();
+      this.setUser(data);
+    });
+  }
 
   private saveUser(): void {
     localStorage.setItem('user', JSON.stringify(this.user));
