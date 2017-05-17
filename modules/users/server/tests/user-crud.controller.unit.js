@@ -63,11 +63,9 @@ describe('UserCrudController', () => {
     mockLogger = {
       debug: () => {},
       info: (args) => {
-        console.log(args);
       },
       warn: () => {},
       error: (args) => {
-        console.log(args);
       },
       crit: () => {}
     };
