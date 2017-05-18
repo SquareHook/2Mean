@@ -17,7 +17,6 @@ function uploadController(logger) {
    */
   function uploadLocal(config) {
     // init the multer object
-    console.log(multer);
     let upload = multer({
       storage: multer.diskStorage({
         // callback for setting up the destination
