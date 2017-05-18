@@ -5,7 +5,6 @@ chai.config.includeStack = true;
 
 var sinon = require('sinon');
 require('sinon-mongoose');
-require('sinon-as-promised');
 
 const MockSharedModule = require('./testbench/mock.shared.module');
 var mongoose = require('mongoose');

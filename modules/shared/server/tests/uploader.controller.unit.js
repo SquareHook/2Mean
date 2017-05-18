@@ -5,7 +5,6 @@ const should = chai.should();
 chai.config.includeStack = true;
 
 const sinon = require('sinon');
-require('sinon-as-promised');
 
 const uuid = require('uuid');
 const multer = require('multer');
