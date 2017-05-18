@@ -4,7 +4,6 @@ const should = chai.should();
 chai.config.includeStack = true;
 
 const sinon = require('sinon');
-require('sinon-as-promised');
 
 const argon2 = require('argon2');
 

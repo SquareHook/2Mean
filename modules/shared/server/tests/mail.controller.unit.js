@@ -8,7 +8,6 @@ const should = chai.should();
 chai.config.includeStack = true;
 
 const sinon = require('sinon');
-require('sinon-as-promised');
 
 const mockLogger = require('./testbench/mock-logger');
 

@@ -5,7 +5,6 @@ chai.config.includeStack = true;
 
 var sinon = require('sinon');
 require('sinon-mongoose');
-require('sinon-as-promised');
 
 var argon2 = require('argon2');
 var mongoose = require('mongoose');
