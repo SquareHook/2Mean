@@ -107,4 +107,14 @@ var UserSchema = new Schema({
   }
 });
 
+UserSchema.pre('save', function(next) {
+  this.updated = Date.now();
+  next();
+});
+
+UserSchema.pre('update', function(next) {
+  this.updated = Date.now();
+  next();
+});
+
 mongoose.model('User', UserSchema);
