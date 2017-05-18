@@ -101,7 +101,6 @@ function authenticationModule(logger, shared) {
               req.user = user;
 
               // update the user updated header
-              console.log(user.updated);
               res.append('User-Updated', Date.parse(user.updated));
 
               return checkEmailVerified(req, res, next);

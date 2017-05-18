@@ -174,7 +174,13 @@ export class AuthService {
   }
 
   updateUser() {
-    this.http.get('api/users/' + this.user._id).subscribe((res: Response) => {
+    let options = new RequestOptions({
+      headers: new Headers({
+        'update-user': 'true'
+      })
+    });
+
+    this.http.get('api/users/' + this.user._id, options).subscribe((res: Response) => {
       let data = res.json();
       this.setUser(data);
     });

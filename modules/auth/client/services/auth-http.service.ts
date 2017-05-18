@@ -30,7 +30,6 @@ export class AuthHttpService extends Http {
     super(backend, options);
   }
 
-
   /* Override http#request
    *  pass good requests through
    *  catch error requests and check for 401 code
@@ -43,11 +42,16 @@ export class AuthHttpService extends Http {
       // header might not be set (signin) if not dont worry about it
       if (userUpdated) {
         let currentUser = this.authService.getUser();
+
+        let currentUserUpdated = Math.trunc(Date.parse(currentUser.updated)/1000)*1000;
         
-        console.log(userUpdated);
-        console.log(Date.parse(currentUser.updated));
-        if (userUpdated !== "" + Date.parse(currentUser.updated)) {
-          this.authService.updateUser();
+        if (userUpdated !== ''+currentUserUpdated) {
+          // before sending check that the request isnt an update sent by the
+          // user update this does NOT handle the case of a single component
+          // requesting multiple endpoints causing multiple drift requests
+          if (!url.headers.has('update-user')) {
+            this.authService.updateUser();
+          }
         }
       }
 
