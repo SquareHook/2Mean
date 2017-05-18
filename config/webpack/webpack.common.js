@@ -39,7 +39,11 @@ module.exports = {
             filename: 'index.html',
             inject: 'body',
             template: path.resolve(rootDir, 'modules/app/client', 'index.html')
-        })
+        }),
+        new webpack.ContextReplacementPlugin(
+          /angular(\\|\/)core(\\|\/)@angular/,
+          path.resolve(__dirname, '../src')
+        )
     ],
     resolve: {
         extensions: [ '.js', '.ts', '.less' ]
