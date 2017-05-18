@@ -49,8 +49,14 @@ export class AuthHttpService extends Http {
           // before sending check that the request isnt an update sent by the
           // user update this does NOT handle the case of a single component
           // requesting multiple endpoints causing multiple drift requests
-          if (!url.headers.has('update-user')) {
-            this.authService.updateUser();
+          if ((<Request>url).headers) {
+            if (!(<Request>url).headers.has('update-user')) {
+              // use the timeout to debounce. Otherwise the auth service http
+              // will not be initialized
+              setTimeout(() => {
+                this.authService.updateUser();
+              }, 1);
+            }
           }
         }
       }
