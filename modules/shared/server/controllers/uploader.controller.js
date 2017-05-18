@@ -1,4 +1,3 @@
-const q = require('q');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
@@ -41,7 +40,7 @@ function uploadController(logger) {
       upload(config.req, config.res, (err) => {
         if (err) {
           logger.error(err);
-          throw new Error('Error while uploading with local strategy');
+          reject(new Error('Error while uploading with local strategy'));
         } else {
           resolve(url);
         }
@@ -52,10 +51,12 @@ function uploadController(logger) {
         // check if old file needs to be deleted
         if (config.oldFileName) {
           // fs.unlink aka delete
-          fs.unlink(path.resolve(config.local.dest, oldFileName), (err) => {
+          fs.unlink(path.resolve(config.local.dest, config.oldFileName), (err) => {
             if (err) {
               logger.error('Error while deleting object locally', err);
-              throw err;
+              // resolve anyway (may leave an orphaned file but ENOENT could
+              // have come from the old file being in a different domain
+              resolve(newUrl);
             } else {
               logger.debug('Old file deleted locally');
               resolve(newUrl);
@@ -163,11 +164,17 @@ function uploadController(logger) {
     config.newFileName = newFileName;
     config.oldFileName = oldFileName;
 
-    if (config.strategy === 's3') {
-      return uploadS3(config);
-    } else if (config.strategy === 'local') {
-      return uploadLocal(config);
-    }
+    return new Promise((resolve, reject) => {
+      // using this.upload<Strategy> because it makes stubbing possible
+      // otherwise the actual function will be used
+      if (config.strategy === 's3') {
+        resolve(this.uploadS3(config));
+      } else if (config.strategy === 'local') {
+        resolve(this.uploadLocal(config));
+      } else {
+        reject(new Error('Configuration error: unknown upload startegy'));
+      }
+    });
   }
 
   return {

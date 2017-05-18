@@ -11,6 +11,7 @@ const uuid = require('uuid');
 const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
+const proxyquire = require('proxyquire');
 
 let mockLogger = require('./testbench/mock-logger');
 
@@ -22,6 +23,7 @@ describe('UploaderController', () => {
   let req, res;
   let mockConfig;
   let multerMock;
+  let multerStub;
   let singleSpy;
   let s3Stub;
 
@@ -34,15 +36,18 @@ describe('UploaderController', () => {
       res: res,
     };
 
+    multerStub = sinon.stub();
     multerMock = sinon.mock(multer);
     singleSpy = sinon.spy();
     s3Stub = sinon.stub(aws, 'S3');
 
-    uploaderController = new UploaderController(mockLogger);
+    uploaderController = proxyquire('../controllers/uploader.controller', {
+      multer: multerStub
+    })(mockLogger);
   });
 
   afterEach(() => {
-    multerMock.restore();
+    //multerStub.restore();
     s3Stub.restore();
   });
 
@@ -67,7 +72,7 @@ describe('UploaderController', () => {
 
     it('should return a promise', () => {
       uploaderController.upload(mockConfig)
-        .constructor.should.equal('Promise');
+        .constructor.name.should.equal('Promise');
     });
 
     it('should call s3 if config.strategy is "s3"', () => {
@@ -89,12 +94,15 @@ describe('UploaderController', () => {
     });
 
     it('should use v1 uuids if config.newFileName is not set', () => {
+      mockConfig.strategy = 'local';
+
       return uploaderController.upload(mockConfig).then((data) => {
         v1Stub.called.should.equal(true);
       });
     });
 
     it('should not use a uuid if config.newFileName is set', () => {
+      mockConfig.strategy = 'local';
       mockConfig.newFileName = 'newfile';
 
       return uploaderController.upload(mockConfig).then((data) => {
@@ -105,8 +113,13 @@ describe('UploaderController', () => {
 
   describe('uploadLocal', () => {
     let localConfig;
+    let uploadStub;
+    let diskStorageStub;
     
     beforeEach(() => {
+      uploadStub = sinon.stub();
+      diskStorageStub = sinon.stub(multer, 'diskStorage');
+
       localConfig = {
         dest: './somewhere/',
         limits: {
@@ -119,25 +132,63 @@ describe('UploaderController', () => {
     });
 
     afterEach(() => {
-
+      diskStorageStub.restore();
     });
 
+    function setupAllResolve() {
+      multerStub.returns(multerMock);
+      multerMock.expects('single')
+        .returns(uploadStub);
+      uploadStub.callsArgWith(2, null);
+      diskStorageStub.returns('disk storage');
+    }
+
     it('should return a promise', () => {
+      setupAllResolve();
+
       uploaderController.uploadLocal(mockConfig)
         .constructor.name.should.equal('Promise');
     });
 
     it('should use the multer contructor and single method', () => {
-      multerMock.expects('single')
-        .withExactArgs('file');
+      setupAllResolve();
+
+      return uploaderController.uploadLocal(mockConfig).then(() => {
+        let arg;
+        multerStub.called.should.equal(true);
+        arg.storage.should.equal('disk storage');
+
+        multerMock.verify(); 
+      });
     });
 
     it('should use the multer.diskStorage method', () => {
+      setupAllResolve();
 
+      return uploaderController.uploadLocal(mockConfig).then(() => {
+        let arg;
+
+        diskStorageStub.args.length.should.equal(1);
+        diskStorageStub.args[0].length.should.equal(1);
+        arg = diskStorageStub[0][0];
+
+        arg.destination.constructor.name.should.equal('Function');
+        arg.filename.constructor.name.should.equal('Function');
+      });
     });
 
     it('should pass the fileFilter and limits', () => {
+      setupAllResolve();
+      return uploaderController.uploadLocal(mockConfig).then(() => {
+        let arg;
 
+        multerStub.args.length.should.equal(1);
+        multerStub.args[0].length.should.equal(1);
+        arg = multerStub.args[0][0];
+
+        arg.fileFilter.should.equal(mockConfig.fileFilter);
+        arg.limits.should.equal(mockConfig.local.limits);
+      });
     });
 
     it('should use the fs.unlink method if config.oldFileName exists', () => {
