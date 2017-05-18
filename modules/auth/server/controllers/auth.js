@@ -100,6 +100,9 @@ function authenticationModule(logger, shared) {
               // Store user for downstream logic.
               req.user = user;
 
+              // update the user updated header
+              res.append('User-Updated', Date.parse(user.updated));
+
               return checkEmailVerified(req, res, next);
             }, (err) => {
               if (err) {
