@@ -68,9 +68,7 @@ if (config.app.force_https) {
       let redirect = 'https://' + req.hostname +
         (config.app.port_https === '443' ? '' : ':' + config.app.port_https) +
         req.url;
-      
-      console.log(redirect);
-      
+            
       return res.redirect(redirect);
     }
 
