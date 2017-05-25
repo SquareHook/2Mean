@@ -773,7 +773,7 @@ describe('UserAuthController', () => {
         .resolves([ mockUser ]);
 
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -873,7 +873,7 @@ describe('UserAuthController', () => {
         .resolves([ mockUser ]);
 
       return userController.resetPassword(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 

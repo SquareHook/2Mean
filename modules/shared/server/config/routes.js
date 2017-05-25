@@ -1,5 +1,11 @@
 module.exports = [
   {
+    route: '/canary',
+    type: 'GET',
+    method: 'shared.apiCanary',
+    secure: false
+  },
+  {
     route: '/files/info',
     type: 'GET',
     method: 'uploader.fileInfo',
