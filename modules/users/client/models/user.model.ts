@@ -10,6 +10,7 @@ export class User {
   subroles: Array<string> = null;
   role:string = null;
   updated: string = null;
+  verified: boolean;
 
   constructor();
   constructor(blob: any);
@@ -53,6 +54,14 @@ export class User {
 
       if (blob.updated) {
         this.updated = blob.updated;
+      }
+
+      if (blob.username) {
+        this.username = blob.username;
+      }
+
+      if (blob.verified) {
+        this.verified = blob.verified;
       }
     }
   }
