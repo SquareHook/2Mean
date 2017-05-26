@@ -69,7 +69,7 @@ export class AuthService {
   }
 
   isLogged() {
-    if (this.user.username) {
+    if (this.loggedIn) {
       return true;
     } else {
       return false;

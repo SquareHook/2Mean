@@ -140,7 +140,7 @@ describe('UserCrudController', () => {
         .resolves(mockUser);
 
       return userController.read(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -262,7 +262,7 @@ describe('UserCrudController', () => {
         .resolves(usersList);
       
       return userController.list(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -279,7 +279,7 @@ describe('UserCrudController', () => {
         .resolves(usersList);
 
       return userController.list(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -298,7 +298,7 @@ describe('UserCrudController', () => {
         .resolves(usersList);
 
       return userController.list(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -461,7 +461,7 @@ describe('UserCrudController', () => {
       setupSaveResolves();
 
       return userController.update(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -577,7 +577,7 @@ describe('UserCrudController', () => {
         .resolves(userList);
 
       return userController.readList(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -642,7 +642,7 @@ describe('UserCrudController', () => {
         .resolves({ numAffected: 1 }); // or something like this
 
       return userController.deleteUser(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
@@ -744,7 +744,7 @@ describe('UserCrudController', () => {
         .resolves([ mockUser ]);
 
       return userController.adminUpdate(req, res, next).then((data) => {
-        usersMock.verify().should.equal(true);
+        usersMock.verify();
       });
     });
 
