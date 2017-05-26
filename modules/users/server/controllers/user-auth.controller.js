@@ -464,7 +464,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendPasswordChangeEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/changePassword;token=' + user.resetPassword.token;
+    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/reset-password;token=' + user.resetPassword.token;
     const subject = 'Change Password';
     const to = user.email;
     const from = config.email.from;
