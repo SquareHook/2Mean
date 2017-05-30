@@ -58,7 +58,7 @@ export class AuthService {
     this.user = this.getUser();
     
     // user not logged in
-    if (!this.user) {
+    if (!this.isLogged()) {
       this.loggedIn = false;
       this.user = new User();
     } else {
