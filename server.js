@@ -72,31 +72,6 @@ if (config.app.force_https) {
 core.routes.loadRoutes();
 
 
-/*
- * Endpoint Definitions.
- *
- * TODO: This should be done somewhere else.
- */
-app.get('/api/test',
-  auth.validateAPIKey,
-  (req, res) => {
-    res.send({
-      user: req.auth
-    });
-  });
-
-/*
- * Routes that can be accessed only by authenticated users.
- */
-
-/*
- * Routes that can be accessed only by authenticated & authorized users.
- */
-
-/*
- * Setup the client application route.
- */
-
 // static route to serve app source and static assets (images)
 app.use(express.static(path.resolve('dist')));
 
