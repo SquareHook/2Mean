@@ -100,7 +100,8 @@ function moduleLoader(config) {
 
     module = require(modConfig.absPath + '/server/');
 
-    loadedModules[modConfig.name] = new module(dependencies);
+    // Loads the module and also provides the module loader as a second argument
+    loadedModules[modConfig.name] = new module(dependencies, this);
 
     return loadedModules[modConfig.name];
   }
@@ -135,9 +136,14 @@ function moduleLoader(config) {
     return null;
   }
 
+  function listModules() {
+    return moduleList;
+  }
+
   return {
-    getRoutes: getRoutes,
-    get: get
+    getRoutes   : getRoutes,
+    get         : get,
+    listModules : listModules
   }
 }
 
