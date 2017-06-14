@@ -57,6 +57,7 @@ function authenticationModule(logger, shared) {
         newUser.password = hash;
         newUser.role ='admin';
         newUser.subroles = ['user'];
+        newUser.verified = true;
         //generate profile image
         let emailHash = md5(newUser.email.toLowerCase());
         newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
