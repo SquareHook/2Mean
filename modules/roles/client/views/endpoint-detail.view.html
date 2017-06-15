@@ -1,0 +1,28 @@
+<h1>{{ endpoint.name }}</h1>
+
+<ngb-accordion #acc="ngbAccordion" activeIds="">
+  <ngb-panel *ngFor="let api of endpoint.endpoints">
+    <ng-template ngbPanelTitle>
+      <div class="d-flex justify-content-end">
+        <span class="mr-auto">{{ api.name }}</span>
+        api{{ api.route }} {{ api.type }}
+      </div>
+    </ng-template>
+    <ng-template ngbPanelContent>
+      <div class="d-flex justify-content-end">
+        <span class="mr-auto">{{ api.description }}</span>
+        <button type="button" class="btn btn-secondary"
+               (click)="api.showForm = !api.showForm"
+               *ngIf="!api.showForm">
+          Edit Permissions
+        </button>
+        <button type="button" class="btn btn-primary"
+                (click)="submitChanges(api)"
+                *ngIf="api.showForm">
+          Submit
+        </button>
+      </div>
+      <endpoint-permission-form [endpoint]="api" [roles]="roles" *ngIf="api.showForm"></endpoint-permission-form>
+    </ng-template>
+  </ngb-panel>
+</ngb-accordion>
