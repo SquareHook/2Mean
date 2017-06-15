@@ -25,59 +25,36 @@ function roleModule(logger, userModule)
 {
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
-
-  // check to make sure there exists an admin role with parent set to null
-  //if one doesn't exist, create it.
-  var adminCount = Roles.count({_id: ADMIN_ROLE_NAME, parent: null}).exec()
-  .then(count => {
-    if (count < 1)
-    {
-      let adminRole = new Roles();
-      adminRole._id = ADMIN_ROLE_NAME;
-      adminRole.parent = null;
-      adminRole.canModify = false;
-      adminRole.subroles = [DEFAULT_ROLE_NAME];
-      adminRole.save()
-      .then(data => {
-        logger.info('created admin role');
-      })
-      .catch(err =>
-      {
-        logger.log('crit',"Failed to create default admin role");
-      });
-    }
-  })
-  .catch(err =>
-  {
-    logger.log('crit', 'Unable to determine if an admin role is present');
+  
+  // create the initial roles
+  // admin
+  createInitialRole(ADMIN_ROLE_NAME, null, [ DEFAULT_ROLE_NAME ]).then(() => {
+    // user
+    return createInitialRole(DEFAULT_ROLE_NAME, ADMIN_ROLE_NAME);
+  }).then(() => {
+    logger.info('Initial roles created/exist');
+  }).catch((error) => {
+    logger.error('Error creating intial roles', { error: error });
   });
-    
-  // check to make sure there exists a default role
-  //if one doesn't exist, create it.
-  var userCount = Roles.count({_id: DEFAULT_ROLE_NAME, parent: ADMIN_ROLE_NAME}).exec()
-  .then(count => {
-    if (count < 1)
-    {
-      let userRole = new Roles();
-      userRole._id = DEFAULT_ROLE_NAME;
-      userRole.parent = ADMIN_ROLE_NAME;
-      userRole.parent.canModify = false;
-      userRole.save()
-      .then(data => {
-        logger.info('created default role');
-      })
-      .catch(err =>
-      {
-        logger.log('crit',"Failed to create default default user role");
-      });
-    }
-  })
-  .catch(err =>
-  {
-    logger.log('crit', 'Unable to determine if a default role is present');
-  });
-    
 
+  function createInitialRole(roleName, parentName, subroles=[]) {
+    return Roles.count({ _id: roleName, parent: parentName }).exec().then((count) => {
+      if (count < 1) {
+        let newRole = new Roles({
+          _id: roleName,
+          parent: parentName,
+          canModify: false,
+          subroles: subroles
+        });
+
+        return newRole.save().then((savedRole) => {
+          logger.info('Created ' + roleName + ' role');
+        });
+      }
+    }).catch((error) => {
+      logger.error('Failed to create ' + roleName + ' role');
+    });
+  }
 
   /*
    * Roles can be added to the role tree at any level other than root.

@@ -57,6 +57,18 @@ export class RoleService{
       });
   }
 
+  getEndpoints() : Observable<any> {
+    return this.http.get('api/roles/permissions').map((res: Response) => {
+      return res.json();
+    });
+  }
+
+  updateEndpoint(endpoint: any) : Observable<any> {
+    return this.http.put('api/roles/permissions/' + endpoint.id, endpoint).map((res: Response) => {
+      return res.json();
+    });
+  }
+
  updateUserRole(data: any): Observable<any>
  {
    return this.http
