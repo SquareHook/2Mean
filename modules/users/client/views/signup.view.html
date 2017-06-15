@@ -1,5 +1,5 @@
 <div class="container">
-  <form #userForm="ngForm" (ngSubmit)="signup()">
+  <form *ngIf="allowRegistration" #userForm="ngForm" (ngSubmit)="signup()">
     <h2>Sign Up</h2>
     <div class="form-group">
       <label for="username">Username</label>
@@ -31,4 +31,8 @@
     <button type="submit" class="btn btn-primary">Submit</button>
   </form>
   <p [hidden]="!errorMessage">{{errorMessage}}</p>
+
+  <div *ngIf="!allowRegistration">
+    Registration is disabled
+  </div>
 </div>

@@ -1,6 +1,6 @@
 {
   "name": "toomean",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Angular 2, Nodejs, Express and Mongo stack",
   "main": "server.js",
   "repository": {

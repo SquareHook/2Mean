@@ -9,7 +9,8 @@ export interface UsersConfig {
     }
   },
   passwordValidatorRe: RegExp,
-  emailValidatorRe: RegExp
+  emailValidatorRe: RegExp,
+  allowRegistration: boolean
 }
 
 export const USERS_DI_CONFIG: UsersConfig = {
@@ -27,7 +28,9 @@ export const USERS_DI_CONFIG: UsersConfig = {
   passwordValidatorRe: /((?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[!-/:-@{-~~"^_`\\\]\[])(?=.{8,}))/,
   // TODO either write a full regex for emails (RFC3696 would help) or
   // implement confirmation email sender
-  emailValidatorRe: /.+@.+/
+  emailValidatorRe: /.+@.+/,
+  // need to comapre to 'false' to preserve backwards compatibility
+  allowRegistration: process.env.TOOMEAN_APP_ALLOW_REGISTRATION === 'false' ? false: true
 };
 
 export let USERS_CONFIG = new OpaqueToken('users.config');

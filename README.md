@@ -32,6 +32,10 @@ watch for changes and compile typescript when a change is detected.
 ### App Name
 set `TOOMEAN_APP_NAME` to define a name for the app in logs.
 
+### Registration
+Don't want people to be able to register? Don't worry bro we won't judge, just
+set `TOOMEAN_APP_ALLOW_REGISTRATION` to `false`
+
 ### Hostname
 If you are developing locally then you should be fine without this step.
 Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
