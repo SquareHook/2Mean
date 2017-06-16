@@ -21,6 +21,7 @@ export class SignupComponent implements AfterViewChecked {
   errorMessage: string = null;
   strongPasswordRe: RegExp;
   validEmailRe: RegExp;
+  allowRegistration: any;
 
   constructor(
     private userService: UserService, 
@@ -34,6 +35,8 @@ export class SignupComponent implements AfterViewChecked {
 
     // an @
     this.validEmailRe = config.emailValidatorRe;
+
+    this.allowRegistration = config.allowRegistration;
   }
 
   signup () {
