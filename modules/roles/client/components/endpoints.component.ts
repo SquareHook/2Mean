@@ -4,38 +4,6 @@ import { NotificationsService } from 'angular2-notifications';
 
 import { RoleService } from '../services/roles.service';
 
-const mockEndpoints = [
-  {
-    name: 'users',
-    endpoints: [
-      {
-        route: '/users',
-        type: 'GET',
-        method: 'crud.readList',
-        secure: true,
-        name: 'Get User',
-        description: 'Use to get users',
-        permissions: {
-          admin: false,
-          user: false
-        }
-      },
-      {
-        route: '/users',
-        type: 'POST',
-        method: 'crud.create',
-        secure: true,
-        name: 'Create User',
-        description: 'Use to create users',
-        permissions: {
-          admin: true,
-          user: false
-        }
-      }
-    ]
-  }
-];
-
 @Component({
   templateUrl: '../views/endpoints.view.html',
   selector: 'endpoints'
@@ -50,19 +18,15 @@ export class EndpointsComponent {
   ) { }
 
   ngOnInit() {
-    this.endpoints = mockEndpoints;
-
     this.roleService.getRoles().subscribe((response) => {
       this.roles = response;
     });
 
-    /*
     this.roleService.getEndpoints().subscribe((response) => {
-      
+      this.endpoints = response;
     }, (error) => {
       this.notificationsService.error('Error', 'Failed to get endpoints');
     });
-    */
   }
 
   updateEndpoint(endpoint: any) : void {

@@ -575,7 +575,7 @@ function roleModule(logger, userModule, moduleLoader)
         endpoints: []
       }
 
-      module.endpoints.push(moduleInfo[i].routes);
+      module.endpoints = moduleInfo[i].routes;
       permissionStructure.push(module);
     }
 
