@@ -45,6 +45,14 @@
                placeholder="Password" name="user.password" autocomplete="new-password">
       </div>
       <div class="form-group">
+        <div class="form-check">
+          <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" [checked]="user.verified" (change)="user.verified =! user.verified">
+            Verified
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
           <span class="form-info">
              Created: {{user.created | date}}
           </span>

@@ -12,5 +12,7 @@ services:
       - ./modules:/usr/src/app/modules/
     environment:
       - TOOMEAN_MONGO_HOST=mongo
+    env_file:
+      - .env
   mongo:
     image: "mongo"
