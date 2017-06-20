@@ -32,8 +32,8 @@ function routeLoader(logger, modLoader, app, roles) {
                   // This has to be instanced to keep track of the endpoint hash.
                   roles.validateAccess(
                       roles.getEndpointHash(roles.pruneEndpointDetails(route)),
-                      req.user.role)
-                    .then((policyAllowed) => {
+                      req.user.role
+                    ).then((policyAllowed) => {
                       if (policyAllowed) {
                         next();
                         return;

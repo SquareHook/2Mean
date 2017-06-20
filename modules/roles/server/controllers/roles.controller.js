@@ -610,7 +610,7 @@ function roleModule(logger, userModule, moduleLoader)
         moduleInfo[i].routes[j].hashId = getEndpointHash(pruneEndpointDetails(moduleInfo[i].routes[j]));
       }
 
-      module.endpoints.push(moduleInfo[i].routes);
+      module.endpoints = moduleInfo[i].routes;
       permissionStructure.push(module);
     }
 
