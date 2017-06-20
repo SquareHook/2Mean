@@ -7,6 +7,8 @@ const ChunkWebpack = webpack.optimize.CommonsChunkPlugin;
 
 const rootDir = path.resolve(__dirname, '../..');
 
+const config = require('../config');
+
 module.exports = {
     devServer: {
         contentBase: path.resolve(rootDir, 'modules/app/client'),
@@ -43,7 +45,12 @@ module.exports = {
         new webpack.ContextReplacementPlugin(
           /angular(\\|\/)core(\\|\/)@angular/,
           path.resolve(__dirname, '../src')
-        )
+        ),
+        new webpack.DefinePlugin({
+          'process.env': {
+            'TOOMEAN_APP_ALLOW_REGISTRATION': JSON.stringify(config.app.allowRegistration)
+          }
+        })
     ],
     resolve: {
         extensions: [ '.js', '.ts', '.less' ]

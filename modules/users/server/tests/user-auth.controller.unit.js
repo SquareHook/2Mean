@@ -21,7 +21,9 @@ const mockConfig = {
     port_http: 80,
     host: 'blahblah.com',
     emailVerificationTTL: 100000,
-    requireEmailVerification: true
+    requireEmailVerification: true,
+    defaultUserRole: 'user',
+    allowRegistration: true
   },
   email: {
     from: 'don\'t care'

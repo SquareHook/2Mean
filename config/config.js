@@ -28,7 +28,9 @@ module.exports = {
     // default is 15 minutes
     requireEmailVerification: process.env.TOOMEAN_APP_REQUIRE_EMAIL_VERIFICATION || false,
     emailVerificationTTL: process.env.TOOMEAN_APP_EMAIL_VERIFICATION_TTL || 15 * 60 * 1000,
-    enableRoleManager: true
+    enableRoleManager: true,
+    allowRegistration: process.env.TOOMEAN_APP_ALLOW_REGISTRATION || true,
+    defaultUserRole: process.env.TOOMEAN_APP_DEFAULT_USER_ROLE || 'user'
   },
   uploads: {
     root: 'uploads',
