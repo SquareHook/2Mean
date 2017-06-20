@@ -14,6 +14,7 @@ var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
 var Promise = q.promise;
+var crypt = require('crypto');
 
 
 // ---------------------------- Module Definition ----------------------------
@@ -21,6 +22,15 @@ function roleModule(logger, userModule, moduleLoader)
 {
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
+
+  /**
+   * List of values that is pulled for determining the id hash for the route manager.
+   */
+  const ENDPOINT_DETAIL_LIST = [
+    'route',
+    'type',
+    'secure'
+  ];
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
@@ -596,11 +606,48 @@ function roleModule(logger, userModule, moduleLoader)
         endpoints: []
       }
 
+      for (let j = 0; j < moduleInfo[i].routes.length; j++) {
+        moduleInfo[i].routes[j].hashId = getEndpointHash(pruneEndpointDetails(moduleInfo[i].routes[j]));
+      }
+
       module.endpoints.push(moduleInfo[i].routes);
       permissionStructure.push(module);
     }
 
     res.status(200).send(permissionStructure);
+  }
+
+  /**
+   * Given the json configuration for a route, this returns the hash for it.
+   *
+   * @param {Object} route The json config data for the endpoint.
+   *
+   * @returns {String} The hash representation for the endpoint.
+   */
+  function getEndpointHash(route) {
+    var hash = crypt.createHash('sha256');
+    hash.update(JSON.stringify(route));
+
+    return hash.digest('hex');
+  }
+
+  /**
+   * Used for pruning details from the endpoint config.
+   *
+   * @param {object} endpointDetails The JSON config object for a given endpoint.
+   *
+   * @returns {object} A modified version of the JSON object, filtered by the ENDPOINT_DETAIL_LIST.
+   */
+  function pruneEndpointDetails(endpointDetails) {
+    let updatedEndpointDetails = {};
+
+    for (let i = 0; i < ENDPOINT_DETAIL_LIST.length; i++) {
+      if (endpointDetails[ENDPOINT_DETAIL_LIST[i]]) {
+        updatedEndpointDetails[ENDPOINT_DETAIL_LIST[i]] = endpointDetails[ENDPOINT_DETAIL_LIST[i]];
+      }
+    }
+
+    return updatedEndpointDetails;
   }
     
 
@@ -614,7 +661,8 @@ function roleModule(logger, userModule, moduleLoader)
     subroles                  : getSubroles,
     tree                      : getRoleTree,
     updateUserRole            : updateUserRole,
-    reportEndpointPermissions : reportEndpointPermissions
+    reportEndpointPermissions : reportEndpointPermissions,
+    pruneEndpointDetails      : pruneEndpointDetails
   }
 }
 
