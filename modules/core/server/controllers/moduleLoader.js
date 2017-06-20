@@ -9,9 +9,13 @@ function moduleLoader(config) {
 
   var moduleList = [];
 
-  var loadedModules = {};
+  var loadedModules = {
+    roleManager: roles
+  };
 
   var loadedModels = [];
+
+  var roles;
 
   constructor();
 
@@ -140,10 +144,19 @@ function moduleLoader(config) {
     return moduleList;
   }
 
+  function setRoles(roleManager) {
+    roles = roleManager;
+  }
+
+  function reportRoles() {
+    console.log(roles);
+  }
+
   return {
     getRoutes   : getRoutes,
     get         : get,
-    listModules : listModules
+    listModules : listModules,
+    setRoles    : setRoles
   }
 }
 

@@ -30,7 +30,6 @@ var logger = core.moduleLoader.get('logger');
 var auth = core.moduleLoader.get('auth');
 var user = core.moduleLoader.get('users');
 
-
 var http = require('http');
 var https = require('https');
 
@@ -69,6 +68,8 @@ if (config.app.force_https) {
     next();
   });
 }
+
+// Magic - Abrakadabra load the application.
 core.routes.loadRoutes();
 
 

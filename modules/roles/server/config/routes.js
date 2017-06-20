@@ -1,5 +1,11 @@
 module.exports = [
 {
+  route: '/roles/permissions',
+  type: 'GET',
+  method: 'reportEndpointPermissions',
+  secure: false
+},
+{
   route: '/roles',
   type: 'GET',
   method: 'list',

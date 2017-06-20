@@ -1,8 +1,3 @@
-
-/* promise.done(onSuccess, onError)
- simply allows you to process resolved value. An additional benefit is that does not imply any error swallowing (as it is the case with promise.then()), it guarantees that any involved exception would be exposed. It also effectively ends the chain and does not return any further promise.
-
-
 /*
  * Roles Controller
  * Provices andvanced role functionality and API endpoints
@@ -10,9 +5,10 @@
 
 // ---------------------------- Imports ----------------------------
 var q = require('q');
+
+// Q promise library is injected in server.js
 var mongoose = require('mongoose');
-//use q promise lib for mongoose promises
-mongoose.Promise = require('q').Promise;
+
 var Roles = mongoose.model('Roles');
 var path = require('path');
 var config = require(path.resolve('config/config'));
@@ -21,7 +17,7 @@ var Promise = q.promise;
 
 
 // ---------------------------- Module Definition ----------------------------
-function roleModule(logger, userModule)
+function roleModule(logger, userModule, moduleLoader)
 {
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
@@ -76,8 +72,6 @@ function roleModule(logger, userModule)
   {
     logger.log('crit', 'Unable to determine if a default role is present');
   });
-    
-
 
   /*
    * Roles can be added to the role tree at any level other than root.
@@ -558,28 +552,69 @@ function roleModule(logger, userModule)
     return formatted;
   }
 
+  /**
+   * Abstracted Error handler.
+   *
+   * @param {Response} res   The Express Response object.
+   * @param {String}   error The Error message to send.
+   * @param {Number}   code  The status code to send.
+   */
   function sendServerError(res, error, code)
   {
     code = code || 500;
     logger.error(error);
     res.status(code).send(
-    {
-      success: false,
-      error: error
-    });
+      {
+        success: false,
+        error: error
+      });
   }
 
+  /**
+   * Retreives a list of modules and their endpoints.
+   *
+   * @return {Array<Object>}
+   */
+  function getAvailableEndpoints() {
+    return moduleLoader.listModules();
+  }
+
+  /**
+   * Endpoint for retreiving Permissions list.
+   *
+   * @param {Request} req  The Express request Object.
+   * @param {Response} res The Express response Object.
+   */
+  function reportEndpointPermissions(req, res) {
+    let permissionStructure = [];
+
+    let moduleInfo = getAvailableEndpoints();
+
+    for (let i = 0; i < moduleInfo.length; i++) {
+      let module = {
+        name: moduleInfo[i].name,
+        endpoints: []
+      }
+
+      module.endpoints.push(moduleInfo[i].routes);
+      permissionStructure.push(module);
+    }
+
+    res.status(200).send(permissionStructure);
+  }
+    
 
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    create: addRole,
-    list: listAllRoles,
-    update: updateRole,
-    delete: removeRole,
-    subroles: getSubroles,
-    tree: getRoleTree,
-    updateUserRole: updateUserRole
+    create                    : addRole,
+    list                      : listAllRoles,
+    update                    : updateRole,
+    delete                    : removeRole,
+    subroles                  : getSubroles,
+    tree                      : getRoleTree,
+    updateUserRole            : updateUserRole,
+    reportEndpointPermissions : reportEndpointPermissions
   }
 }
 

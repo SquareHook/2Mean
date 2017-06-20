@@ -27,7 +27,8 @@ module.exports = {
     force_https: process.env.TOOMEAN_APP_FORCE_HTTPS || false,
     // default is 15 minutes
     requireEmailVerification: process.env.TOOMEAN_APP_REQUIRE_EMAIL_VERIFICATION || false,
-    emailVerificationTTL: process.env.TOOMEAN_APP_EMAIL_VERIFICATION_TTL || 15 * 60 * 1000
+    emailVerificationTTL: process.env.TOOMEAN_APP_EMAIL_VERIFICATION_TTL || 15 * 60 * 1000,
+    enableRoleManager: true
   },
   uploads: {
     root: 'uploads',
