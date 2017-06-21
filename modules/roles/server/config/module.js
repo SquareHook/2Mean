@@ -1,4 +1,4 @@
 module.exports = {
   models: ['Roles'],
-  dependencies: ['logger', 'users']
+  dependencies: ['logger', 'users', 'roleManager']
 };

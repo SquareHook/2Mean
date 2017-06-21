@@ -17,6 +17,13 @@ export const CoreMenu: Array<MenuItem> = [
         ]
       },
       {
+        template: 'Endpoints',
+        state: '/roles/endpoints',
+        roles: [
+          'admin'
+        ]
+      },
+      {
         template: 'Users',
         state: '/users/manage',
         roles: [

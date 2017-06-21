@@ -1,8 +1,3 @@
-
-/* promise.done(onSuccess, onError)
- simply allows you to process resolved value. An additional benefit is that does not imply any error swallowing (as it is the case with promise.then()), it guarantees that any involved exception would be exposed. It also effectively ends the chain and does not return any further promise.
-
-
 /*
  * Roles Controller
  * Provices andvanced role functionality and API endpoints
@@ -10,74 +5,55 @@
 
 // ---------------------------- Imports ----------------------------
 var q = require('q');
+
+// Q promise library is injected in server.js
 var mongoose = require('mongoose');
-//use q promise lib for mongoose promises
-mongoose.Promise = require('q').Promise;
+
 var Roles = mongoose.model('Roles');
 var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
 var Promise = q.promise;
+var crypt = require('crypto');
+
+var config = require('../config/config');
 
 
 // ---------------------------- Module Definition ----------------------------
-function roleModule(logger, userModule)
+function roleModule(logger, userModule, moduleLoader)
 {
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
-
-  // check to make sure there exists an admin role with parent set to null
-  //if one doesn't exist, create it.
-  var adminCount = Roles.count({_id: ADMIN_ROLE_NAME, parent: null}).exec()
-  .then(count => {
-    if (count < 1)
-    {
-      let adminRole = new Roles();
-      adminRole._id = ADMIN_ROLE_NAME;
-      adminRole.parent = null;
-      adminRole.canModify = false;
-      adminRole.subroles = [DEFAULT_ROLE_NAME];
-      adminRole.save()
-      .then(data => {
-        logger.info('created admin role');
-      })
-      .catch(err =>
-      {
-        logger.log('crit',"Failed to create default admin role");
-      });
-    }
-  })
-  .catch(err =>
-  {
-    logger.log('crit', 'Unable to determine if an admin role is present');
+  
+  // create the initial roles
+  // admin
+  createInitialRole(ADMIN_ROLE_NAME, null, [ DEFAULT_ROLE_NAME ]).then(() => {
+    // user
+    return createInitialRole(DEFAULT_ROLE_NAME, ADMIN_ROLE_NAME);
+  }).then(() => {
+    logger.info('Initial roles created/exist');
+  }).catch((error) => {
+    logger.error('Error creating intial roles', { error: error });
   });
-    
-  // check to make sure there exists a default role
-  //if one doesn't exist, create it.
-  var userCount = Roles.count({_id: DEFAULT_ROLE_NAME, parent: ADMIN_ROLE_NAME}).exec()
-  .then(count => {
-    if (count < 1)
-    {
-      let userRole = new Roles();
-      userRole._id = DEFAULT_ROLE_NAME;
-      userRole.parent = ADMIN_ROLE_NAME;
-      userRole.parent.canModify = false;
-      userRole.save()
-      .then(data => {
-        logger.info('created default role');
-      })
-      .catch(err =>
-      {
-        logger.log('crit',"Failed to create default default user role");
-      });
-    }
-  })
-  .catch(err =>
-  {
-    logger.log('crit', 'Unable to determine if a default role is present');
-  });
-    
 
+  function createInitialRole(roleName, parentName, subroles=[]) {
+    return Roles.count({ _id: roleName, parent: parentName }).exec().then((count) => {
+      if (count < 1) {
+        let newRole = new Roles({
+          _id: roleName,
+          parent: parentName,
+          canModify: false,
+          subroles: subroles
+        });
+
+        return newRole.save().then((savedRole) => {
+          logger.info('Created ' + roleName + ' role');
+        });
+      }
+    }).catch((error) => {
+      logger.error('Failed to create ' + roleName + ' role');
+    });
+  }
 
   /*
    * Roles can be added to the role tree at any level other than root.
@@ -558,28 +534,109 @@ function roleModule(logger, userModule)
     return formatted;
   }
 
+  /**
+   * Abstracted Error handler.
+   *
+   * @param {Response} res   The Express Response object.
+   * @param {String}   error The Error message to send.
+   * @param {Number}   code  The status code to send.
+   */
   function sendServerError(res, error, code)
   {
     code = code || 500;
     logger.error(error);
     res.status(code).send(
-    {
-      success: false,
-      error: error
-    });
+      {
+        success: false,
+        error: error
+      });
   }
 
+  /**
+   * Retreives a list of modules and their endpoints.
+   *
+   * @return {Array<Object>}
+   */
+  function getAvailableEndpoints() {
+    return moduleLoader.listModules();
+  }
+
+  /**
+   * Endpoint for retreiving Permissions list.
+   *
+   * @param {Request} req  The Express request Object.
+   * @param {Response} res The Express response Object.
+   */
+  function reportEndpointPermissions(req, res) {
+    let permissionStructure = [];
+
+    let moduleInfo = getAvailableEndpoints();
+
+    for (let i = 0; i < moduleInfo.length; i++) {
+      let module = {
+        name: moduleInfo[i].name,
+        endpoints: []
+      }
+
+      for (let j = 0; j < moduleInfo[i].routes.length; j++) {
+        moduleInfo[i].routes[j].hashId = getEndpointHash(pruneEndpointDetails(moduleInfo[i].routes[j]));
+      }
+
+      module.endpoints = moduleInfo[i].routes;
+      permissionStructure.push(module);
+    }
+
+    res.status(200).send(permissionStructure);
+  }
+
+  /**
+   * Given the json configuration for a route, this returns the hash for it.
+   *
+   * @param {Object} route The json config data for the endpoint.
+   *
+   * @returns {String} The hash representation for the endpoint.
+   */
+  function getEndpointHash(route) {
+    var hash = crypt.createHash('sha256');
+    hash.update(JSON.stringify(route));
+
+    return hash.digest('hex');
+  }
+
+  /**
+   * Used for pruning details from the endpoint config.
+   *
+   * @param {object} endpointDetails The JSON config object for a given endpoint.
+   *
+   * @returns {object} A modified version of the JSON object, filtered by the ENDPOINT_DETAIL_LIST.
+   */
+  function pruneEndpointDetails(endpointDetails) {
+    let updatedEndpointDetails = {};
+
+    let endpoint_fields = config.ENDPOINT_DETAIL_LIST;
+
+    for (let i = 0; i < endpoint_fields.length; i++) {
+      if (endpointDetails[endpoint_fields[i]]) {
+        updatedEndpointDetails[endpoint_fields[i]] = endpointDetails[endpoint_fields[i]];
+      }
+    }
+
+    return updatedEndpointDetails;
+  }
+    
 
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
-    create: addRole,
-    list: listAllRoles,
-    update: updateRole,
-    delete: removeRole,
-    subroles: getSubroles,
-    tree: getRoleTree,
-    updateUserRole: updateUserRole
+    create                    : addRole,
+    list                      : listAllRoles,
+    update                    : updateRole,
+    delete                    : removeRole,
+    subroles                  : getSubroles,
+    tree                      : getRoleTree,
+    updateUserRole            : updateUserRole,
+    reportEndpointPermissions : reportEndpointPermissions,
+    pruneEndpointDetails      : pruneEndpointDetails
   }
 }
 
