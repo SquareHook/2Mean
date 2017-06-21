@@ -189,8 +189,49 @@ function roleModule(logger, userModule, moduleLoader)
       .catch(error => {
         sendServerError(res, error);
       });
+  }
 
+  /**
+   * updates a role (the updateRole function does alot more, use it if you
+   * need to update the role tree. Use this one if you just want to update
+   * the role itself
+   * @param {Object} req.body.role - the role to update
+   */
+  function updateSingleRole(req, res, next) {
+    let roleId = req.params && req.params.roleId;
+    let body = req.body;
 
+    return new Promise((resolve, reject) => {
+      if (!body) {
+        reject(new Error('Missing role'));
+      } else if (roleId && body && roleId === body._id) {
+        resolve(Roles.findOne({ _id: roleId }));
+      } else {
+        reject(new Error('Param body mismatch'));
+      }
+    }).then((foundRole) => {
+      if (foundRole) {
+        mapOverRole(body, foundRole);
+
+        return foundRole.save();
+      } else {
+        throw new Error('Not found' );
+      }
+    }).then((savedRole) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing role') {
+        res.status(400).send({ error: 'Missing role' });
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else {
+        console.log(error);
+        logger.error('Error in RolesController#updateSingleRole', { error: error });
+        res.status(500).send();
+      }
+    });
   }
 
   function updateDirectDescendants(role)
@@ -623,6 +664,17 @@ function roleModule(logger, userModule, moduleLoader)
 
     return updatedEndpointDetails;
   }
+
+  function mapOverRole(updates, role) {
+    let schemaFields = Roles.schema.obj;
+
+    for (let index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
+      if (updates[realIndex]) {
+        role[realIndex] = updates[realIndex];
+      }
+    }
+  }
     
 
   // --------------------------- Revealing Module Section ----------------------------
@@ -636,7 +688,8 @@ function roleModule(logger, userModule, moduleLoader)
     tree                      : getRoleTree,
     updateUserRole            : updateUserRole,
     reportEndpointPermissions : reportEndpointPermissions,
-    pruneEndpointDetails      : pruneEndpointDetails
+    pruneEndpointDetails      : pruneEndpointDetails,
+    updateSingleRole          : updateSingleRole
   }
 }
 

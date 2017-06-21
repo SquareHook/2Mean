@@ -62,5 +62,13 @@ module.exports = [
   type: 'GET',
   method: 'subroles',
   secure: true
+},
+{
+  name: 'Update a single role',
+  description: 'Updates a single role. This method is used by the role manager',
+  route: '/roles/:roleId',
+  type: 'PUT',
+  method: 'updateSingleRole',
+  secure: true
 }
 ];

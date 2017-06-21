@@ -10,7 +10,7 @@
     </ng-template>
     <ng-template ngbPanelContent>
       <div class="d-flex justify-content-end">
-        <span class="mr-auto">{{ api.description }}</span>
+        <span class="mr-auto">{{ api.route }}{{ api.description }}</span>
         <button type="button" class="btn btn-secondary"
                (click)="api.showForm = !api.showForm"
                *ngIf="!api.showForm">
@@ -22,7 +22,9 @@
           Submit
         </button>
       </div>
-      <endpoint-permission-form [endpoint]="api" [roles]="roles" *ngIf="api.showForm"></endpoint-permission-form>
+      <endpoint-permission-form [endpoint]="api" [roles]="roles"
+                                *ngIf="api.showForm">
+      </endpoint-permission-form>
     </ng-template>
   </ngb-panel>
 </ngb-accordion>
