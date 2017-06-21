@@ -68,10 +68,12 @@ function userAuthController(logger, shared) {
     newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
     // Overwrite any roles set or make sure they get set appropriately.
-    newUser.role = 'user';
+    newUser.role = config.app.defaultUserRole;
 
     return new Promise((resolve, reject) => {
-      if (!isStrongPassword(newUser.password)) {
+      if (!config.app.allowRegistration) {
+        reject(new Error('Registration disabled'));
+      } else if (!isStrongPassword(newUser.password)) {
         reject(new Error('Invalid password'));
       } else {
         resolve(authHelpers.hashPassword(newUser.password));

@@ -32,6 +32,10 @@ watch for changes and compile typescript when a change is detected.
 ### App Name
 set `TOOMEAN_APP_NAME` to define a name for the app in logs.
 
+### Registration
+Don't want people to be able to register? Don't worry bro we won't judge, just
+set `TOOMEAN_APP_ALLOW_REGISTRATION` to `false`
+
 ### Hostname
 If you are developing locally then you should be fine without this step.
 Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
@@ -75,6 +79,11 @@ These can be hardcoded (don't do that) or set using environment variables.
 Access keys can also be passed in as environment variables.
 For more information or to use different configuration refer to 
 [Configuring the AWS Command Line Interface] (http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
+
+### Roles Enforcement
+Role enforcement can be disabled in the configuration.
+
+- `enableRoleManager` Can be set to true or false as desired.
 
 ### Elasticsearch Logging
 To enable elasticsearch logging you must define the following environment
