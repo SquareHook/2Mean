@@ -32,10 +32,11 @@ export class EndpointsComponent {
   updateEndpoint(endpoint: any) : void {
     endpoint.showForm = false;
 
-    this.roleService.updateEndpoint(endpoint).subscribe((response) => {
-      this.notificationsService.success(':+1:', 'Endpoint Updated');
-    }, (error) => {
-      this.notificationsService.error('Error', 'Failed to update endpoint');
+    this.roles.forEach((role) => {
+      this.roleService.updateSingleRole(role).subscribe((response) => {
+      }, (error) => {
+        this.notificationsService.error('Error', 'Failed to update role');
+      })
     });
   }
 }

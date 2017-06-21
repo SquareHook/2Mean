@@ -22,7 +22,9 @@
           Submit
         </button>
       </div>
-      <endpoint-permission-form [endpoint]="api" [roles]="roles" *ngIf="api.showForm"></endpoint-permission-form>
+      <endpoint-permission-form [endpoint]="api" [roles]="roles"
+                                *ngIf="api.showForm">
+      </endpoint-permission-form>
     </ng-template>
   </ngb-panel>
 </ngb-accordion>

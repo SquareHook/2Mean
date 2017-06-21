@@ -227,6 +227,8 @@ function roleModule(logger, userModule, moduleLoader)
       } else if (error.errors) {
         res.status(400).send({ error: error.errors });
       } else {
+        console.log(error);
+        logger.error('Error in RolesController#updateSingleRole', { error: error });
         res.status(500).send();
       }
     });

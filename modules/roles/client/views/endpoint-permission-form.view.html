@@ -1,8 +1,8 @@
 <div class="form-check" *ngFor="let role of roles">
   <label class="form-check-label">
     <input class="form-check-input" type="checkbox"
-      [checked]="endpoint.permissions && endpoint.permissions[role._id]"
-      (change)="updateRole(role)">
+      [checked]="isChecked(role, endpoint)"
+      (change)="updateRole(role, endpoint)">
     {{ role._id }}
   </label>
 </div>

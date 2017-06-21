@@ -1,6 +1,3 @@
-Endpoints
-<pre><code>{{ endpoints | json }}</code></pre>
-
 <div *ngFor="let endpoint of endpoints">
   <endpoint-detail [roles]="roles" [endpoint]="endpoint" (endpointChange)="updateEndpoint($event)"></endpoint-detail>
 </div>
