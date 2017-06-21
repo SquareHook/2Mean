@@ -14,6 +14,9 @@ var path = require('path');
 var config = require(path.resolve('config/config'));
 var _ = require('lodash');
 var Promise = q.promise;
+var crypt = require('crypto');
+
+var config = require('../config/config');
 
 
 // ---------------------------- Module Definition ----------------------------
@@ -186,8 +189,47 @@ function roleModule(logger, userModule, moduleLoader)
       .catch(error => {
         sendServerError(res, error);
       });
+  }
 
+  /**
+   * updates a role (the updateRole function does alot more, use it if you
+   * need to update the role tree. Use this one if you just want to update
+   * the role itself
+   * @param {Object} req.body.role - the role to update
+   */
+  function updateSingleRole(req, res, next) {
+    let roleId = req.params && req.params.roleId;
+    let body = req.body;
 
+    return new Promise((resolve, reject) => {
+      if (!body) {
+        reject(new Error('Missing role'));
+      } else if (roleId && body && roleId === body._id) {
+        resolve(Roles.findOne({ _id: roleId }));
+      } else {
+        reject(new Error('Param body mismatch'));
+      }
+    }).then((foundRole) => {
+      if (foundRole) {
+        mapOverRole(body, foundRole);
+
+        return foundRole.save();
+      } else {
+        throw new Error('Not found' );
+      }
+    }).then((savedRole) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Missing role') {
+        res.status(400).send({ error: 'Missing role' });
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else {
+        res.status(500).send();
+      }
+    });
   }
 
   function updateDirectDescendants(role)
@@ -575,11 +617,61 @@ function roleModule(logger, userModule, moduleLoader)
         endpoints: []
       }
 
+      for (let j = 0; j < moduleInfo[i].routes.length; j++) {
+        moduleInfo[i].routes[j].hashId = getEndpointHash(pruneEndpointDetails(moduleInfo[i].routes[j]));
+      }
+
       module.endpoints = moduleInfo[i].routes;
       permissionStructure.push(module);
     }
 
     res.status(200).send(permissionStructure);
+  }
+
+  /**
+   * Given the json configuration for a route, this returns the hash for it.
+   *
+   * @param {Object} route The json config data for the endpoint.
+   *
+   * @returns {String} The hash representation for the endpoint.
+   */
+  function getEndpointHash(route) {
+    var hash = crypt.createHash('sha256');
+    hash.update(JSON.stringify(route));
+
+    return hash.digest('hex');
+  }
+
+  /**
+   * Used for pruning details from the endpoint config.
+   *
+   * @param {object} endpointDetails The JSON config object for a given endpoint.
+   *
+   * @returns {object} A modified version of the JSON object, filtered by the ENDPOINT_DETAIL_LIST.
+   */
+  function pruneEndpointDetails(endpointDetails) {
+    let updatedEndpointDetails = {};
+
+    let endpoint_fields = config.ENDPOINT_DETAIL_LIST;
+
+    for (let i = 0; i < endpoint_fields.length; i++) {
+      if (endpointDetails[endpoint_fields[i]]) {
+        updatedEndpointDetails[endpoint_fields[i]] = endpointDetails[endpoint_fields[i]];
+      }
+    }
+
+    return updatedEndpointDetails;
+  }
+
+  function mapOverRole(updates, role) {
+    let schemaFields = Roles.schema.obj;
+
+    for (let index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
+      if (updates[realIndex]) {
+        role[realIndex] = updates[realIndex];
+      }
+    }
   }
     
 
@@ -593,7 +685,9 @@ function roleModule(logger, userModule, moduleLoader)
     subroles                  : getSubroles,
     tree                      : getRoleTree,
     updateUserRole            : updateUserRole,
-    reportEndpointPermissions : reportEndpointPermissions
+    reportEndpointPermissions : reportEndpointPermissions,
+    pruneEndpointDetails      : pruneEndpointDetails,
+    updateSingleRole          : updateSingleRole
   }
 }
 

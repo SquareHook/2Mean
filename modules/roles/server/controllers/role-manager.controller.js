@@ -15,6 +15,8 @@ var crypt = require('crypto');
 
 var mongoose = require('mongoose');
 
+var config = require('../config/config');
+
 /**
  * The Roles model.
  */
@@ -117,11 +119,33 @@ function roleManager(logger)
     return appConfig.app.enableRoleManager;
   }
 
+  /**
+   * Used for pruning details from the endpoint config.
+   *
+   * @param {object} endpointDetails The JSON config object for a given endpoint.
+   *
+   * @returns {object} A modified version of the JSON object, filtered by the ENDPOINT_DETAIL_LIST.
+   */
+  function pruneEndpointDetails(endpointDetails) {
+    let updatedEndpointDetails = {};
+
+    let endpoint_fields = config.ENDPOINT_DETAIL_LIST;
+
+    for (let i = 0; i < endpoint_fields.length; i++) {
+      if (endpointDetails[endpoint_fields[i]]) {
+        updatedEndpointDetails[endpoint_fields[i]] = endpointDetails[endpoint_fields[i]];
+      }
+    }
+
+    return updatedEndpointDetails;
+  }
+    
   return {
-    checkPolicy      : checkPolicy,
-    isEnabled        : isEnabled,
-    getEndpointHash  : getEndpointHash,
-    validateAccess   : validateAccess
+    checkPolicy          : checkPolicy,
+    isEnabled            : isEnabled,
+    getEndpointHash      : getEndpointHash,
+    validateAccess       : validateAccess,
+    pruneEndpointDetails : pruneEndpointDetails
   }
 }
 
