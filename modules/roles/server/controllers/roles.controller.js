@@ -16,21 +16,14 @@ var _ = require('lodash');
 var Promise = q.promise;
 var crypt = require('crypto');
 
+var config = require('../config/config');
+
 
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule, moduleLoader)
 {
   const ADMIN_ROLE_NAME = 'admin';
   const DEFAULT_ROLE_NAME = 'user';
-
-  /**
-   * List of values that is pulled for determining the id hash for the route manager.
-   */
-  const ENDPOINT_DETAIL_LIST = [
-    'route',
-    'type',
-    'secure'
-  ];
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
@@ -641,9 +634,11 @@ function roleModule(logger, userModule, moduleLoader)
   function pruneEndpointDetails(endpointDetails) {
     let updatedEndpointDetails = {};
 
-    for (let i = 0; i < ENDPOINT_DETAIL_LIST.length; i++) {
-      if (endpointDetails[ENDPOINT_DETAIL_LIST[i]]) {
-        updatedEndpointDetails[ENDPOINT_DETAIL_LIST[i]] = endpointDetails[ENDPOINT_DETAIL_LIST[i]];
+    let endpoint_fields = config.ENDPOINT_DETAIL_LIST;
+
+    for (let i = 0; i < endpoint_fields.length; i++) {
+      if (endpointDetails[endpoint_fields[i]]) {
+        updatedEndpointDetails[endpoint_fields[i]] = endpointDetails[endpoint_fields[i]];
       }
     }
 
