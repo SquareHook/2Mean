@@ -80,6 +80,11 @@ Access keys can also be passed in as environment variables.
 For more information or to use different configuration refer to 
 [Configuring the AWS Command Line Interface] (http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html)
 
+### Roles Enforcement
+Role enforcement can be disabled in the configuration.
+
+- `enableRoleManager` Can be set to true or false as desired.
+
 ### Elasticsearch Logging
 To enable elasticsearch logging you must define the following environment
 variables:
