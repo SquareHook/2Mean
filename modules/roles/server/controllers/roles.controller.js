@@ -11,49 +11,27 @@ var mongoose = require('mongoose');
 
 var Roles = mongoose.model('Roles');
 var path = require('path');
-var config = require(path.resolve('config/config'));
 var _ = require('lodash');
 var Promise = q.promise;
 var crypt = require('crypto');
 
-var config = require('../config/config');
+const config = require('../config/config');
+const appConfig = require('../../../../config/config');
 
+const RoleManager = require('./role-manager.controller');
+const RolesInitHelper = require('./roles-init.helper');
+
+const initialRoles = config.DEFAULT_ROLE_TREE;
 
 // ---------------------------- Module Definition ----------------------------
-function roleModule(logger, userModule, moduleLoader)
-{
-  const ADMIN_ROLE_NAME = 'admin';
-  const DEFAULT_ROLE_NAME = 'user';
+function roleModule(logger, userModule, moduleLoader) {
+  let roleManager = new RoleManager(logger);
+  const routes = moduleLoader.getRoutes();
   
+  let rolesInitHelper = new RolesInitHelper(logger, roleManager, routes);
+
   // create the initial roles
-  // admin
-  createInitialRole(ADMIN_ROLE_NAME, null, [ DEFAULT_ROLE_NAME ]).then(() => {
-    // user
-    return createInitialRole(DEFAULT_ROLE_NAME, ADMIN_ROLE_NAME);
-  }).then(() => {
-    logger.info('Initial roles created/exist');
-  }).catch((error) => {
-    logger.error('Error creating intial roles', { error: error });
-  });
-
-  function createInitialRole(roleName, parentName, subroles=[]) {
-    return Roles.count({ _id: roleName, parent: parentName }).exec().then((count) => {
-      if (count < 1) {
-        let newRole = new Roles({
-          _id: roleName,
-          parent: parentName,
-          canModify: false,
-          subroles: subroles
-        });
-
-        return newRole.save().then((savedRole) => {
-          logger.info('Created ' + roleName + ' role');
-        });
-      }
-    }).catch((error) => {
-      logger.error('Failed to create ' + roleName + ' role');
-    });
-  }
+  rolesInitHelper.createInitialRoles(initialRoles);
 
   /*
    * Roles can be added to the role tree at any level other than root.

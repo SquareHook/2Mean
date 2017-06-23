@@ -15,7 +15,7 @@ export class EndpointPermissionFormComponent {
     }
 
     // look for the permission object in the array
-    let permissionIndex = role.permissions.findIndex((element) => {
+    let permissionIndex = role.permissions.findIndex((element: any) => {
       return element.asset === endpoint.hashId;
     });
 
@@ -38,6 +38,10 @@ export class EndpointPermissionFormComponent {
   }
 
   isChecked(role: any, endpoint: any) {
+    if (role._id === 'admin') {
+      return true;
+    }
+
     let index = role.permissions.findIndex((element: any) => {
       return element.asset === endpoint.hashId;
     });
