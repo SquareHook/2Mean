@@ -238,7 +238,7 @@ granting permissions to certain resources. For example, creating a
 role called 'roleA' with parent 'user' would mean that the user role
 has access to everything roleA can access as well. 
 
-Users have one main role and an array of subroles depending on their
+Users have one main role and an array of roleCache  depending on their
 main role's position in the role tree. 
 
 TODO: continue documentation once endpoints are dynamic and we have a 

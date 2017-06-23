@@ -61,7 +61,7 @@ function userAuthController(logger, shared) {
 
     var deferred = q.defer();
 
-    var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role subroles username';
+    var SANITIZED_SELECTION = 'created displayName email firstName lastName profileImageURL role roleCache username';
 
     let newUser = mapUser(body);
 

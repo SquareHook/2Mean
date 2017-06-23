@@ -36,9 +36,9 @@ module.exports = [
   secure: true
 },
 {
-  route: '/roles/subroles/:id?',
+  route: '/roles/roleCache/:id?',
   type: 'GET',
-  method: 'subroles',
+  method: 'roleCache',
   secure: true
 }
 ];

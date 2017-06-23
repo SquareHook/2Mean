@@ -30,13 +30,13 @@
       </div>
       <div class="form-group">
         <label for="user.role">Role</label>
-          <select name="user.role" [(ngModel)]="user.role" class="form-control" (change)="updateSubroles($event)">
+          <select name="user.role" [(ngModel)]="user.role" class="form-control" (change)="updateRoleCache($event)">
             <option *ngFor="let role of roles;" selected="user.role==role._id">
                 {{role._id}}
             </option>
         </select>
         <span class="form-control">
-          <small> subroles: {{user.subroles}} </small>
+          <small> roleCache: {{user.roleCache}} </small>
         </span>
       </div>
       <div class="form-group">

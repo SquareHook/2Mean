@@ -62,9 +62,9 @@ export class AdminUserForm {
     });
   }
 
-  updateSubroles($event: any) {
-    this.roleService.getSubroles(this.user.role).subscribe(data => {
-      this.user.subroles = data;
+  updateRoleCache($event: any) {
+    this.roleService.getRoleCache(this.user.role).subscribe(data => {
+      this.user.roleCache = data;
     });
   }
 

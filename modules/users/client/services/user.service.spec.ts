@@ -27,7 +27,7 @@ describe('UserService', () => {
     password: 'null',
     profileImageURL: 'modules/users/client/img/profile/default.png',
     role: 'admin',
-    subroles: [ 'admin', 'user' ],
+    roleCache: [ 'admin', 'user' ],
     username: 'squarehook'
   };
 
@@ -41,7 +41,7 @@ describe('UserService', () => {
     password: 'null',
     profileImageURL: 'modules/users/client/img/profile/default.png',
     role: 'admin',
-    subroles: [ 'admin', 'user' ],
+    roleCache: [ 'admin', 'user' ],
     username: 'squarehook'
   };
 

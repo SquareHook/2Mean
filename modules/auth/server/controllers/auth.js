@@ -56,7 +56,7 @@ function authenticationModule(logger, shared) {
         newUser.username = 'squarehook';
         newUser.password = hash;
         newUser.role ='admin';
-        newUser.subroles = ['user'];
+        newUser.roleCache = ['user'];
         newUser.verified = true;
         //generate profile image
         let emailHash = md5(newUser.email.toLowerCase());
@@ -252,7 +252,7 @@ function authenticationModule(logger, shared) {
                 //determine its roles
                 let keyRoles = [];
                 keyRoles.push(user.role);
-                keyRoles = keyRoles.concat(user.subroles);
+                keyRoles = keyRoles.concat(user.roleCache);
                 key.roles = keyRoles;
     
                 key.save((err, data) => {
@@ -371,7 +371,7 @@ function authenticationModule(logger, shared) {
       lastName: user.lastName,
       profileImageURL: user.profileImageURL,
       role: user.role,
-      subroles: user.subroles,
+      roleCache: user.roleCache,
       username: user.username,
       verified: user.verified
     }

@@ -66,7 +66,7 @@ var UserSchema = new Schema({
     default: 'user',
     required: 'Please provide a user role'
   },
-  subroles:{
+  roleCache:{
     type:[String],
     default:[]
   },
