@@ -15,7 +15,7 @@ var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
 var Roles = mongoose.model('Roles');
 var path = require('path');
-var config = require(path.resolve('config/config'));
+const config = require(path.resolve('config/config'));
 var _ = require('lodash');
 var Promise = q.promise;
 
@@ -23,8 +23,8 @@ var Promise = q.promise;
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule)
 {
-  const ADMIN_ROLE_NAME = 'admin';
-  const DEFAULT_ROLE_NAME = 'user';
+  const ADMIN_ROLE_NAME = config.app.defaultAdminRole;
+  const DEFAULT_ROLE_NAME = config.app.defaultUserRole;
 
   // check to make sure there exists an admin role with parent set to null
   //if one doesn't exist, create it.
@@ -36,7 +36,6 @@ function roleModule(logger, userModule)
       adminRole._id = ADMIN_ROLE_NAME;
       adminRole.parent = null;
       adminRole.canModify = false;
-      adminRole.subroles = [DEFAULT_ROLE_NAME];
       adminRole.save()
       .then(data => {
         logger.info('created admin role');
@@ -61,7 +60,6 @@ function roleModule(logger, userModule)
       let userRole = new Roles();
       userRole._id = DEFAULT_ROLE_NAME;
       userRole.parent = ADMIN_ROLE_NAME;
-      userRole.parent.canModify = false;
       userRole.save()
       .then(data => {
         logger.info('created default role');
@@ -259,6 +257,10 @@ function roleModule(logger, userModule)
       while (parent)
       {
         var subroles = getRolesByParent(parent._id, data, []);
+
+
+        //TODO: need to rename flushSubroles and send the 
+        //full list of roles
         userModule.crud.flushSubroles(parent._id, subroles);
         parent = _.find(data, ['_id', parent.parent]);
       }

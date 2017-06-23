@@ -12,7 +12,10 @@ var RolesSchema = new Schema({
     required: '_id is required. Set it to the role name'
   },
   parent: String,
-  canModify: Boolean,
+  canModify: {
+    type: Boolean,
+    default: true
+  },
   lastUpdated: {
     type: Date,
     default: Date.now

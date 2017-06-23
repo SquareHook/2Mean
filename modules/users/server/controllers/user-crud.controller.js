@@ -21,14 +21,19 @@ var q = require('q');
 var _ = require('lodash');
 var md5 = require('md5');
 
+/*
+* app configuration
+*/
+const config = require(path.resolve('config/config'));
+
 /**
  * Main business logic for handling requests.
  */
 function userCrudController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
-  const ADMIN_ROLE_NAME = 'admin';
-  const DEFAULT_ROLE_NAME = 'user';
+  const ADMIN_ROLE_NAME = config.app.defaultAdminRole;
+  const DEFAULT_ROLE_NAME = config.app.defaultUserRole;
 
   let authHelpers = shared.authHelpers;
 

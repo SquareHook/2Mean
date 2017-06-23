@@ -56,7 +56,7 @@ function authenticationModule(logger, shared) {
         newUser.username = 'squarehook';
         newUser.password = hash;
         newUser.role ='admin';
-        newUser.roleCache = ['user'];
+        newUser.roleCache = ['admin', 'user'];
         newUser.verified = true;
         //generate profile image
         let emailHash = md5(newUser.email.toLowerCase());
