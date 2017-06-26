@@ -25,7 +25,16 @@ const mockUserModule = {
 };
 
 const mockModuleLoader = {
-
+  getRoutes: () => {
+    return {
+      blah: [
+        {
+          type: 'GET',
+          route: '/blah'
+        }
+      ]
+    }
+  }
 };
 
 const mockUser = {
@@ -201,7 +210,7 @@ describe('RolesController', () => {
 
       return rolesController.updateSingleRole(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
-        sendStub.args.should.deep.equah([[ ]]);
+        sendStub.args.should.deep.equal([[ ]]);
       });
     });
   });
