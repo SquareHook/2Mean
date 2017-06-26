@@ -11,7 +11,7 @@ const ObjectID = require('mongodb').ObjectID;
 require('../models/Roles');
 const Roles = mongoose.model('Roles');
 
-const mocKRole = {
+const mockRole = {
   _id: 'mockrole',
   parent: null,
   canModify: false,
@@ -54,7 +54,7 @@ describe('rolesInitHelper', () => {
 
   beforeEach(() => {
     roleManager = new RoleManager(mockLogger);
-    rolesInitHelper = new RolesInitHelper(mockLogger, RoleManager, mockRoutes);
+    rolesInitHelper = new RolesInitHelper(mockLogger, roleManager, mockRoutes);
   });
 
   describe('#createInitialRoles', () => {
@@ -91,8 +91,7 @@ describe('rolesInitHelper', () => {
 
     beforeEach(() => {
       createInitialRoleStub = sinon.stub(rolesInitHelper, 'createInitialRole');
-      createInitialRolesStub = sinon.stub(rolesInitHelper, 'createInitialRoles');
-      createInitialRolesStub.onCall(0).callThrough();
+      createInitialRolesStub = sinon.stub(rolesInitHelper, 'createInitialRoles').callThrough();
     });
 
     afterEach(() => {
@@ -138,33 +137,30 @@ describe('rolesInitHelper', () => {
 
     it('should call createInitialRoles with its children if they exist', () => {
       createInitialRoleStub.resolves();
+      
+      createInitialRolesStub.onCall(1).resolves();
+      createInitialRolesStub.onCall(2).resolves();
 
-      rolesInitHelper.createInitialRoles(childrenRoleTree);
-
-      createInitialRolesStub.args.should.deep.equal([[
-        childrenRoleTree.name,
-        null,
-        childrenRoleTreeChildNames,
-        undefined
-      ], [
-        childrenRoleTree.children[0].name,
-        childrenRoleTree.name,
-        [],
-        undefined
-      ], [
-        childrenRoleTree.children[1].name,
-        childrenRoleTree.name,
-        [],
-        undefined
-      ]]);
+      return rolesInitHelper.createInitialRoles(childrenRoleTree).then(() => {
+        createInitialRolesStub.args.should.deep.equal([[
+          childrenRoleTree
+        ], [
+          childrenRoleTree.children[0],
+          childrenRoleTree.name
+        ], [
+          childrenRoleTree.children[1],
+          childrenRoleTree.name
+        ]]);
+      });
     });
   });
 
   describe('#createInitialRole', () => {
-    let rolesMock, saveStub, isRouteAllowedStub, getEndpointHashStub, pruneEndpointDetailsStub;
+    let countStub, execStub, saveStub, isRouteAllowedStub, getEndpointHashStub, pruneEndpointDetailsStub;
 
     beforeEach(() => {
-      rolesMock = sinon.mock('Roles');
+      execStub = sinon.stub();
+      countStub = sinon.stub(Roles, 'count');
       saveStub = sinon.stub(Roles.prototype, 'save');
       isRouteAllowedStub = sinon.stub(rolesInitHelper, 'isRouteAllowed');
       getEndpointHashStub = sinon.stub(roleManager, 'getEndpointHash');
@@ -172,7 +168,7 @@ describe('rolesInitHelper', () => {
     });
 
     afterEach(() => {
-      rolesMock.restore();
+      countStub.restore();
       saveStub.restore();
       isRouteAllowedStub.restore();
       getEndpointHashStub.restore();
@@ -182,10 +178,14 @@ describe('rolesInitHelper', () => {
     function setupAllResolve() {
       setupCountResolves();
       setupSaveResolves();
+      setupIsRouteAllowedResolves();
+      setupGetEndpointHashResolves();
+      setupPruneEndpointDetailsResolves();
     }
 
     function setupCountResolves() {
-      rolesMock.expects('count').chain('exec').resolves(0);
+      countStub.returns({ exec: execStub });
+      execStub.resolves(0);
     }
 
     function setupSaveResolves() {
@@ -198,6 +198,10 @@ describe('rolesInitHelper', () => {
 
     function setupPruneEndpointDetailsResolves() {
       pruneEndpointDetailsStub.returns('pruned');
+    }
+
+    function setupIsRouteAllowedResolves() {
+      isRouteAllowedStub.returns(true);
     }
 
     it('should call isRouteAllowed for each route in a module specified in config', () => {
@@ -219,11 +223,15 @@ describe('rolesInitHelper', () => {
       rolesInitHelper.createInitialRole('name', null, undefined, permissions);
 
       isRouteAllowedStub.args.should.deep.equal([[
-        mockRoutes[permissions[0].module],
+        mockRoutes[permissions[0].module][0],
         permissions[0].allow,
         permissions[0].forbid
       ], [
-        mockRoutes[permissions[1].module],
+        mockRoutes[permissions[0].module][1],
+        permissions[0].allow,
+        permissions[0].forbid
+      ], [
+        mockRoutes[permissions[1].module][0],
         permissions[1].allow,
         permissions[1].forbid
       ]]);
@@ -240,16 +248,13 @@ describe('rolesInitHelper', () => {
         }
       ];
 
-      should.throw(
+      should.throw(() => {
         rolesInitHelper.createInitialRole('name', null, undefined, permissions)
-      );
+      });
     });
 
     it('should use get the hash of each allowed endpoint', () => {
-      setupCountResolves();
-      setupSaveResolves();
-
-      isRouteAllowedStub.returns(true);
+      setupAllResolve();
 
       const permissions = [
         {
@@ -261,8 +266,12 @@ describe('rolesInitHelper', () => {
 
       rolesInitHelper.createInitialRole('name', null, undefined, permissions);
 
-      pruneEndpointDetailsStub.args.should.deep.equal([[mockRoutes[permissions.module]]]);
-      getEndpointsHashStub.args.should.deep.equal([[ 'pruned' ]]);
+      pruneEndpointDetailsStub.args.should.deep.equal([[
+        mockRoutes[permissions[0].module][0],
+      ], [
+        mockRoutes[permissions[0].module][1]
+      ]]);
+      getEndpointHashStub.args.should.deep.equal([[ 'pruned' ], [ 'pruned' ]]);
     });
 
     it('should return a promise', () => {
@@ -272,14 +281,11 @@ describe('rolesInitHelper', () => {
     });
 
     it('should use Roles.count', () => {
-      rolesMock.expects('count')
-        .withExactArgs({ _id: 'name', parent: null })
-        .chain('exec')
-        .resolves(0);
-      setupSaveResolves();
+      setupAllResolve();
 
       rolesInitHelper.createInitialRole('name', null).then((data) => {
-        rolesMock.verify();
+        countStub.args.should.deep.equal([[ { _id: 'name', parent: null } ]]);
+        execStub.called.should.equal(true);
       });
     });
 
@@ -292,9 +298,8 @@ describe('rolesInitHelper', () => {
     });
 
     it('should not use the save stub if count is not 0', () => {
-      rolesMock.expects('count')
-        .chain('exec')
-        .resolves(1);
+      countStub.returns({ exec: execStub });
+      execStub.resolves(1);
 
       rolesInitHelper.createInitialRole('name', null).then((data) => {
         saveStub.called.should.equal(false);
