@@ -111,7 +111,6 @@ function rolesInitHelper(logger, roleManager, routes) {
 
         for (let routeIndex = 0; routeIndex < moduleRoutes.length; routeIndex++) {
           if (this.isRouteAllowed(moduleRoutes[routeIndex], allow, forbid)) {
-            console.log(roleManager);
             allowedRoutes.push({
               asset: roleManager.getEndpointHash(roleManager.pruneEndpointDetails(moduleRoutes[routeIndex]))
             });

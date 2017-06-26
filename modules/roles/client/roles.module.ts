@@ -12,6 +12,7 @@ import { RoleComponent } from './components/role.component';
 import { EndpointsComponent } from './components/endpoints.component';
 import { EndpointDetailComponent } from './components/endpoint-detail.component';
 import { EndpointPermissionFormComponent } from './components/endpoint-permission-form.component';
+import { EndpointPermissionListComponent } from './components/endpoint-permission-list.component';
 
 import { JsonTreePipe } from './components/json-tree.pipe';
 
@@ -29,7 +30,8 @@ import { JsonTreePipe } from './components/json-tree.pipe';
     JsonTreePipe,
     EndpointsComponent,
     EndpointDetailComponent,
-    EndpointPermissionFormComponent
+    EndpointPermissionFormComponent,
+    EndpointPermissionListComponent
   ],
   /*components available to other modules */
   exports: [RoleComponent],
