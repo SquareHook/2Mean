@@ -1,4 +1,5 @@
 module.exports = {
+  ADMIN_ROLE_NAME: 'admin',
   /**
    * List of values that is pulled for determining the id hash for the route manager.
    */
