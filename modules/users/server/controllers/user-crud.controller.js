@@ -363,6 +363,16 @@ function userCrudController(logger, shared) {
      return Users.update(query, update);
      
    }
+   
+  /**
+   * method for getting own user (provided by req.user)
+   */
+  function readSelf(req, res, next) {
+    let user = req.user;
+
+    res.status(200).send(sanitizeUser(user));
+  }
+
 
   // --------------------------- Private Function Definitions ----------------------------
 
@@ -476,7 +486,8 @@ function userCrudController(logger, shared) {
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
-    list                  : list
+    list                  : list,
+    readSelf              : readSelf
   };
 }
 

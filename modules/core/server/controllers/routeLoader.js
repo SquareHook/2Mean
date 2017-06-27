@@ -21,7 +21,7 @@ function routeLoader(logger, modLoader, app, roles) {
         // If the route we're adding is a secured route.
         if (route.secure) {
           // and the role manager is enabled.
-          if (roles.isEnabled) {
+          if (roles.isEnabled()) {
               app[route.type.toLowerCase()](
                 // The route URI
                 '/API' + route.route,
