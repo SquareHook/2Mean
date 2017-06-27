@@ -1,6 +1,6 @@
 <h1>{{ endpoint.name }}</h1>
 
-<ngb-accordion #acc="ngbAccordion" activeIds="">
+<ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-0">
   <ngb-panel *ngFor="let api of endpoint.endpoints">
     <ng-template ngbPanelTitle>
       <div class="d-flex justify-content-end">
@@ -9,22 +9,22 @@
       </div>
     </ng-template>
     <ng-template ngbPanelContent>
-      <div class="d-flex justify-content-end">
-        <span class="mr-auto">{{ api.route }}{{ api.description }}</span>
-        <button type="button" class="btn btn-secondary"
-               (click)="api.showForm = !api.showForm"
-               *ngIf="!api.showForm">
-          Edit Permissions
-        </button>
-        <button type="button" class="btn btn-primary"
-                (click)="submitChanges(api)"
-                *ngIf="api.showForm">
-          Submit
-        </button>
+      <div class="row">
+        <div class="col-sm-4">
+          <h4>Description</h4>
+          {{ api.description }}
+        </div>
+        <div class="col-sm-8 d-flex justify-content-end">
+          <div *ngIf="!showForm">
+            <h4>Allowed Roles</h4>
+            <endpoint-permission-list [endpoint]="api" [roles]="roles"></endpoint-permission-list>
+          </div>
+          <div *ngIf="showForm">
+            <h4>Allowed Roles</h4>
+            <endpoint-permission-form [endpoint]="api" [roles]="roles"></endpoint-permission-form>
+          </div>
+        </div>
       </div>
-      <endpoint-permission-form [endpoint]="api" [roles]="roles"
-                                *ngIf="api.showForm">
-      </endpoint-permission-form>
     </ng-template>
   </ngb-panel>
 </ngb-accordion>

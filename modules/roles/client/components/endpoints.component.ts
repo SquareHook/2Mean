@@ -11,6 +11,7 @@ import { RoleService } from '../services/roles.service';
 export class EndpointsComponent {
   private endpoints : Array<any>;
   private roles : Array<any>;
+  private showForm: boolean;
 
   constructor(
     private roleService: RoleService,
@@ -29,8 +30,8 @@ export class EndpointsComponent {
     });
   }
 
-  updateEndpoint(endpoint: any) : void {
-    endpoint.showForm = false;
+  updateEndpoints() : void {
+    this.showForm = false;
 
     this.roles.forEach((role) => {
       this.roleService.updateSingleRole(role).subscribe((response) => {

@@ -22,6 +22,7 @@ const RoleManager = require('./role-manager.controller');
 const RolesInitHelper = require('./roles-init.helper');
 
 const initialRoles = config.DEFAULT_ROLE_TREE;
+const ADMIN_ROLE_NAME = config.ADMIN_ROLE_NAME;
 
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule, moduleLoader) {
