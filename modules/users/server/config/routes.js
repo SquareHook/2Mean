@@ -30,6 +30,12 @@ module.exports = [
     secure: false
   },
   {
+    route: '/users/readSelf',
+    type: 'GET',
+    method: 'crud.readSelf',
+    secure: true
+  },
+  {
     route: '/users/:userId',
     type: 'GET',
     method: 'crud.read',
