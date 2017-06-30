@@ -1,6 +1,6 @@
 var _ = require('lodash');
 
-function routeLoader(logger, modLoader, app) {
+function routeLoader(logger, modLoader, app, roles) {
   var routes = [];
 
   constructor();
@@ -18,59 +18,47 @@ function routeLoader(logger, modLoader, app) {
       routeList[mod].forEach((route) => {
         var targetFunction = findTargetFunction(route.method, modLoader.get(mod));
 
-
-        if (route.type.toUpperCase() === 'GET') {
-          if (route.secure) {
-            app.get(
-              '/API' + route.route,
-              auth.validateAPIKey,
-              targetFunction
-            );
+        // If the route we're adding is a secured route.
+        if (route.secure) {
+          // and the role manager is enabled.
+          if (roles.isEnabled()) {
+              app[route.type.toLowerCase()](
+                // The route URI
+                '/API' + route.route,
+                // Auth module check
+                auth.validateAPIKey,
+                // Roles policy check.
+                (req, res, next) => {
+                  // This has to be instanced to keep track of the endpoint hash.
+                  roles.validateAccess(
+                      roles.getEndpointHash(roles.pruneEndpointDetails(route)),
+                      req.user.role
+                    ).then((policyAllowed) => {
+                      if (policyAllowed) {
+                        next();
+                        return;
+                      } else {
+                        return res.status(403).send({error: 'Role does not have permission to access this resource'});
+                      }
+                    });
+                },
+                // Actual function to handle request.
+                targetFunction
+              );
           } else {
-            app.get(
-              '/API' + route.route,
-              targetFunction
-            );
+            // Role manager disabled.
+            app[route.type.toLowerCase()](
+                '/API' + route.route,
+                auth.validateAPIKey,
+                targetFunction
+              );
           }
-        } else if (route.type.toUpperCase() === 'POST') {
-          if (route.secure) {
-            app.post(
-              '/API' + route.route,
-              auth.validateAPIKey,
-              targetFunction
-            );
-          } else {
-            app.post(
+        } else {
+          // Unsecured Endpoint.
+          app[route.type.toLowerCase()](
               '/API' + route.route,
               targetFunction
             );
-          }
-        } else if (route.type.toUpperCase() === 'PUT') {
-          if (route.secure) {
-            app.put(
-              '/API' + route.route,
-              auth.validateAPIKey,
-              targetFunction
-            );
-          } else {
-            app.put(
-              '/API' + route.route,
-              targetFunction
-            );
-          }
-        } else if (route.type.toUpperCase() === 'DELETE') {
-          if (route.secure) {
-            app.delete(
-              '/API' + route.route,
-              auth.validateAPIKey,
-              targetFunction
-            );
-          } else {
-            app.delete(
-              '/API' + route.route,
-              targetFunction
-            );
-          }
         }
       });
     }

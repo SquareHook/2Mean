@@ -1,3 +1,9 @@
+v1.2.0
+6/21/2017
+  - Added Roles policy enforcement.
+  - Core modifications to support this functionality.
+  - Endpoint managment ui
+
 v1.1.1
 5/18/2017
   - Updated deps

@@ -180,7 +180,7 @@ export class AuthService {
       })
     });
 
-    this.http.get('api/users/' + this.user._id, options).subscribe((res: Response) => {
+    this.http.get('api/users/readSelf', options).subscribe((res: Response) => {
       let data = res.json();
       this.setUser(data);
     });

@@ -323,13 +323,21 @@ function userCrudController(logger, shared) {
       });
    }
 
+   /**
+    * Removes the provided roles from any user in the system.
+    *
+    * @param {Array<String>} subroles The array of roles to remove.
+    *
+    *
+    * TODO: Shouldn't this also remove this from primary roles?
+    */
    function removeSubroles(subroles)
    {
       logger.info("removing subroles " + subroles);
       logger.info(subroles);
       for(let i = 0; i < subroles.length; i++)
       {
-        Users.update({subroles: subroles[i]}, {$pull: {subroles: subroles[i]}}, {multi: true}, function(err, data)
+        Users.update({cachedRoles: subroles[i]}, {$pull: {cachedRoles: subroles[i]}}, {multi: true}, function(err, data)
         {
           if(err)
           {
@@ -342,18 +350,29 @@ function userCrudController(logger, shared) {
 
    /**
     * Updates a users roles
-    * @param {userId} the id of the user to update
-    * @param {targetRole} the role to place the user in
-    * @param {subroles} a list of corres
-    * @returns {Promise} an update promise
+    * @param {String}i        userId        The id of the user to update.
+    * @param {Array<String>}  primaryRoles  The role to place the user in.
+    * @param {Array<String>}  cachedRoles   A list of cached roles the user has access to.
+    *
+    * @returns {Promise} An update promise
     */
-   function updateUserRoles(userId, targetRole, subroles)
+   function updateUserRoles(userId, primaryRoles, cachedRoles)
    {
      let query = {_id: userId};
-     let update = {$set: {role: targetRole, subroles: subroles}};
+     let update = {$set: {role: primaryRoles, cachedRoles: cachedRoles}};
      return Users.update(query, update);
      
    }
+   
+  /**
+   * method for getting own user (provided by req.user)
+   */
+  function readSelf(req, res, next) {
+    let user = req.user;
+
+    res.status(200).send(sanitizeUser(user));
+  }
+
 
   // --------------------------- Private Function Definitions ----------------------------
 
@@ -381,9 +400,10 @@ function userCrudController(logger, shared) {
    * Verfies the user is authorized to make changes.
    *
    * TODO: This could probably be more robust.
+   * TODO: Not sure if this still works since roles was changed to an array.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, ADMIN_ROLE_NAME)) {
+    if (_.indexOf(user.roles, ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -466,7 +486,8 @@ function userCrudController(logger, shared) {
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
-    list                  : list
+    list                  : list,
+    readSelf              : readSelf
   };
 }
 

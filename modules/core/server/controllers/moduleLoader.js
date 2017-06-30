@@ -9,9 +9,13 @@ function moduleLoader(config) {
 
   var moduleList = [];
 
-  var loadedModules = {};
+  var loadedModules = {
+    roleManager: roles
+  };
 
   var loadedModels = [];
+
+  var roles;
 
   constructor();
 
@@ -100,7 +104,8 @@ function moduleLoader(config) {
 
     module = require(modConfig.absPath + '/server/');
 
-    loadedModules[modConfig.name] = new module(dependencies);
+    // Loads the module and also provides the module loader as a second argument
+    loadedModules[modConfig.name] = new module(dependencies, this);
 
     return loadedModules[modConfig.name];
   }
@@ -135,9 +140,23 @@ function moduleLoader(config) {
     return null;
   }
 
+  function listModules() {
+    return moduleList;
+  }
+
+  function setRoles(roleManager) {
+    roles = roleManager;
+  }
+
+  function reportRoles() {
+    console.log(roles);
+  }
+
   return {
-    getRoutes: getRoutes,
-    get: get
+    getRoutes   : getRoutes,
+    get         : get,
+    listModules : listModules,
+    setRoles    : setRoles
   }
 }
 
