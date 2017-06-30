@@ -32,10 +32,16 @@ export class RoleService{
       .map((r: Response) => r.json());
   }
 
-  getSubroles(parentRole: String): Observable<Array<any>>
+  getRoleList(roleList: Array<String>): Observable<Array<any>>
   {
+    // TODO: Need to add the roleList at the end of the uri as a CSV list.
+    let roleCSV = roleList[0];
+    for (let i = 1; i < roleList.length; i++) {
+      roleCSV += ',' + roleList[i];
+    }
+
     return this.http
-      .get('api/roles/subroles/' + parentRole)
+      .get('api/roles/roleList/' + roleCSV)
       .map((r:Response) => r.json());
   }
   getTree(): Observable<any>
