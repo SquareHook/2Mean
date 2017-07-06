@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Role } from '../models/role';
+import { User } from '../../../users/client/models/user.model';
 
 import {
   Http,
@@ -91,7 +92,13 @@ export class RoleService{
       });
   }
 
+  userHasRole(user: User, role: Array<String>) : boolean {
+    for (let i = 0; i < user.cachedRoles.length; i++) {
+      if (role.indexOf(user.cachedRoles[i]) !== -1) {
+        return true;
+      }
+    }
 
-
-
+    return false;
+  }
 }
