@@ -1,5 +1,5 @@
 /* Vendor */
-import { Component, OnInit }        from '@angular/core';
+import { Component }        from '@angular/core';
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 
@@ -14,16 +14,13 @@ import { UserService }      from '../services/user.service';
 @Component({
   templateUrl: './../views/profile.view.html'
 })
-export class ProfileComponent implements OnInit{
+export class ProfileComponent {
   user: User;
 
   constructor (private authService: AuthService) { 
+    this.user = authService.user;
   }
 
-  ngOnInit(){
-    this.user = this.authService.getUser();
-  }
-  
   getUserString() {
     return JSON.stringify(this.user, null, 2);
   }
