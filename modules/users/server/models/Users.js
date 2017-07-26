@@ -61,12 +61,15 @@ var UserSchema = new Schema({
   },
   providerData: {},
   additionalProvidersData: {},
-  role: {
-    type: String,
-    default: 'user',
-    required: 'Please provide a user role'
+  roles: {
+    type:[String],
+    default:[]
   },
-  subroles:{
+  cachedRoles:{
+    type:[String],
+    default:[]
+  },
+  cachedPermissions:{
     type:[String],
     default:[]
   },

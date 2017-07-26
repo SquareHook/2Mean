@@ -16,7 +16,8 @@ import { CoreRoutingModule }     from './config/core-routing.module';
     NgbModule,
     HttpModule,
     RouterModule,
-    CoreRoutingModule
+    CoreRoutingModule,
+    RoleModule
   ],
   /*components available inside of this module */
   declarations: [
