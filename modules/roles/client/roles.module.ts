@@ -9,8 +9,6 @@ import { FormsModule } from '@angular/forms';
 
 import { RoleComponent } from './components/role.component';
 
-import { RoleService } from './services/roles.service';
-
 import { EndpointsComponent } from './components/endpoints.component';
 import { EndpointDetailComponent } from './components/endpoint-detail.component';
 import { EndpointPermissionFormComponent } from './components/endpoint-permission-form.component';
@@ -36,9 +34,7 @@ import { JsonTreePipe } from './components/json-tree.pipe';
     EndpointPermissionListComponent
   ],
   /*components available to other modules */
-  exports: [
-    RoleComponent
-  ],
+  exports: [RoleComponent],
 
   /* which components to load when starting this module */
   bootstrap: []

@@ -63,9 +63,8 @@ export class AdminUserForm {
   }
 
   updateSubroles($event: any) {
-    this.roleService.getRoleList(this.user.roles)
-    .subscribe((data: Array<string>) => {
-      this.user.cachedRoles = data;
+    this.roleService.getSubroles(this.user.role).subscribe(data => {
+      this.user.subroles = data;
     });
   }
 
@@ -92,7 +91,7 @@ export class AdminUserForm {
       //update the user's role
       let updateObj = {
         userId: this.user._id,
-        roles: this.user.roles
+        roleId: this.user.role
       };
 
       this.roleService.updateUserRole(updateObj).subscribe(data => {

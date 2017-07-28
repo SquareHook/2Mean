@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Role } from '../models/role';
-import { User } from '../../../users/client/models/user.model';
 
 import {
   Http,
@@ -33,16 +32,10 @@ export class RoleService{
       .map((r: Response) => r.json());
   }
 
-  getRoleList(roleList: Array<String>): Observable<Array<any>>
+  getSubroles(parentRole: String): Observable<Array<any>>
   {
-    // TODO: Need to add the roleList at the end of the uri as a CSV list.
-    let roleCSV = roleList[0];
-    for (let i = 1; i < roleList.length; i++) {
-      roleCSV += ',' + roleList[i];
-    }
-
     return this.http
-      .get('api/roles/roleList/' + roleCSV)
+      .get('api/roles/subroles/' + parentRole)
       .map((r:Response) => r.json());
   }
   getTree(): Observable<any>
@@ -92,13 +85,7 @@ export class RoleService{
       });
   }
 
-  userHasRole(user: User, role: Array<String>) : boolean {
-    for (let i = 0; i < user.cachedRoles.length; i++) {
-      if (role.indexOf(user.cachedRoles[i]) !== -1) {
-        return true;
-      }
-    }
 
-    return false;
-  }
+
+
 }

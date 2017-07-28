@@ -7,8 +7,8 @@ export class User {
   username: string = null;
   password: string = null;
   profileImageURL: string = null;
-  cachedRoles: Array<string> = null;
-  roles:Array<string> = null;
+  subroles: Array<string> = null;
+  role:string = null;
   updated: string = null;
   verified: boolean;
 
@@ -44,12 +44,12 @@ export class User {
         this.profileImageURL = blob.profileImageURL;
       }
 
-      if (blob.cachedRoles) {
-        this.cachedRoles = blob.cachedRoles;
+      if (blob.subroles) {
+        this.subroles = blob.subroles;
       }
 
-      if (blob.roles) {
-        this.roles = blob.roles;
+      if (blob.role) {
+        this.role = blob.role;
       }
 
       if (blob.updated) {

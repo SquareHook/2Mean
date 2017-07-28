@@ -102,7 +102,7 @@ function roleModule(logger, userModule, moduleLoader) {
     })
     .then(data =>
     {
-      return updateCachedRoles(data, role)
+      return updateSubroles(data, role)
     })
     .then(data =>
     {
@@ -219,7 +219,8 @@ function roleModule(logger, userModule, moduleLoader) {
     //update the parent of any direct descendants
     return new Promise((resolve, reject) =>
     {
-      _.forEach(role.parentForDescendants, (child) => {
+      _.forEach(role.parentForDescendants, (child) =>
+      {
         updateParentForRole(node, role._id)
       });
       resolve(true);
@@ -245,10 +246,7 @@ function roleModule(logger, userModule, moduleLoader) {
     });
   }
 
-  /**
-   * Old name for cachedRoles.
-   */
-  function updateCachedRoles(data, role)
+  function updateSubroles(data, role)
   {
     return new Promise((resolve, reject) =>
     {
@@ -256,10 +254,8 @@ function roleModule(logger, userModule, moduleLoader) {
       let parent = _.find(data, ['_id', role.parent]);
       while (parent)
       {
-        //TODO: Need to Make this set more than just subroles.
-        var cachedRoles = getRolesByParent(parent._id, data, []);
-        cachedRoles.push(parent._id);
-        userModule.crud.flushSubroles(parent._id, cachedRoles);
+        var subroles = getRolesByParent(parent._id, data, []);
+        userModule.crud.flushSubroles(parent._id, subroles);
         parent = _.find(data, ['_id', parent.parent]);
       }
       resolve("roles updated");
