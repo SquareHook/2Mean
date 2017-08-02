@@ -42,6 +42,16 @@ Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
 hostname you use in your browser. Otherwise you will be unable to authenticate
 users.
 
+### Proxy (or container)
+If you are deploying behind a proxy then set `TOOMEAN_APP_PROXY_URL` to a url
+that will resolve to the application. This is especially necessary if the
+`TOOMEAN_APP_PORT` is not being listened on (for example in a docker container
+that maps the application port to something else or behind a proxy that routes
+traffic to the application based on hostname). This setting will be used to
+generate links to the application reachable from email. For example:
+
+- `TOOMEAN_APP_PROXY_URL=https://app.example.com`
+
 ### Mongo
 Mongo can be configured with several environment variables. By default 2Mean
 will attempt to connect to a local mongo on port 27017 using 2Mean_development.

@@ -444,7 +444,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendEmailVerificationEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/verifyEmail;token=' + user.verification.token;
+    const url = authHelpers.generateUrl() + '/verifyEmail;token=' + user.verification.token;
     const subject = 'Verification Email';
     const to = user.email;
     const from = config.email.from;
@@ -466,7 +466,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendPasswordChangeEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/reset-password;token=' + user.resetPassword.token;
+    const url = authHelpers.generateUrl() + '/changePassword;token=' + user.verification.token;
     const subject = 'Change Password';
     const to = user.email;
     const from = config.email.from;

@@ -45,6 +45,7 @@ describe('UserAuthController', () => {
   var sendStub;
   let mockUser;
   let sendMailStub;
+  let generateUniqueTokenStub, generateUrlStub;
     
   const token = 'abc123';
   
@@ -82,14 +83,14 @@ describe('UserAuthController', () => {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Verification Email',
-    text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/verifyEmail;token=' + token
+    text: 'Verify your email by going here: http://' + mockConfig.app.host + '/verifyEmail;token=' + token
   };
 
   const passwordMailParams = {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Change Password',
-    text: 'Change your password by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/changePassword;token=' + token
+    text: 'Change your password by going here: http://' + mockConfig.app.host + '/changePassword;token=' + token
   };
 
   before(() => {
@@ -137,6 +138,9 @@ describe('UserAuthController', () => {
     
     generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
     generateUniqueTokenStub.returns(token);
+    
+    generateUrlStub = sinon.stub(mockSharedModule.authHelpers, 'generateUrl');
+    generateUrlStub.returns('http://blahblah.com');
   });
 
   afterEach(() => {
@@ -179,7 +183,6 @@ describe('UserAuthController', () => {
       setupSaveResolves();
       setupSendMailResolves();
     }
-    
     it('should return a promise', () => {
       req.body = {
         username: 'newuser',
@@ -603,6 +606,14 @@ describe('UserAuthController', () => {
         sendStub.args.should.deep.equal([[ ]]);
       });
     });
+
+    it('should use authHelpers.generateUrl', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        generateUrlStub.args.should.deep.equal([[ ]]);
+      });
+    });
     
     it('should use authHelpers.generateUniqueToken', () => {
       setupAllResolve();
@@ -727,6 +738,14 @@ describe('UserAuthController', () => {
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use authHelpers.generateUrl', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        generateUrlStub.args.should.deep.equal([[ ]]);
       });
     });
     
