@@ -190,18 +190,26 @@ file select. This component is demoed on the edit user page.
 ### Email
 If you are going to send email for any reason, it is recommended that you
 verify users email. This can be done by setting `TOOMEAN_APP_EMAIL_VERIFICATION_REQUIRED=true`.
-This will prevent users with un verified emails from accessing secure endpoints.
+This will prevent users with non-verified emails from accessing secure endpoints.
 Additionally it will try to send a verification email when the user registers
 and enable password reset emails. This requires an email provider to be
 configured:
 
+#### Addresses
+The main from address used to send account emails is set by the
+`TOOMEAN_APP_EMAIL_FROM` environment variable. It can be just an email or
+it can include a display from name.
+`From Name <from address`. For example: `Nice Name <noreply@example.com>`
+
+#### Providers
+
 Set the `TOOMEAN_EMAIL_PROVIDER` environment variable to one of the following
 
-#### `ses`
-Use the aws-ses service. Set `TOOMEAN_AWS_SES_ENABLED=true` and
-`TOOMEAN_AWS_SES_FROM=<from email>`. The from email must be verified in SES.
+###### `ses`
+Use the aws-ses service. Set `TOOMEAN_AWS_SES_ENABLED=true` and be sure that
+all from addresses used are verified in SES.
 
-#### `sendmail`
+##### `sendmail`
 TODO
 
 ## Add Menu item:
