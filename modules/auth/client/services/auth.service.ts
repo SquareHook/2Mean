@@ -39,7 +39,6 @@ import 'rxjs/add/operator/map';
 @Injectable()
 export class AuthService {
   user: User;
-  apikey: String;
   loggedIn: boolean;
   redirect: string;
 
@@ -51,30 +50,16 @@ export class AuthService {
 
   private http: Http;
   constructor(injector: Injector) {
+    this.loggedIn = this.determineAuth();
+    if (this.loggedIn) {
+      this.setUser(this.getUser());
+    }
     setTimeout(() => {
+      //resolves a circular dependency
       this.http = injector.get(Http);
     });
-
-    this.user = this.getUser();
-    
-    // user not logged in
-    if (!this.isLogged()) {
-      this.loggedIn = false;
-      this.user = new User();
-    } else {
-      this.loggedIn = true;
-    }
-
-    this.apikey = null;
   }
 
-  isLogged() {
-    if (this.loggedIn) {
-      return true;
-    } else {
-      return false;
-    }
-  }
 
   /*
    * Login function to process login requests.
@@ -83,8 +68,8 @@ export class AuthService {
    * @param {string}   password The password to auth with.
    * @param {function} cb       The callback to use to get results.
    */
-  login(username: string, password: string, cb: (err: any, user: Object) =>  any) : void {
-  
+  login(username: string, password: string, cb: (err: any, user: Object) => any): void {
+
     let body = {
       username: username,
       password: password
@@ -94,16 +79,8 @@ export class AuthService {
       .post('api/login', body)
       .subscribe((res: Response) => {
         let body = res.json();
-
-        this.user = body.user;
-        this.saveUser();
         this.loggedIn = true;
-
-        // Save the apikey
-        this.apikey = body.apikey;
-
-        //notify subscribers
-        this.authChanged(true);
+        this.setUser(body.user);
 
         cb(null, this.user);
       }, (error: Response | any) => {
@@ -114,6 +91,23 @@ export class AuthService {
   }
 
   /*
+   * Logs user out. Emits false to authChanged subscribers
+   */
+  logout(): void {
+    this.http
+      .get('api/logout')
+      .subscribe((res: Response) => {
+      }, (error: Response | any) => {
+        console.log(error);
+      });
+
+    this.setUser(null);
+    this.loggedIn = false;
+    this.authChanged(false);
+    localStorage.setItem('user', JSON.stringify(null));
+  }
+
+  /*
    * Register function to create new users
    *
    * @param {string}   username The username to signup with
@@ -121,7 +115,7 @@ export class AuthService {
    * @param {string}   password The password to signup with
    * @param {function} cb       The callback used to get results
    */
-  register(username: string, email: string, password: string, cb: (err: Object, user: Object) => any) : void {
+  register(username: string, email: string, password: string, cb: (err: Object, user: Object) => any): void {
     let body = {
       username: username,
       email: email,
@@ -139,39 +133,26 @@ export class AuthService {
       });
   }
 
-  /*
-   * Logout function to log user out
-   */
-  logout() : void {
-    this.http
-      .get('api/logout')
-      .subscribe((res: Response) => {
-      }, (error: Response | any) => {
-        console.log(error);
-      });
-
-    this.setUser(null);
-    this.apikey = null;
-    this.loggedIn = false;
-    this.authChanged(false);
-    localStorage.setItem('user', JSON.stringify(null));
+    // emit data to subscribers
+  authChanged(data: boolean) {
+    this.authChangedSource.next(data);
   }
-
 
   getUser(): User {
     return JSON.parse(localStorage.getItem('user'));
   }
 
-  setUser(user : User) : void {
+  isLogged() {
+    return this.loggedIn;
+  }
+
+
+  setUser(user: User): void {
     this.user = user;
     this.saveUser();
     this.authChanged(true);
   }
 
-  // emit data to subscribers
-  authChanged(data: boolean) {
-    this.authChangedSource.next(data);
-  }
 
   updateUser() {
     let options = new RequestOptions({
@@ -185,6 +166,23 @@ export class AuthService {
       this.setUser(data);
     });
   }
+
+
+  /**
+   * Attempts to pull a cached user from local storage.
+   * If a cached user exists, the user is considered logged in
+   * @returns {boolean} true iff cached user exists
+   */
+  private determineAuth() {
+    try {
+      let cachedUser: any = JSON.parse(localStorage.getItem('user'));
+      return !!cachedUser.apikey;
+
+    } catch (error) {
+      return false;
+    }
+  }
+
 
   private saveUser(): void {
     localStorage.setItem('user', JSON.stringify(this.user));
