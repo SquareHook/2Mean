@@ -787,4 +787,19 @@ describe('UserCrudController', () => {
       });
     });
   });
+
+  describe('#readSelf', () => {
+    it('should send a 200 and the req.user', () => {
+      userController.readSelf(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 200 ]]);
+
+      let sanitized = sendStub.args[0][0];
+      
+      req.user._id.equals(sanitized._id).should.equal(true);
+      should.not.exist(sanitized.password);
+      should.not.exist(sanitized.verification.token);
+      should.not.exist(sanitized.resetPassword.token);
+    });
+  });
 });

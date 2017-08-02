@@ -21,7 +21,7 @@ function routeLoader(logger, modLoader, app, roles) {
         // If the route we're adding is a secured route.
         if (route.secure) {
           // and the role manager is enabled.
-          if (roles.isEnabled) {
+          if (roles.isEnabled()) {
               app[route.type.toLowerCase()](
                 // The route URI
                 '/API' + route.route,
@@ -30,8 +30,10 @@ function routeLoader(logger, modLoader, app, roles) {
                 // Roles policy check.
                 (req, res, next) => {
                   // This has to be instanced to keep track of the endpoint hash.
-                  roles.validateAccess(roles.getEndpointHash(route), req.user.role)
-                    .then((policyAllowed) => {
+                  roles.validateAccess(
+                      roles.getEndpointHash(roles.pruneEndpointDetails(route)),
+                      req.user.role
+                    ).then((policyAllowed) => {
                       if (policyAllowed) {
                         next();
                         return;

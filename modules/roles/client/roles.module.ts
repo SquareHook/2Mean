@@ -9,7 +9,13 @@ import { FormsModule } from '@angular/forms';
 
 import { RoleComponent } from './components/role.component';
 
+import { EndpointsComponent } from './components/endpoints.component';
+import { EndpointDetailComponent } from './components/endpoint-detail.component';
+import { EndpointPermissionFormComponent } from './components/endpoint-permission-form.component';
+import { EndpointPermissionListComponent } from './components/endpoint-permission-list.component';
+
 import { JsonTreePipe } from './components/json-tree.pipe';
+
 @NgModule({
   imports: [
     BrowserModule,
@@ -21,7 +27,11 @@ import { JsonTreePipe } from './components/json-tree.pipe';
   /*components available inside of this module */
   declarations: [
     RoleComponent,
-    JsonTreePipe
+    JsonTreePipe,
+    EndpointsComponent,
+    EndpointDetailComponent,
+    EndpointPermissionFormComponent,
+    EndpointPermissionListComponent
   ],
   /*components available to other modules */
   exports: [RoleComponent],

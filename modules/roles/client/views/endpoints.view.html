@@ -1,0 +1,15 @@
+<div class="d-flex justify-content-end">
+  <button type="button" class="btn btn-secondary"
+          (click)="showForm = !showForm"
+          *ngIf="!showForm">
+    Edit Permissions
+  </button>
+  <button type="button" class="btn btn-primary"
+          (click)="updateEndpoints()"
+          *ngIf="showForm">
+    Submit
+  </button>
+</div>
+<div *ngFor="let endpoint of endpoints">
+  <endpoint-detail [roles]="roles" [endpoint]="endpoint" [showForm]="showForm"></endpoint-detail>
+</div>
