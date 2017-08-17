@@ -226,20 +226,18 @@ function userAuthController(logger, shared) {
    */
   function verifyEmail(req, res, next) {
     let token = req.query.token;
-    let user = req.user;
 
-    return new Promise((resolve, reject) => {
+    // try to find the token and the user it is attached to
+    return Users.findOne({ 'verification.token': token }).exec().then((user) => {
       if (!user) {
-        reject(new Error('Not authorized'));
-      } else if (user.verification.token !== token) {
-        reject(new Error('Token invalid'));
+        throw new Error('Token invalid');
       } else if (Date.now() > user.verification.expires) {
-        reject(new Error('Token has expired'));
+        throw new Error('Token has expired');
       } else {
         user.verification.expires = undefined;
         user.verified = true;
 
-        resolve(user.save());
+        return user.save()
       }
     }).then((savedUser) => {
       res.status(204).send();

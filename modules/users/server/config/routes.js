@@ -13,7 +13,7 @@ module.exports = [
     route: '/users/verifyEmail',
     type: 'GET',
     method: 'auth.verifyEmail',
-    secure: true
+    secure: false
   },
   {
     name: 'Request for verification of an email.',

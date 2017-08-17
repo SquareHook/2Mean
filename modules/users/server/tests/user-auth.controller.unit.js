@@ -442,24 +442,38 @@ describe('UserAuthController', () => {
   });
 
   describe('#verifyEmail', () => {
+    let findOneStub;
+    let execStub;
+
     beforeEach(() => {
-      req.user = mockUser;
       req.query = {
         token: token
       };
 
-      req.user.save = saveStub;
+      mockUser.save = saveStub;
+      findOneStub = sinon.stub(Users, 'findOne');
+      execStub = sinon.stub();
     });
 
     afterEach(() => {
+      findOneStub.restore();
     });
 
     function setupSaveResolves() {
       saveStub.resolves(mockUser);
     }
 
+    function setupFindOneResolves() {
+      execStub.resolves(mockUser);
+
+      findOneStub.returns({
+        exec: execStub
+      });
+    }
+
     function setupAllResolve() {
       setupSaveResolves();
+      setupFindOneResolves();
     }
 
     it('should return a promise', () => {
@@ -467,6 +481,15 @@ describe('UserAuthController', () => {
 
       userController.verifyEmail(req, res, next).constructor.name
         .should.equal('Promise');
+    });
+
+    it('should use the users findOne method and exec it', () => {
+      setupAllResolve();
+
+      return userController.verifyEmail(req, res, next).then(() => {
+        findOneStub.args.should.deep.equal([[ { 'verification.token': req.query.token } ]]);
+        execStub.called.should.equal(true);
+      });
     });
 
     it('should use user.save', () => {
@@ -497,17 +520,20 @@ describe('UserAuthController', () => {
       });
     });
 
-    it('should send a 400 if the user and token don\'t match', () => {
+    it('should send a 400 if the token does not exist', () => {
+      setupFindOneResolves();
+      execStub.resolves(null);
+
       req.query.token = 'xyz';
 
-      return userController.verifyEmail(req, res, next).then((data) => {
-        saveStub.called.should.equal(false);
+      return userController.verifyEmail(req, res, next).then(() => {
         statusStub.args.should.deep.equal([[ 400 ]]);
         sendStub.args.should.deep.equal([[ { message: 'Token invalid' } ]]);
       });
     });
 
     it('should send a 500 if the save fails', () => {
+      setupFindOneResolves();
       saveStub.rejects(new Error('save failed'));
 
       return userController.verifyEmail(req, res, next).then((data) => {
@@ -518,6 +544,7 @@ describe('UserAuthController', () => {
 
     it('should send a 400 if the ttl has passed', () => {
       // set expire time to some time in the past
+      setupFindOneResolves();
       mockUser.verification.expires = Date.now() - 100000;
 
       return userController.verifyEmail(req, res, next).then((data) => {
