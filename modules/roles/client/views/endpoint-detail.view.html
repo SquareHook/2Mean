@@ -1,0 +1,30 @@
+<h1>{{ endpoint.name }}</h1>
+
+<ngb-accordion #acc="ngbAccordion" activeIds="ngb-panel-0">
+  <ngb-panel *ngFor="let api of endpoint.endpoints">
+    <ng-template ngbPanelTitle>
+      <div class="d-flex justify-content-end">
+        <span class="mr-auto">{{ api.name }}</span>
+        api{{ api.route }} {{ api.type }}
+      </div>
+    </ng-template>
+    <ng-template ngbPanelContent>
+      <div class="row">
+        <div class="col-sm-4">
+          <h4>Description</h4>
+          {{ api.description }}
+        </div>
+        <div class="col-sm-8 d-flex justify-content-end">
+          <div *ngIf="!showForm">
+            <h4>Allowed Roles</h4>
+            <endpoint-permission-list [endpoint]="api" [roles]="roles"></endpoint-permission-list>
+          </div>
+          <div *ngIf="showForm">
+            <h4>Allowed Roles</h4>
+            <endpoint-permission-form [endpoint]="api" [roles]="roles"></endpoint-permission-form>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ngb-panel>
+</ngb-accordion>
