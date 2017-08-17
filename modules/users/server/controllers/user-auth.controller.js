@@ -226,20 +226,18 @@ function userAuthController(logger, shared) {
    */
   function verifyEmail(req, res, next) {
     let token = req.query.token;
-    let user = req.user;
 
-    return new Promise((resolve, reject) => {
+    // try to find the token and the user it is attached to
+    return Users.findOne({ 'verification.token': token }).exec().then((user) => {
       if (!user) {
-        reject(new Error('Not authorized'));
-      } else if (user.verification.token !== token) {
-        reject(new Error('Token invalid'));
+        throw new Error('Token invalid');
       } else if (Date.now() > user.verification.expires) {
-        reject(new Error('Token has expired'));
+        throw new Error('Token has expired');
       } else {
         user.verification.expires = undefined;
         user.verified = true;
 
-        resolve(user.save());
+        return user.save()
       }
     }).then((savedUser) => {
       res.status(204).send();
@@ -444,7 +442,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendEmailVerificationEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/verifyEmail;token=' + user.verification.token;
+    const url = authHelpers.generateUrl() + '/verifyEmail;token=' + user.verification.token;
     const subject = 'Verification Email';
     const to = user.email;
     const from = config.email.from;
@@ -466,7 +464,7 @@ function userAuthController(logger, shared) {
    * @return {Promise}
    */
   function sendPasswordChangeEmail(user) {
-    const url = 'http://' + config.app.host + ':' + config.app.port_http + '/reset-password;token=' + user.resetPassword.token;
+    const url = authHelpers.generateUrl() + '/changePassword;token=' + user.verification.token;
     const subject = 'Change Password';
     const to = user.email;
     const from = config.email.from;

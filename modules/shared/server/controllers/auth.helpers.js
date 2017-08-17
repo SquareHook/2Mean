@@ -8,6 +8,8 @@ const argon2 = require('argon2');
 // unique string generator
 const uuid = require('uuid');
 
+const config = require('../../../../config/config');
+
 let AuthHelpers = function () {
   /**
    * hashes the plaintext password
@@ -47,10 +49,33 @@ let AuthHelpers = function () {
     return uuid.v4();
   }
 
+  /**
+   * generates a url that can be accessed directly throught a link
+   * in an email
+   */
+  function generateUrl() {
+    let url;
+
+    // if the app is behind a proxy, use the config url
+    if (config.app.proxyUrl) {
+      url = config.app.proxyUrl;
+    } else {
+      // if node is serving over TLS, give an https url
+      if (config.app.force_https) {
+        url = 'https://' + config.app.host + (config.app.port_https !== '443' ? ':' + config.app.port_https : '');
+      } else {
+        url = 'http://' + config.app.host + (config.app.port_http !== '80' ? ':' + config.app.port_http : '');
+      }
+    }
+
+    return url;
+  }
+
   return {
     hashPassword: hashPassword,
     verifyPassword: verifyPassword,
-    generateUniqueToken: generateUniqueToken
+    generateUniqueToken: generateUniqueToken,
+    generateUrl: generateUrl
   }
 }
 

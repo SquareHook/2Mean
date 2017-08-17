@@ -10,6 +10,9 @@ module.exports = function(logger) {
         },
         generateUniqueToken: function generateUniqueToken() {
         
+        },
+        generateUrl: function generateUrl() {
+
         }
       }
     })(logger),

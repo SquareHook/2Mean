@@ -30,7 +30,8 @@ module.exports = {
     emailVerificationTTL: process.env.TOOMEAN_APP_EMAIL_VERIFICATION_TTL || 15 * 60 * 1000,
     enableRoleManager: process.env.TOOMEAN_APP_ENABLE_ROLE_MANAGER || false,
     allowRegistration: process.env.TOOMEAN_APP_ALLOW_REGISTRATION || true,
-    defaultUserRole: process.env.TOOMEAN_APP_DEFAULT_USER_ROLE || 'user'
+    defaultUserRole: process.env.TOOMEAN_APP_DEFAULT_USER_ROLE || 'user',
+    proxyUrl: process.env.TOOMEAN_APP_PROXY_URL || undefined
   },
   uploads: {
     root: 'uploads',

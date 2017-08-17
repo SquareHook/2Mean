@@ -42,6 +42,16 @@ Otherwise you must set the `TOOMEAN_APP_HOST` environment variable to the
 hostname you use in your browser. Otherwise you will be unable to authenticate
 users.
 
+### Proxy (or container)
+If you are deploying behind a proxy then set `TOOMEAN_APP_PROXY_URL` to a url
+that will resolve to the application. This is especially necessary if the
+`TOOMEAN_APP_PORT` is not being listened on (for example in a docker container
+that maps the application port to something else or behind a proxy that routes
+traffic to the application based on hostname). This setting will be used to
+generate links to the application reachable from email. For example:
+
+- `TOOMEAN_APP_PROXY_URL=https://app.example.com`
+
 ### Mongo
 Mongo can be configured with several environment variables. By default 2Mean
 will attempt to connect to a local mongo on port 27017 using 2Mean_development.
@@ -195,18 +205,26 @@ file select. This component is demoed on the edit user page.
 ### Email
 If you are going to send email for any reason, it is recommended that you
 verify users email. This can be done by setting `TOOMEAN_APP_EMAIL_VERIFICATION_REQUIRED=true`.
-This will prevent users with un verified emails from accessing secure endpoints.
+This will prevent users with non-verified emails from accessing secure endpoints.
 Additionally it will try to send a verification email when the user registers
 and enable password reset emails. This requires an email provider to be
 configured:
 
+#### Addresses
+The main from address used to send account emails is set by the
+`TOOMEAN_APP_EMAIL_FROM` environment variable. It can be just an email or
+it can include a display from name.
+`From Name <from address`. For example: `Nice Name <noreply@example.com>`
+
+#### Providers
+
 Set the `TOOMEAN_EMAIL_PROVIDER` environment variable to one of the following
 
-#### `ses`
-Use the aws-ses service. Set `TOOMEAN_AWS_SES_ENABLED=true` and
-`TOOMEAN_AWS_SES_FROM=<from email>`. The from email must be verified in SES.
+###### `ses`
+Use the aws-ses service. Set `TOOMEAN_AWS_SES_ENABLED=true` and be sure that
+all from addresses used are verified in SES.
 
-#### `sendmail`
+##### `sendmail`
 TODO
 
 ## Add Menu item:

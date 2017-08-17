@@ -570,6 +570,7 @@ function roleModule(logger, userModule, moduleLoader) {
         success: false,
         error: error
       });
+
   }
 
   /**

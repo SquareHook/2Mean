@@ -9,6 +9,8 @@ const argon2 = require('argon2');
 
 const uuid = require('uuid');
 
+const proxyquire = require('proxyquire');
+
 const AuthHelpers = require('./../controllers/auth.helpers');
 
 describe('AuthHelpers', () => {
@@ -183,6 +185,89 @@ describe('AuthHelpers', () => {
       uuidV4Stub.returns('uuid');
 
       authHelpers.generateUniqueToken().should.equal('uuid');
+    });
+  });
+
+  describe('#generateUrl', () => {
+    let configStub;
+
+    beforeEach(() => {
+      // reset the config stub
+      configStub = {
+        app: {
+        }
+      };
+    });
+
+    function initializeUut () {
+      authHelpers = proxyquire('../controllers/auth.helpers', {
+        '../../../../config/config': configStub
+      })(mockLogger);
+    }
+
+    it('should send the proxyUrl if it is set', () => {
+      const proxyUrl = 'https://somewhere:8888';
+      configStub.app.proxyUrl = proxyUrl;
+
+      initializeUut();
+
+      authHelpers.generateUrl().should.equal(proxyUrl);
+    });
+
+    it('should send the http url if proxyUrl is not set and force_http is false', () => {
+      const host = 'host';
+      const port = '8888';
+
+      configStub.app.host = host;
+      configStub.app.port_http = port;
+
+      initializeUut();
+
+      authHelpers.generateUrl().should.equal('http://' + host + ':' + port);
+    });
+
+    it('should send the https url if proxy url is not set and force_http is true', () => {
+      const host = 'host';
+      const port_http = '8888';
+      const port_https = '4443';
+      const force_https = true;
+
+      configStub.app.host = host;
+      configStub.app.port_http = port_http;
+      configStub.app.port_https = port_https;
+      configStub.app.force_https = force_https;
+
+      initializeUut();
+
+      authHelpers.generateUrl().should.equal('https://' + host + ':' + port_https);
+    });
+
+    it('should only attach the port if the port is not 80/443', () => {
+      const host = 'host';
+      const port_http = '80';
+
+      configStub.app.host = host;
+      configStub.app.port_http = port_http;
+
+      initializeUut();
+
+      authHelpers.generateUrl().should.equal('http://' + host);
+    });
+
+    it('should only attach the port if the port is not 443', () => {
+      const host = 'host';
+      const port_http = '80';
+      const port_https = '443';
+      const force_https = true;
+
+      configStub.app.host = host;
+      configStub.app.port_http = port_http;
+      configStub.app.port_https = port_https;
+      configStub.app.force_https = force_https;
+
+      initializeUut();
+
+      authHelpers.generateUrl().should.equal('https://' + host);
     });
   });
 });

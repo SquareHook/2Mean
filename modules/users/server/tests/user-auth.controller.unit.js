@@ -45,6 +45,7 @@ describe('UserAuthController', () => {
   var sendStub;
   let mockUser;
   let sendMailStub;
+  let generateUniqueTokenStub, generateUrlStub;
     
   const token = 'abc123';
   
@@ -82,14 +83,14 @@ describe('UserAuthController', () => {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Verification Email',
-    text: 'Verify your email by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/verifyEmail;token=' + token
+    text: 'Verify your email by going here: http://' + mockConfig.app.host + '/verifyEmail;token=' + token
   };
 
   const passwordMailParams = {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Change Password',
-    text: 'Change your password by going here: http://' + mockConfig.app.host + ':' + mockConfig.app.port_http + '/changePassword;token=' + token
+    text: 'Change your password by going here: http://' + mockConfig.app.host + '/changePassword;token=' + token
   };
 
   before(() => {
@@ -137,6 +138,9 @@ describe('UserAuthController', () => {
     
     generateUniqueTokenStub = sinon.stub(mockSharedModule.authHelpers, 'generateUniqueToken');
     generateUniqueTokenStub.returns(token);
+    
+    generateUrlStub = sinon.stub(mockSharedModule.authHelpers, 'generateUrl');
+    generateUrlStub.returns('http://blahblah.com');
   });
 
   afterEach(() => {
@@ -179,7 +183,6 @@ describe('UserAuthController', () => {
       setupSaveResolves();
       setupSendMailResolves();
     }
-    
     it('should return a promise', () => {
       req.body = {
         username: 'newuser',
@@ -439,24 +442,38 @@ describe('UserAuthController', () => {
   });
 
   describe('#verifyEmail', () => {
+    let findOneStub;
+    let execStub;
+
     beforeEach(() => {
-      req.user = mockUser;
       req.query = {
         token: token
       };
 
-      req.user.save = saveStub;
+      mockUser.save = saveStub;
+      findOneStub = sinon.stub(Users, 'findOne');
+      execStub = sinon.stub();
     });
 
     afterEach(() => {
+      findOneStub.restore();
     });
 
     function setupSaveResolves() {
       saveStub.resolves(mockUser);
     }
 
+    function setupFindOneResolves() {
+      execStub.resolves(mockUser);
+
+      findOneStub.returns({
+        exec: execStub
+      });
+    }
+
     function setupAllResolve() {
       setupSaveResolves();
+      setupFindOneResolves();
     }
 
     it('should return a promise', () => {
@@ -464,6 +481,15 @@ describe('UserAuthController', () => {
 
       userController.verifyEmail(req, res, next).constructor.name
         .should.equal('Promise');
+    });
+
+    it('should use the users findOne method and exec it', () => {
+      setupAllResolve();
+
+      return userController.verifyEmail(req, res, next).then(() => {
+        findOneStub.args.should.deep.equal([[ { 'verification.token': req.query.token } ]]);
+        execStub.called.should.equal(true);
+      });
     });
 
     it('should use user.save', () => {
@@ -494,17 +520,20 @@ describe('UserAuthController', () => {
       });
     });
 
-    it('should send a 400 if the user and token don\'t match', () => {
+    it('should send a 400 if the token does not exist', () => {
+      setupFindOneResolves();
+      execStub.resolves(null);
+
       req.query.token = 'xyz';
 
-      return userController.verifyEmail(req, res, next).then((data) => {
-        saveStub.called.should.equal(false);
+      return userController.verifyEmail(req, res, next).then(() => {
         statusStub.args.should.deep.equal([[ 400 ]]);
         sendStub.args.should.deep.equal([[ { message: 'Token invalid' } ]]);
       });
     });
 
     it('should send a 500 if the save fails', () => {
+      setupFindOneResolves();
       saveStub.rejects(new Error('save failed'));
 
       return userController.verifyEmail(req, res, next).then((data) => {
@@ -515,6 +544,7 @@ describe('UserAuthController', () => {
 
     it('should send a 400 if the ttl has passed', () => {
       // set expire time to some time in the past
+      setupFindOneResolves();
       mockUser.verification.expires = Date.now() - 100000;
 
       return userController.verifyEmail(req, res, next).then((data) => {
@@ -601,6 +631,14 @@ describe('UserAuthController', () => {
       return userController.requestVerificationEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+
+    it('should use authHelpers.generateUrl', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        generateUrlStub.args.should.deep.equal([[ ]]);
       });
     });
     
@@ -727,6 +765,14 @@ describe('UserAuthController', () => {
       return userController.requestChangePasswordEmail(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
+      });
+    });
+    
+    it('should use authHelpers.generateUrl', () => {
+      setupAllResolve();
+
+      return userController.requestVerificationEmail(req, res, next).then((data) => {
+        generateUrlStub.args.should.deep.equal([[ ]]);
       });
     });
     

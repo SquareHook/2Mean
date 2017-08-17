@@ -1,10 +1,11 @@
-from node:7.3.0
+FROM node:8
 
 RUN apt-get update
 RUN npm install -g node-gyp
 
 WORKDIR /usr/src/app
 ADD package.json /usr/src/app
+ADD npm-shrinkwrap.json /usr/src/app
 RUN npm install
 
 ADD . /usr/src/app
