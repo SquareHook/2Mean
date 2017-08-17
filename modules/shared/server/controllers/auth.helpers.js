@@ -62,7 +62,6 @@ let AuthHelpers = function () {
     } else {
       // if node is serving over TLS, give an https url
       if (config.app.force_https) {
-        console.log(config.app);
         url = 'https://' + config.app.host + (config.app.port_https !== '443' ? ':' + config.app.port_https : '');
       } else {
         url = 'http://' + config.app.host + (config.app.port_http !== '80' ? ':' + config.app.port_http : '');
