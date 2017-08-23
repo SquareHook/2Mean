@@ -294,11 +294,11 @@ function userCrudController(logger, shared) {
             reject(error);
           });
       }
-      else{
+      else {
         resolve();
       }
     })
-    .then(n => {
+    .then(() => {
       //update password if necessary
       return new Promise((resolve, reject) => {
      
@@ -311,21 +311,19 @@ function userCrudController(logger, shared) {
             reject(error);
           });
         }
-        else
-        {
+        else {
           resolve();
         }
  
-
       });
     })
-    .then(n => {
+    .then(() => {
       let updateDef = { $set: user };
       //send update to mongo
       return Users.findOneAndUpdate({ _id: req.body._id}, updateDef).exec();
     })
     .then(results => {
-      res.status(201).send(results);
+      res.status(200).send(results);
     })
     .catch(error => {
       logger.error('Error updating user', error);
