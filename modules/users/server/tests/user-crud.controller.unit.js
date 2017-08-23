@@ -680,11 +680,19 @@ describe('UserCrudController', () => {
   describe('#adminUpdate', () => {
     let hashPasswordStub;
 
+    before(()=> {
+      userController.setRoleModule({
+        determineSubroles: () => {return []}
+      });
+    });
     beforeEach(() => {
       req.body = {
         _id: 'look at me',
         firstName: 'first',
         lastName: 'last'
+      };
+      req.user = {
+        role: 'admin'
       };
 
       hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
@@ -720,6 +728,7 @@ describe('UserCrudController', () => {
       setupAllResolve();
 
       req.body.password = 'newpass';
+     
 
       return userController.adminUpdate(req, res, next).then((data) => {
         hashPasswordStub.args.should.deep.equal([[ 'newpass' ]]);
@@ -731,18 +740,21 @@ describe('UserCrudController', () => {
 
       req.body.password = undefined;
 
+
       return userController.adminUpdate(req, res, next).then((data) => {
         hashPasswordStub.args.should.deep.equal([]);
       });
     });
 
-    it('should use Users.update', () => {
+    it('should use Users.findOneAndUpdate', () => {
       setupHashPasswordResolves();
-      usersMock.expects('update')
-        .withExactArgs({ _id: 'look at me' }, { $set: { firstName: 'first', lastName: 'last', updated: new Date() } })
+      usersMock.expects('findOneAndUpdate')
+        .withExactArgs({ _id: 'look at me' }, { $set: {_id: 'look at me', firstName: 'first', lastName: 'last' } })
         .chain('exec')
-        .resolves([ mockUser ]);
-
+        .resolves( mockUser );
+      req.user = {
+        role: 'admin'
+      };
       return userController.adminUpdate(req, res, next).then((data) => {
         usersMock.verify();
       });
@@ -750,10 +762,10 @@ describe('UserCrudController', () => {
 
     it('should send a 200 and the sanitized user on success', () => {
       setupAllResolve();
-
+      req.body._id = '012345678901234567890123';
       return userController.adminUpdate(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 200 ]]);
-        
+  
         sendStub.args.length.should.equal(1);
         sendStub.args[0].length.should.equal(1);
         sendStub.args[0][0].length.should.equal(1);

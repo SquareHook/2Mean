@@ -271,14 +271,12 @@ function userCrudController(logger, shared) {
    */
   function adminUpdate(req, res) {
     if(req.user.role != roleConfig.ADMIN_ROLE_NAME){
-      res.status(403).send();
-      return;
+      return new Promise((resolve, reject) =>{
+        res.status(403).send();
+        reject({error: "unauthorized"});
+      });
     }   
 
-    if (!isAuthorized(req.user)) {
-      res.status(403).send({ success: false, message: "Forbidden" });
-      return;
-    }
 
     let user = req.body;
     //update role if necessary
@@ -290,9 +288,7 @@ function userCrudController(logger, shared) {
             //resolve after subroles are determined
             resolve();
           })
-          .catch(error => {
-            reject(error);
-          });
+ 
       }
       else {
         resolve();
@@ -326,7 +322,7 @@ function userCrudController(logger, shared) {
       res.status(200).send(results);
     })
     .catch(error => {
-      logger.error('Error updating user', error);
+      logger.error(error);
       res.status(500).send();
     });
 

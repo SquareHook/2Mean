@@ -3,7 +3,7 @@ module.exports = function(logger) {
     authHelpers: (function(logger) {
       return {
         hashPassword: function hashPassword(clearText) {
-
+          
         },
         verifyPassword: function verifyPassword(hash, clear) {
 
