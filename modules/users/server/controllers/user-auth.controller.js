@@ -294,10 +294,6 @@ function userAuthController(logger, shared) {
         throw new Error('Email not found');
       }
 
-      if (!user.verified) {
-        throw new Error('User has not verified email');
-      }
-
       user.resetPassword = {
         token: authHelpers.generateUniqueToken(),
         expires: Date.now() + config.app.emailVerificationTTL
@@ -313,8 +309,6 @@ function userAuthController(logger, shared) {
         res.status(400).send({ error: 'Missing email' });
       } else if (error.message === 'Email not found') {
         res.status(400).send({ error: 'Email not found' });
-      } else if (error.message === 'User has not verified email') {
-        res.status(400).send({ error: 'User has not verified email' });
       } else {
         logger.error('Error in User.auth#requestChangePasswordEmail', error);
         res.status(500).send();
@@ -353,6 +347,7 @@ function userAuthController(logger, shared) {
     }).then((hashed) => {
       user.password = hashed;
       user.resetPassword = {};
+      user.verified = true;
 
       return user.save();
     }).then((savedUser) => {
