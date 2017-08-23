@@ -270,7 +270,6 @@ function userCrudController(logger, shared) {
    * @param {Response} res  The Express response object
    */
   function adminUpdate(req, res) {
-
     if(req.user.role != roleConfig.ADMIN_ROLE_NAME){
       res.status(403).send();
       return;
@@ -290,6 +289,9 @@ function userCrudController(logger, shared) {
             user.subroles = subroles;
             //resolve after subroles are determined
             resolve();
+          })
+          .catch(error => {
+            reject(error);
           });
       }
       else{
@@ -305,6 +307,8 @@ function userCrudController(logger, shared) {
             user.password = hash;
             //resolve after password hash
             resolve();
+          }).catch(error => {
+            reject(error);
           });
         }
         else
