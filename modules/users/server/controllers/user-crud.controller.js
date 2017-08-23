@@ -20,7 +20,7 @@ var q = require('q');
  */
 var _ = require('lodash');
 var md5 = require('md5');
-
+const roleConfig = require('../../../roles/server/config/config');
 /**
  * Main business logic for handling requests.
  */
@@ -31,7 +31,8 @@ function userCrudController(logger, shared) {
   const DEFAULT_ROLE_NAME = 'user';
 
   let authHelpers = shared.authHelpers;
-
+  let self = this;
+ 
   /**
    * Reads a user from the database if the permissions are adequate.
    *
@@ -269,44 +270,66 @@ function userCrudController(logger, shared) {
    * @param {Response} res  The Express response object
    */
   function adminUpdate(req, res) {
+
+    if(req.user.role != roleConfig.ADMIN_ROLE_NAME){
+      res.status(403).send();
+      return;
+    }   
+
     if (!isAuthorized(req.user)) {
       res.status(403).send({ success: false, message: "Forbidden" });
       return;
     }
 
-    let deferred = q.defer();
     let user = req.body;
-
+    //update role if necessary
     return new Promise((resolve, reject) => {
-      //note that this doesn't affect user roles
-      let updateDef = {
-        $set: {
-          firstName: user.firstName,
-          lastName: user.lastName,
-          updated: new Date()
-        }
-      };
-
-      // should only send a password if it is to be updated
-      if (user.password) {
-        authHelpers.hashPassword(user.password).then((hash) => {
-          updateDef.$set.password = hash;
-          resolve(updateDef);
-        }).catch((error) => { reject(error); });
-      } else {
-        resolve(updateDef);
+      if (user.role) {
+        self.roleModule.determineSubroles(user.role)
+          .then(subroles => {
+            user.subroles = subroles;
+            //resolve after subroles are determined
+            resolve();
+          });
       }
-    }).then((updateDef) => {
+      else{
+        resolve();
+      }
+    })
+    .then(n => {
+      //update password if necessary
+      return new Promise((resolve, reject) => {
+     
+        if (user.password) {
+          authHelpers.hashPassword(user.password).then((hash) => {
+            user.password = hash;
+            //resolve after password hash
+            resolve();
+          });
+        }
+        else
+        {
+          resolve();
+        }
+ 
+
+      });
+    })
+    .then(n => {
+      let updateDef = { $set: user };
       //send update to mongo
-      return Users.update({ _id: req.body._id }, updateDef).exec();
-    }).then((updatedUsers) => {
-      res.status(200).send(updatedUsers);
-    }).catch((error) => {
-      console.log(error);
+      return Users.findOneAndUpdate({ _id: req.body._id}, updateDef).exec();
+    })
+    .then(results => {
+      res.status(201).send(results);
+    })
+    .catch(error => {
       logger.error('Error updating user', error);
       res.status(500).send();
     });
-   }
+
+
+  }
 
   /*
    * Updates all subroles for a given role 
@@ -447,6 +470,14 @@ function userCrudController(logger, shared) {
     let hash = md5(email.toLowerCase());
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
+
+  /**
+   * Called by the role module to avoid a circular dependency
+   * @param { Object } roleModule 
+   */
+  function setRoleModule(roleModule) {
+    self.roleModule = roleModule;
+  }
     
   /**
    * @param {Object} updates 
@@ -472,6 +503,7 @@ function userCrudController(logger, shared) {
     deleteUser            : deleteUser,
     adminUpdate           : adminUpdate,
     updateUserRoles       : updateUserRoles,
+    setRoleModule         : setRoleModule,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
