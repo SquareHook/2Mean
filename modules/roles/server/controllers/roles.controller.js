@@ -27,13 +27,14 @@ const ADMIN_ROLE_NAME = config.ADMIN_ROLE_NAME;
 // ---------------------------- Module Definition ----------------------------
 function roleModule(logger, userModule, moduleLoader) {
   let roleManager = new RoleManager(logger);
+
   const routes = moduleLoader.getRoutes();
   
   let rolesInitHelper = new RolesInitHelper(logger, roleManager, routes);
 
   // create the initial roles
   rolesInitHelper.createInitialRoles(initialRoles);
-
+ 
   /*
    * Roles can be added to the role tree at any level other than root.
    * When a role is added, the tree is traversed, and for each 'parent'
@@ -124,7 +125,8 @@ function roleModule(logger, userModule, moduleLoader) {
       }
     })
   }
-  
+ 
+
   /**
    * Updates the role that a user is in.
    * Validates, determines subroles, and requests
@@ -280,35 +282,55 @@ function roleModule(logger, userModule, moduleLoader) {
   }
 
 
-  /*
-   * Returns an unordered list of subroles for a given role
-   * 
-   * @param {targetRole} optional. the role to get subroles for
-   * @return [Role] a list of subroles (if any)
+   /**
+   * Returns an array of subroles for a given role
+   * @param { Object } req - HTTP request object
+   * @param { Object } res - HTTP response object
+   * @param { the name of the role } roleName 
    */
   function getSubroles(req, res, next)
   {
-    getAllRoles()
-      .then((data) =>
-      {
-        let list = [];
-        if(req.params.id)
-        {
-          list = getRolesByParent(req.params.id, data, []);
-        }
-        else
-        {
-          list = getRolesByParent(ADMIN_ROLE_NAME, data, []);
-        }
-        res.status(200).send(list);
+    if(!req.params.id) {
+      sendServerError(res, "must specify a role");
+    }
+    determineSubroles()
+      .then(data =>{
+        res.status(200).send(data);
       })
-      .catch((err) =>
-      {
-        sendServerError(res, "error getting subroles");
+      .catch(error => {
+        sendServerError(res, "error retrieving subroles");
       });
   }
 
-
+  /**
+   * Returns a promise that resolves to an arraof subroles
+   * for a given role
+   * @param { the name of the role } roleName 
+   */
+  function determineSubroles(roleName){
+    
+    return new Promise((resolve, reject) => {
+      if(!roleName) {
+        resolve([]);
+      }
+      else{
+        getAllRoles()
+        .then((data) =>
+        {
+          let list = getRolesByParent(roleName, data, []);
+     
+          resolve(list);
+  
+        })
+        .catch((err) =>
+        {
+          console.log(err);
+          logger.error(error);
+          reject(err);
+        });  
+      }
+    });
+  }
 
   /*
    * Roles can be added to the role tree at any level other than root.
@@ -655,22 +677,26 @@ function roleModule(logger, userModule, moduleLoader) {
       }
     }
   }
-    
+ 
+
 
   // --------------------------- Revealing Module Section ----------------------------
 
-  return {
+  let publicFunctions = {
     create                    : addRole,
     list                      : listAllRoles,
     update                    : updateRole,
     delete                    : removeRole,
     subroles                  : getSubroles,
+    determineSubroles         : determineSubroles,
     tree                      : getRoleTree,
     updateUserRole            : updateUserRole,
     reportEndpointPermissions : reportEndpointPermissions,
     pruneEndpointDetails      : pruneEndpointDetails,
     updateSingleRole          : updateSingleRole
   }
+  userModule.crud.setRoleModule(publicFunctions);
+  return publicFunctions;
 }
 
 module.exports = roleModule;
