@@ -1,31 +1,30 @@
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <nav class="navbar navbar-toggleable-md navbar-inverse bg-primary content-space-between subnav">
-                <a class="navbar-brand" href="#">Users</a>
-                <div class="width-auto" id="navbarColor02">
-                    <form (ngSubmit)="searchUsers()" class="form-inline" ng-submit="">
-                        <input  name="searchText" [(ngModel)]="searchText" class="form-control" placeholder="enter a user name">
-                        <button class="btn btn-outline-secondary my-2 my-sm-0 icon fa-search search-button" type="submit" >Search</button>
-                    </form>
-                </div>
-            </nav>
-            <div class="card-group user-card-group card-wrapper">
-                <div class="card" *ngFor="let user of users" (click)="displayUser(user)">
-                    <img class="card-img-top" src="{{user.profileImageURL}}" alt="{{user.firstName}}">
-                    <div class="card-block">
-                        <h4 class="card-title text-center">{{user.username}}</h4>
-                        <p class="card-text text-center"> role: {{user.role}}</p>
-                        <p class="card-text text-center"><small class="text-muted">{{user.created | date}}</small></p>
-                    </div>
+
+<div class="row">
+    <div class="col-md-12">
+        <nav class="navbar navbar-toggleable-md navbar-inverse bg-primary content-space-between subnav">
+            <a class="navbar-brand" href="#">Users</a>
+            <div class="width-auto" id="navbarColor02">
+                <form (ngSubmit)="searchUsers()" class="form-inline" ng-submit="">
+                    <input  name="searchText" [(ngModel)]="searchText" class="form-control" placeholder="enter a user name">
+                    <button class="btn btn-outline-secondary my-2 my-sm-0 icon fa-search search-button" type="submit" >Search</button>
+                </form>
+            </div>
+        </nav>
+        <div class="card-columns ">
+            <div class="card" *ngFor="let user of users" (click)="displayUser(user)">
+                <img class="card-img-top" src="{{user.profileImageURL}}" alt="{{user.firstName}}">
+                <div class="card-block">
+                    <h4 class="card-title text-center">{{user.username}}</h4>
+                    <p class="card-text text-center"> role: {{user.role}}</p>
+                    <p class="card-text text-center"><small class="text-muted">{{user.created | date}}</small></p>
                 </div>
             </div>
         </div>
-        <template ngbModalContainer>
-        </template>
-        <admin-user-modal [userSubject]="userSubject" (refreshUsers)="refreshUsers($event)">
-        </admin-user-modal>
-
-
     </div>
+    <template ngbModalContainer>
+    </template>
+    <admin-user-modal [userSubject]="userSubject" (refreshUsers)="refreshUsers($event)">
+    </admin-user-modal>
+
+
 </div>

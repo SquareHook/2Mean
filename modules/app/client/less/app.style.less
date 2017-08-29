@@ -6,7 +6,7 @@
 @inactiveLinkColor: rgba(255, 255, 255, 0.75);
 @activeLinkColor: rgba(255, 255, 255, 1);
 @blue: rgba(25, 118, 210, 1);
-@red: rgba(221, 0, 49, 1);
+@red: rgba(248, 49, 49, 1);
 @green: rgba(92,193,25,1);
 @yellow: rgba(210,198,25,1);
 @pink: rgba(255,82,82,1);
@@ -36,7 +36,8 @@ div.alert {
     border-radius: 0px;
 }
 
-.btn-core {
+.btn-core,
+.btn {
   padding: 6.5px 15px;
   margin: 5px 0;
   text-transform: uppercase;
@@ -76,11 +77,15 @@ div.alert {
     }
   }
 
-  &.red {
+  &.red,
+  &.btn-danger,
+  &.danger {
     .color-class(@activeLinkColor,@activeLinkColor,@red);
   }
 
-  &.green {
+  &.green,
+  &.btn-success,
+  &.success {
     .color-class(@activeLinkColor,@activeLinkColor,@green);
   }
 
@@ -458,7 +463,7 @@ nav.bg-primary {
     &:hover,
     &:focus,
     &:active {
-        border: 0px solid @blue;
+        border-color: @blue;
     }
 }
 
@@ -535,6 +540,10 @@ nav.bg-primary {
 
   &.card-small {
     margin: 10px 0;
+
+    .card-block {
+      padding: 10px;
+    }
   }
 
   .card:first-child {
@@ -609,7 +618,27 @@ img.card-img-top {
     }
 }
 
+@media screen and (min-width: 1200px) {
+  .card-columns {
+    -webkit-column-count: 4;
+    -moz-column-count: 4;
+    column-count: 4;
+    -webkit-column-gap: 1em;
+    -moz-column-gap: 1em;
+    column-gap: 1em;
+  }
+}
 
+@media screen and (max-width: 767px) {
+  .card-columns {
+    -webkit-column-count: 2;
+    -moz-column-count: 2;
+    column-count: 2;
+    -webkit-column-gap: 1.5em;
+    -moz-column-gap: 1.5em;
+    column-gap: 1.5em;
+  }
+}
 
 .card-inverse {
     background-color: rgba(155,155,155,1);
