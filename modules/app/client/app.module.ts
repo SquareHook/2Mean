@@ -17,6 +17,7 @@ import {
   PushNotificationsModule, 
   NotificationsService
 } from 'angular2-notifications';
+
 import { UserService }            from '../../users/client/services/user.service';
 import { AuthService }            from '../../auth/client/services/auth.service';
 import { RoleService }            from '../../roles/client/services/roles.service';
@@ -26,7 +27,8 @@ import { UsersModule }            from '../../users/client/users.module';
 import { ArticleModule }          from '../../articles/client/articles.module';
 import { AppRoutingModule }       from './app-routing.module';
 import { RoleModule }             from '../../roles/client/roles.module';
- 
+import { SharedModule }           from '../../shared/client/shared.module';
+
 import {
   Http,
   XHRBackend,
@@ -48,7 +50,8 @@ import { ActivatedRoute }         from '@angular/router';
     AppRoutingModule,
     RoleModule,
     SimpleNotificationsModule,
-    PushNotificationsModule
+    PushNotificationsModule,
+    SharedModule
   ],
   providers: [
     UserService,

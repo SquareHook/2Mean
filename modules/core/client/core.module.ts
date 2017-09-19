@@ -9,6 +9,7 @@ import { RoleModule } from '../../roles/client/roles.module';
 import { AppModule }      from '../../app/client/app.module';
 import { AppRoutingModule }      from '../../app/client/app-routing.module';
 import { CoreRoutingModule }     from './config/core-routing.module';
+import { SharedModule } from '../../shared/client/shared.module'
 
 @NgModule({
   imports:      [
@@ -16,7 +17,8 @@ import { CoreRoutingModule }     from './config/core-routing.module';
     NgbModule,
     HttpModule,
     RouterModule,
-    CoreRoutingModule
+    CoreRoutingModule,
+    SharedModule
   ],
   /*components available inside of this module */
   declarations: [
