@@ -46,13 +46,14 @@ div.alert {
 }
 
 .btn-core,
-.btn {
+.btn,
+.nav-pills .nav-link {
   padding: 6.5px 15px;
   margin: 0;
+  margin-bottom: 5px;
   text-transform: uppercase;
   color: @blue;
   border: 1px solid @blue;
-  font-family: "RBNo21a-Bold", sans-serif;
   font-size: 14px;
   letter-spacing: 1px;
   display: block;
@@ -139,6 +140,15 @@ div.alert {
     background-color: darken(@bgcolor,10%);
   }
 
+  &.active,
+  &.active:focus,
+  &.active:hover {
+    color: @color;
+    border-color: @bgcolor;
+    background-color: darken(@bgcolor,15%);
+    cursor: default;
+  }
+
   &.disabled {
     opacity: 0.7;
     color: hsl(hue(@color),25%,lightness(@color));
@@ -165,6 +175,15 @@ div.alert {
       color: @bgcolor;
       border-color: @bgcolor;
       background-color: darken(@color,10%);
+    }
+
+    &.active,
+    &.active:focus,
+    &.active:hover {
+      color: @bgcolor;
+      border-color: @color;
+      background-color: darken(@color,15%);
+      cursor: default;
     }
 
     &.disabled {
