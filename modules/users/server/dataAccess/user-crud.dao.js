@@ -19,16 +19,40 @@ var q = require('q');
  * Underscore/Lodash functionality.
  */
 var _ = require('lodash');
+
+/**
+ * Basic MD5 hashing.
+ */
 var md5 = require('md5');
+
+/**
+ * The role configuration.
+ */
 const roleConfig = require('../../../roles/server/config/config');
 
 /**
  * Main business logic for handling requests.
  */
-function userCrudController(logger, shared, userCrudDAO) {
+function userCrudDAO(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
+
+  /**
+   * Limit on pages?
+   */
   const pageLimit = 25;
+
+  /**
+   * The default admin role name.
+   *
+   * TODO: This should be defined in the role module and pulled from there.
+   */
   const ADMIN_ROLE_NAME = 'admin';
+
+  /**
+   * The default user role name.
+   *
+   * TODO: This should be defined in the role module and pulled from there.
+   */
   const DEFAULT_ROLE_NAME = 'user';
 
   let authHelpers = shared.authHelpers;
@@ -37,39 +61,41 @@ function userCrudController(logger, shared, userCrudDAO) {
   /**
    * Reads a user from the database if the permissions are adequate.
    *
-   * @param {Request} req   The Express request object.
-   * @param {Response} res  The Express response object.
-   * @param {Next} next     The Express next (middleware) function.
+   * @param {ObjectId} userId The id of the user to read (optional).
+   * @param {User}     user   The user object to the user making the request.
    *
-   * @return {Promise}
+   * @throws {Exception} 'Not Implimented' Portion of the function that is not complete.
+   * @throws {Exception} 'Forbidden'       The requesting user does not have permission for this operation.
+   *
+   * @return {Promise<Array<User>>}
    */
-  function read(req, res, next) {
-    var user = req.user;
+  function read(userId, user) {
+    let id = userId || null; 
 
-    var id = req.params.userId || null; 
+    return new Promise((resolve, reject) => {
+      /**
+       * Request for a list of users.
+       */
+      if (!id) {
+        // This is a list request.
 
-    return userCrudDAO.read(id, user)
-      .then((foundUser) => {
-        if (foundUser) {
-          res.status(200).send(sanitizeUser(user));
-        } else {
-          throw new Error('Not found');
-        }
-      }).catch((error) => {
-        // handle errors. message sent depends on error message
-        if (error.message === 'Malformed request') {
-          res.status(400).send({ error: error.message });
-        } else if(error.message === 'Forbidden') {
-          res.status(403).send();
-        } else if (error.message === 'Not found') {
-          res.status(404).send();
-        } else if (error.message === 'Not Implemented') {
-          res.status(501).send({ error: error.message });
-        } else {
-          logger.error('Error user.crud#read', error);
-          res.status(500).send();
-        }
-      });
+        // TODO: Retrieve the list of users if the user has permissions.
+        reject(new Error('Not Implemeneted'));
+
+      /**
+       * User has permissions, get the user requested and return it.
+       */
+      } else if (isSelf(user, id) || isAuthorized(user, 'read')) {
+        resolve(Users.findOne({ _id: id }).exec());
+
+      /**
+       * Insufficient permissions for this operation.
+       */
+      } else {
+        // not allowed
+        reject(new Error('Forbidden'));
+      }
+    });
   }
 
   /**
@@ -503,4 +529,5 @@ function userCrudController(logger, shared, userCrudDAO) {
   };
 }
 
-module.exports = userCrudController;
+module.exports = userCrudDAO;
+
