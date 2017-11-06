@@ -51,7 +51,7 @@ var fs = require('fs');
 /*
  * application config
  */
-var config = require(path.resolve('config/config'));
+const config = require('../../../../config/config');
 
 var md5 = require('md5');
 
@@ -71,7 +71,7 @@ function userProfileController(logger, shared) {
    *
    * @return {void}
    */
-  function changeProfilePicture(req, res, next) {
+  async function changeProfilePicture(req, res, next) {
     // get user from request
     var user = req.user;
     let uploadConfig = {
@@ -81,49 +81,45 @@ function userProfileController(logger, shared) {
       res: res
     };
 
-    return new Promise((resolve, reject) => {
-      if (isAuthorized(user, 'update')) { 
-        if (uploadConfig.strategy === 's3') {
-          uploadConfig.s3 = config.uploads.profilePicture.s3;
-        } else if (uploadConfig.strategy === 'local') {
-          uploadConfig.local = config.uploads.profilePicture.local;
-          uploadConfig.local.apiPrefix = '/api/users/' + user._id + '/picture/';
-        } else {
-          throw new Error('unknown strategy');
-        }
+    if (!isAuthorized(user, 'update')) { 
+      return res.status(403).send();
+    }
+    
+    if (uploadConfig.strategy === 's3') {
+      uploadConfig.s3 = config.uploads.profilePicture.s3;
+    } else if (uploadConfig.strategy === 'local') {
+      uploadConfig.local = config.uploads.profilePicture.local;
+      uploadConfig.local.apiPrefix = '/api/users/' + user._id + '/picture/';
+    } else {
+      return res.status(500).send();
+    }
 
-        return Users.findById(user._id).exec().then((foundUser) => {
-          if (foundUser) {
-            resolve(shared.uploader.upload(uploadConfig).then((url) => {
-              foundUser.profileImageURL = url;
-              return foundUser.save();
-            }));
-          } else {
-            throw new Error('not found');
-          }
-        });
-      } else {
-        throw new Error('forbidden');
+    try {
+      foundUser = Users.findById(user._id).exec();
+    } catch (error) {
+      return res.status(500).send();
+    } 
+
+    if (foundUser) {
+      try {
+        url = await shared.uploader.upload(uploadConfig);
+      } catch (error) {
+
       }
-    })
-    .then((savedUser) => {
-      res.status(200).send(savedUser);
-    })
-    .catch((error) => {
-      if (error.message === 'unknown strategy') {
-        logger.error(error.message + ' for profile picture upload');
-        res.status(500).send();
-      } else if (error.message === 'forbidden') {
-        res.status(403).send();
-      } else if (error.message === 'not found') {
-        res.status(404).send();
-      } else if (error.name === 'ValidationError') {
-        res.status(400).send(error.message);
+    } else {
+      return res.status(404).send();
+    }
+    
+    foundUser.profileImageURL = url;
+
+    try {
+      savedUser = await foundUser.save();
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).send(error.message);
       } else {
-        logger.error(error);
         res.status(500).send();
-      }
-    });
+    }
   }
     
   /**
@@ -135,31 +131,30 @@ function userProfileController(logger, shared) {
    *
    * @returns {void}
    */
-  function getProfilePicture(req, res, next) {
+  async function getProfilePicture(req, res, next) {
     // local strategy stores image on filesystem
     // s3 strategy serves direct urls
     if (config.uploads.profilePicture.use !== 'local') {
-      res.status(400).send('Local strategy not in use');
+      return res.status(400).send('Local strategy not in use');
     }
 
     var userId = req.params.userId;
     var fileName = req.params.fileName;
 
-    Users.findOne({_id: userId})
-      .then((user) => {
-        var url = user.profileImageURL;
-        var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
+    let user;
+    try {
+      user = await Users.findOne({_id: userId});
+    } catch (error) {
+      return res.status(500).send('Error retrieving user information');
+    }
+        
+    var url = user.profileImageURL;
+    var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
 
-        // if filename exists
-        if (serveUrl.length !== 0) {
-          res.status(201).sendFile(serveUrl);
-        } else {
-          logger.error('Filename does not exist');
-          res.status(400).send('Error retrieving file');
-        }
-      }, (error) => {
-        res.status(500).send('Error retrieving user information');
-      });
+    // if filename exists
+    if (serveUrl.length !== 0) {
+      return res.status(200).sendFile(serveUrl);
+    }
   }
   // --------------------------- Private Function Definitions ----------------------------
 

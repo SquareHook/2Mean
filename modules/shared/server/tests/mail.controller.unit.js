@@ -134,6 +134,10 @@ describe('MailController', () => {
           error.should.equal(sendMailError);
         });
       });
+
+      it('should reject if the config does not have a provider set', async () => {
+        
+      });
     });
 
     /**
@@ -143,20 +147,31 @@ describe('MailController', () => {
     describe('Unknown transport', () => {
       const transportName = 'morse code';
 
-      beforeEach(() => {
+      it('should reject for not set', () => {
+        // set config to use unknown transport
+        configStub.email.provider = undefined;
+
+        mailController = proxyquire(uutPath, {
+          '../../../../config/config': configStub
+        })(mockLogger);
+        
+        const undefinedProviderError = new Error('Email config missing provider');
+        
+        return mailController.sendMail(mockParams).then((data) => {
+          throw new Error('This should have rejected');
+        }).catch((error) => {
+          error.should.deep.equal(undefinedProviderError);
+        });
+
+      });
+
+      it('should reject for unknown', () => {
         // set config to use unknown transport
         configStub.email.provider = transportName;
 
         mailController = proxyquire(uutPath, {
           '../../../../config/config': configStub
         })(mockLogger);
-      });
-
-      afterEach(() => {
-
-      });
-
-      it('should reject', () => {
         const unknownTransportError = new Error('Unknown email provider: ' + transportName);
         
         return mailController.sendMail(mockParams).then((data) => {

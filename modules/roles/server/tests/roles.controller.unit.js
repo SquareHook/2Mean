@@ -21,7 +21,9 @@ const mockLogger = {
 };
 
 const mockUserModule = {
-
+  crud: {
+    setRoleModule: () => {}
+  }
 };
 
 const mockModuleLoader = {

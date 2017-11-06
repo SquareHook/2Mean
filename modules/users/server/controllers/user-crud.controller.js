@@ -21,11 +21,10 @@ var q = require('q');
 var _ = require('lodash');
 var md5 = require('md5');
 const roleConfig = require('../../../roles/server/config/config');
-
 /**
  * Main business logic for handling requests.
  */
-function userCrudController(logger, shared, userCrudDAO) {
+function userCrudController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
   const ADMIN_ROLE_NAME = 'admin';
@@ -48,28 +47,36 @@ function userCrudController(logger, shared, userCrudDAO) {
 
     var id = req.params.userId || null; 
 
-    return userCrudDAO.read(id, user)
-      .then((foundUser) => {
-        if (foundUser) {
-          res.status(200).send(sanitizeUser(user));
-        } else {
-          throw new Error('Not found');
-        }
-      }).catch((error) => {
-        // handle errors. message sent depends on error message
-        if (error.message === 'Malformed request') {
-          res.status(400).send({ error: error.message });
-        } else if(error.message === 'Forbidden') {
-          res.status(403).send();
-        } else if (error.message === 'Not found') {
-          res.status(404).send();
-        } else if (error.message === 'Not Implemented') {
-          res.status(501).send({ error: error.message });
-        } else {
-          logger.error('Error user.crud#read', error);
-          res.status(500).send();
-        }
-      });
+    return new Promise((resolve, reject) => {
+      if (!id) {
+        // missing id
+        reject(new Error('Malformed request'));
+      } else if (isSelf(user, id) || isAuthorized(user, 'read')) {
+        // check if allowed
+        resolve(Users.findOne({ _id: id }).exec());
+      } else {
+        // not allowed
+        reject(new Error('Forbidden'));
+      }
+    }).then((foundUser) => {
+      if (foundUser) {
+        res.status(200).send(sanitizeUser(user));
+      } else {
+        throw new Error('Not found');
+      }
+    }).catch((error) => {
+      // handle errors. message sent depends on error message
+      if (error.message === 'Malformed request') {
+        res.status(400).send({ error: error.message });
+      } else if(error.message === 'Forbidden') {
+        res.status(403).send();
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else {
+        logger.error('Error user.crud#read', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -162,44 +169,46 @@ function userCrudController(logger, shared, userCrudDAO) {
    *
    * @return {Promise}
    */
-  function update(req, res, next) {
+  async function update(req, res, next) {
+    let foundUser, savedUser;
     var user = req.user;
 
     var updates = req.body;
 
-    var deferred = q.defer();
+    if (updates._id) {
+      try {
+        foundUser = await Users.findOne({ _id: updates._id }).exec();
+      } catch (error) {
+        logger.error('Error in user.crud#update findOne', error);
+        return res.status(500).send();
+      }
+    } else {
+      return res.status(400).send({ error: 'Missing user._id' });
+    }
+    
+    if (!foundUser) {
+      return res.status(404).send();
+    }
 
-    return new Promise((resolve, reject) => {
-      if (updates._id) {
-        resolve(Users.findOne({ _id: updates._id }).exec())
-      } else {
-        reject(new Error('Missing user._id'));
-      }
-    }).then((foundUser) => {
-      if (foundUser) {
-        // update the found user
-        mapOverUser(updates, foundUser);
-        
-        foundUser.updated = new Date();
+    // update the found user
+    mapOverUser(updates, foundUser);
       
-        return foundUser.save();
-      } else {
-        throw new Error('Not found');
-      }
-    }).then((savedUser) => {
-      res.status(200).send(sanitizeUser(savedUser));
-    }).catch((error) => {
-      if (error.message === 'Missing user._id') {
-        res.status(400).send({ error: error.message });
-      } else if (error.errors) {
-        res.status(400).send({ error: error.errors });
+    foundUser.updated = new Date();
+    
+    try {
+      savedUser = await foundUser.save();
+    } catch(error) {
+      if (error.errors) {
+        return res.status(400).send({ error: error.errors });
       } else if (error.message === 'Not found') {
-        res.status(404).send();
+        return res.status(404).send();
       } else {
         logger.error('Error user.crud#update', error);
-        res.status(500).send();
+        return res.status(500).send();
       }
-    });
+    }
+      
+    return res.status(200).send(sanitizeUser(savedUser));
   }
 
   /**
@@ -219,6 +228,10 @@ function userCrudController(logger, shared, userCrudDAO) {
       .select(this.SANITIZED_SELECTION)
       .exec()
       .then((foundUsers) => {
+        for (let i = 0; i < foundUsers.length; i++) {
+          foundUsers[i] = sanitizeUser(foundUsers[i]);
+        }
+
         res.status(200).send(foundUsers);
       }).catch((error) => {
         logger.error('Error user.crud#readList', error);
@@ -262,64 +275,37 @@ function userCrudController(logger, shared, userCrudDAO) {
    * @param {Request} req   The Express request object
    * @param {Response} res  The Express response object
    */
-  function adminUpdate(req, res) {
+  async function adminUpdate(req, res) {
     if(req.user.role != roleConfig.ADMIN_ROLE_NAME){
-      return new Promise((resolve, reject) =>{
-        res.status(403).send();
-        reject({error: "unauthorized"});
-      });
-    }   
-
+      return res.status(403).send();
+    }
 
     let user = req.body;
     //update role if necessary
-    return new Promise((resolve, reject) => {
-      if (user.role) {
-        self.roleModule.determineSubroles(user.role)
-          .then(subroles => {
-            user.subroles = subroles;
-            //resolve after subroles are determined
-            resolve();
-          })
- 
+    if (user.role) {
+      user.subroles = await self.roleModule.determineSubroles(user.role);
+    }
+    
+    if (user.password) {
+      try {
+        user.password = await authHelpers.hashPassword(user.password);
+      } catch (error) {
+        logger.error('Error in user.crud#adminUpdate hash password', error);
+        return res.status(500).send();
       }
-      else {
-        resolve();
-      }
-    })
-    .then(() => {
-      //update password if necessary
-      return new Promise((resolve, reject) => {
-     
-        if (user.password) {
-          authHelpers.hashPassword(user.password).then((hash) => {
-            user.password = hash;
-            //resolve after password hash
-            resolve();
-          }).catch(error => {
-            reject(error);
-          });
-        }
-        else {
-          resolve();
-        }
- 
-      });
-    })
-    .then(() => {
-      let updateDef = { $set: user };
-      //send update to mongo
-      return Users.findOneAndUpdate({ _id: req.body._id}, updateDef).exec();
-    })
-    .then(results => {
-      res.status(200).send(results);
-    })
-    .catch(error => {
-      logger.error(error);
-      res.status(500).send();
-    });
+    }
 
-
+    let updateDef = { $set: user };
+    //send update to mongo
+    let results;
+    try {
+      results = await Users.findOneAndUpdate({ _id: req.body._id}, updateDef).exec();
+    } catch (error) {
+      logger.error('Error in user.crud#adminUpdate findOneAndUpdate', error);
+      return res.status(500).send();
+    }
+    
+    return res.status(204).send();
   }
 
   /*
@@ -406,7 +392,7 @@ function userCrudController(logger, shared, userCrudDAO) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, ADMIN_ROLE_NAME)) {
+    if (user.subroles.includes(ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -447,10 +433,6 @@ function userCrudController(logger, shared, userCrudDAO) {
       }
     }
 
-    if (body._id) {
-      user._id = body._id;
-    }
-
     user.updated = new Date();
     user.created = new Date();
 
@@ -479,7 +461,7 @@ function userCrudController(logger, shared, userCrudDAO) {
 
     for (let index in Object.keys(schemaFields)) {
       let realIndex = Object.keys(schemaFields)[index];
-      if (updates[realIndex]) {
+      if (updates[realIndex] !== undefined) {
         user[realIndex] = updates[realIndex];
       }
     }
