@@ -84,7 +84,7 @@ export class UserService {
   }
 
   update(updatedUser: User) : Observable<User> {
-    return this.http.put('api/users', updatedUser)
+    return this.http.put('api/users/' + updatedUser._id, updatedUser)
       .map(this.extractData);
   }
   

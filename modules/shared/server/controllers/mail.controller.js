@@ -31,6 +31,8 @@ function MailController(logger) {
         } else {
           reject(new Error('Unknown email provider: ' + config.email.provider));
         }
+      } else {
+        reject(new Error('Email config missing provider'));
       }
     });
   }

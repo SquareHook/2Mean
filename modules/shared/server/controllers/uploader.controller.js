@@ -15,7 +15,7 @@ function uploadController(logger) {
    * @param {string} config.local.apiPrefix - api endpoint where file will be served from (no file name)
    * @returns {Promise} will resolve to the file's url
    */
-  function uploadLocal(config) {
+  async function uploadLocal(config) {
     // init the multer object
     let upload = multer({
       storage: multer.diskStorage({
@@ -35,7 +35,7 @@ function uploadController(logger) {
     // the api url to access the file from
     let url = config.local.apiPrefix + config.newFileName;
 
-    return new Promise((resolve, reject) => {
+    let newUrl = await new Promise((resolve, reject) => {
       // use the multer object
       upload(config.req, config.res, (err) => {
         if (err) {
@@ -46,27 +46,26 @@ function uploadController(logger) {
         }
       });
     })
-    .then((newUrl) => {
-      return new Promise((resolve, reject) => {
-        // check if old file needs to be deleted
-        if (config.oldFileName) {
-          // fs.unlink aka delete
-          fs.unlink(path.resolve(config.local.dest, config.oldFileName), (err) => {
-            if (err) {
-              logger.error('Error while deleting object locally', err);
-              // resolve anyway (may leave an orphaned file but ENOENT could
-              // have come from the old file being in a different domain
-              resolve(newUrl);
-            } else {
-              logger.debug('Old file deleted locally');
-              resolve(newUrl);
-            }
-          });
-        } else {
-          resolve(newUrl);
-        }
+
+    // check if old file needs to be deleted
+    if (config.oldFileName) {
+      await new Promise((resolve, reject) => {
+        // fs.unlink aka delete
+        fs.unlink(path.resolve(config.local.dest, config.oldFileName), (err) => {
+          if (err) {
+            logger.error('Error while deleting object locally', err);
+            // resolve anyway (may leave an orphaned file but ENOENT could
+            // have come from the old file being in a different domain
+            resolve();
+          } else {
+            logger.debug('Old file deleted locally');
+            resolve();
+          }
+        });
       });
-    });
+    }
+
+    return newUrl;
   }
 
   /**
@@ -77,7 +76,7 @@ function uploadController(logger) {
    * @param {string} config.s3.dest
    * @returns {Promise} will resolve to the file's url
    */
-  function uploadS3(config) {
+  async function uploadS3(config) {
     // set up the aws object
     let s3 = new aws.S3();
 
@@ -101,7 +100,7 @@ function uploadController(logger) {
     // aws url
     let url = config.s3.dest + config.newFileName;
     
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       // use the multer object
       upload(config.req, config.res, (err) => {
         if (err) {
@@ -112,29 +111,28 @@ function uploadController(logger) {
         }
       });
     })
-    .then((newUrl) => {
-      return new Promise((resolve, reject) => {
-        // possibly try to remove old file
-        if (config.oldFileName) {
-          const params = {
-            Bucket: config.s3.bucket,
-            Key: config.oldFileName
-          };
+    
+    // possibly try to remove old file
+    if (config.oldFileName) {
+      await new Promise((resolve, reject) => {
+        const params = {
+          Bucket: config.s3.bucket,
+          Key: config.oldFileName
+        };
 
-          s3.deleteObject(params, (err, data) => {
-            if (err) {
-              logger.error('Error while deleting object on s3', err);
-              throw err;
-            } else {
-              logger.debug('Old file deleted deleted from s3');
-              resolve(newUrl);
-            }
-          });
-        } else {
-          resolve(newUrl);
-        }
+        s3.deleteObject(params, (err, data) => {
+          if (err) {
+            logger.error('Error while deleting object on s3', err);
+            throw err;
+          } else {
+            logger.debug('Old file deleted deleted from s3');
+            resolve();
+          }
+        });
       });
-    });
+    }
+
+    return url;
   }
   
   /**
@@ -172,7 +170,7 @@ function uploadController(logger) {
       } else if (config.strategy === 'local') {
         resolve(this.uploadLocal(config));
       } else {
-        reject(new Error('Configuration error: unknown upload startegy'));
+        reject(new Error('Configuration error: unknown upload strategy'));
       }
     });
   }

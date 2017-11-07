@@ -54,7 +54,7 @@ function userAuthController(logger, shared) {
    *
    * @return {void}
    */
-  function register(req, res, next) {
+  async function register(req, res, next) {
     var user = req.user;
 
     var body = req.body;
@@ -70,81 +70,67 @@ function userAuthController(logger, shared) {
     // Overwrite any roles set or make sure they get set appropriately.
     newUser.role = config.app.defaultUserRole;
 
-    return new Promise((resolve, reject) => {
-      if (!config.app.allowRegistration) {
-        reject(new Error('Registration disabled'));
-      } else if (!isStrongPassword(newUser.password)) {
-        reject(new Error('Invalid password'));
-      } else {
-        resolve(authHelpers.hashPassword(newUser.password));
-      }
-    }).then((hash) => {
-      newUser.password = hash;
+    if (!config.app.allowRegistration) {
+      logger.warn('Registration is disabled but someone tried to signup');
+      return res.status(500).send();
+    } else if (!isStrongPassword(newUser.password)) {
+      return res.status(400).send({ error: 'Invalid password: ' + config.auth.invalidPasswordMessage });
+    }
+
+    let hash = await authHelpers.hashPassword(newUser.password);
       
-      newUser.verification = {
-        token: authHelpers.generateUniqueToken(),
-        expires: Date.now() + config.app.emailVerificationTTL
-      };
+    newUser.password = hash;
+      
+    newUser.verification = {
+      token: authHelpers.generateUniqueToken(),
+      expires: Date.now() + config.app.emailVerificationTTL
+    };
 
-      // save the user
-      return newUser.save();
-    }).then((savedUser) => {
-      logger.info('User created: ' + newUser.username);
+    // save the user
+    let savedUser;
+    try {
+      savedUser = await newUser.save();
+    } catch (error) {
+      if (error.code === 11000) {
+        // check for specific codes to provide feedback to ui
+        let errObj = error.toJSON();
+        let errmsg = errObj.errmsg;
+        let errmsgList = errmsg.split(' ');
+        // index is the duplicate key
+        let index = errmsgList[errmsgList.indexOf('index:')+1];
 
-      if (config.app.requireEmailVerification) {
-        return sendEmailVerificationEmail(newUser).then((mailInfo) => {
-          res.status(201).send({ user: savedUser });
-        }).catch((error) => {
-          logger.error('Error sending verification email', error);
-          res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
-        });
-      } else {
-        return new Promise((resolve, reject) => {
-          res.status(201).send({ user: savedUser });
-        });
-      }
-    }).catch((error) => {
-      if (error.errors) {
-        let errors = extractMongooseErrors(err.errors);
-        let validation = _.find(errors, (o) => {
-          return (o.name === 'ValidatorError');
-        });
+        // TODO implement email-password login and registration
+        // confirmation emails. Otherwise usernames could be enumerated
+        // with this endpoint. Until then send back generic error
+        // message
 
-        if (validation) {
-          logger.error('Validation error on registering a new user', validation);
-          res.status(400).send({ error: validation.message });
+        if (index === 'username_1') {
+          return res.status(400).send({ error: 'Username is taken' });
         } else {
-          // check for specific codes to provide feedback to ui
-          let errObj = err.toJSON();
-          let code = errObj.code;
-          let errmsg = errObj.errmsg;
-
-          // user already exists
-          // 11000 code is from mongoose
-          if (code === 11000) {
-            let errmsgList = errmsg.split(' ');
-            // index is the duplicate key
-            let index = errmsgList[errmsgList.indexOf('index:')+1];
-
-            // TODO implement email-password login and registration
-            // confirmation emails. Otherwise usernames could be enumerated
-            // with this endpoint. Until then send back generic error
-            // message
-
-            if (index === 'username_1') {
-              res.status(500).send({ error: 'Username is taken' });
-            } else {
-              res.status(500).send();
-            }
-          }
+          return res.status(500).send();
         }
-      } else if (error.message === 'Invalid password') {
-        res.status(400).send({ error: 'Invalid password: ' + config.auth.invalidPasswordMessage });
+        
+        
       } else {
         logger.error('Error in User.auth#register', error);
-        res.status(500).send();
+        return res.status(500).send();
       }
-    });
+
+    }
+      
+    logger.info('User created: ' + newUser.username);
+
+    if (config.app.requireEmailVerification) {
+      try {
+        let mailInfo = await sendEmailVerificationEmail(newUser);
+        return res.status(201).send({ user: savedUser });
+      } catch (error) {
+        logger.error('Error sending verification email', error);
+        return res.status(201).send({ user: savedUser, message: 'Verification email not sent' });
+      }
+    } else {
+      return res.status(201).send({ user: savedUser });
+    }
   }
 
   /**
@@ -246,8 +232,6 @@ function userAuthController(logger, shared) {
         res.status(400).send({ message: 'Token has expired' });
       } else if (error.message === 'Token invalid') {
         res.status(400).send({ message: 'Token invalid' });
-      } else if (error.message === 'Not authorized') {
-        res.status(401).send();
       } else {
         logger.error('Error verifying email: ', error);
         res.status(500).send();
@@ -399,10 +383,6 @@ function userAuthController(logger, shared) {
       if (body[realIndex]) {
         user[realIndex] = body[realIndex];
       }
-    }
-
-    if (body._id) {
-      user._id = body._id;
     }
 
     user.updated = new Date();

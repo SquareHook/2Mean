@@ -9,6 +9,7 @@ require('sinon-mongoose');
 var argon2 = require('argon2');
 var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
+
 var ObjectID = require('mongodb').ObjectID;
 
 var Keys = require('./../../../auth/server/models/Keys');
@@ -39,7 +40,8 @@ describe('UserCrudController', () => {
     username: 'testuser',
     email: 'test@example.com',
     password: 'hash',
-    roles: ['user'],
+    role: 'user',
+    subroles: ['user'],
     verification: {
       token: 'blahblah',
       expires: Date.now()
@@ -55,7 +57,8 @@ describe('UserCrudController', () => {
     username: 'admin',
     email: 'admin@example.com',
     password: 'hash',
-    roles: [ 'admin', 'user' ]
+    role: 'admin',
+    subroles: [ 'admin', 'user' ]
   };
 
   before(() => {
@@ -178,9 +181,10 @@ describe('UserCrudController', () => {
     });
 
     it('should send a 403 if not authorized', () => {
-      usersMock.expects('findOne')
-        .chain('exec')
-        .resolves(mockAdmin);
+      setupAllResolve();
+
+      req.user = mockUser;
+      req.params.userId = new ObjectID();
 
       return userController.read(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 403 ]]);
@@ -518,6 +522,7 @@ describe('UserCrudController', () => {
 
     it('should send a 500 if findOne fails', () => {
       usersMock.expects('findOne')
+        .chain('exec')
         .rejects(new Error('findOne failed'));
 
       return userController.update(req, res, next).then((data) => {
@@ -617,6 +622,8 @@ describe('UserCrudController', () => {
       req.params = {
         userId: mockUser._id
       };
+
+      req.user = mockAdmin;
     });
 
     function setupAllResolve() {
@@ -687,12 +694,13 @@ describe('UserCrudController', () => {
     });
     beforeEach(() => {
       req.body = {
-        _id: 'look at me',
+        _id: new ObjectID(),
         firstName: 'first',
         lastName: 'last'
       };
       req.user = {
-        role: 'admin'
+        role: 'admin',
+        subroles: ['admin', 'user']
       };
 
       hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
@@ -712,7 +720,7 @@ describe('UserCrudController', () => {
     }
 
     function setupUpdateResolves() {
-      usersMock.expects('update')
+      usersMock.expects('findOneAndUpdate')
         .chain('exec')
         .resolves([ mockUser ]);
     }
@@ -749,7 +757,7 @@ describe('UserCrudController', () => {
     it('should use Users.findOneAndUpdate', () => {
       setupHashPasswordResolves();
       usersMock.expects('findOneAndUpdate')
-        .withExactArgs({ _id: 'look at me' }, { $set: {_id: 'look at me', firstName: 'first', lastName: 'last' } })
+        .withExactArgs({ _id: req.body._id }, { $set: {_id: req.body._id, firstName: 'first', lastName: 'last' } })
         .chain('exec')
         .resolves( mockUser );
       req.user = {
@@ -760,19 +768,12 @@ describe('UserCrudController', () => {
       });
     });
 
-    it('should send a 200 and the sanitized user on success', () => {
+    it('should send a 204 on success', () => {
       setupAllResolve();
       req.body._id = '012345678901234567890123';
       return userController.adminUpdate(req, res, next).then((data) => {
-        statusStub.args.should.deep.equal([[ 200 ]]);
-  
-        sendStub.args.length.should.equal(1);
-        sendStub.args[0].length.should.equal(1);
-        sendStub.args[0][0].length.should.equal(1);
-
-        should.not.exist(sendStub.args[0][0][0].password);
-        should.not.exist(sendStub.args[0][0][0].verification.token);
-        should.not.exist(sendStub.args[0][0][0].resetPassword.token);
+        statusStub.args.should.deep.equal([[ 204 ]]);
+        sendStub.args.should.deep.equal([[]]);
       });
     });
 
@@ -789,7 +790,7 @@ describe('UserCrudController', () => {
 
     it('should send a 500 if update fails', () => {
       setupHashPasswordResolves();
-      usersMock.expects('update')
+      usersMock.expects('findOneAndUpdate')
         .chain('exec')
         .rejects(new Error('update failed'));
 
@@ -813,5 +814,34 @@ describe('UserCrudController', () => {
       should.not.exist(sanitized.verification.token);
       should.not.exist(sanitized.resetPassword.token);
     });
+  });
+
+  describe('#updateUserRoles', () => {
+    const userId = new ObjectID();
+    const targetRole = 'a role';
+    const subroles = [ 'user' ];
+
+    beforeEach(() => {
+      usersMock.expects('update')
+        .withExactArgs({ _id: userId }, { $set: { role: targetRole, subroles: subroles } })
+        .resolves();
+    });
+
+    it('should return a promise', () => {
+      userController.updateUserRoles(userId, targetRole, subroles)
+        .constructor.name.should.equal('Promise');
+    });
+
+    it('should call Users.update', async () => {
+      await userController.updateUserRoles(userId, targetRole, subroles);
+
+      usersMock.verify();
+    });
+  });
+
+  // TODO this method seems to be doing something bad so I'm not going to test
+  // it someone needs to revisit the way subroles are being removed and fix
+  // that first
+  describe('#removeSubroles', () => {
   });
 });

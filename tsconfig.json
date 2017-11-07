@@ -9,7 +9,8 @@
         "removeComments": false,
         "sourceMap": true,
         "target": "es5",
-        "lib": [ "es7", "dom" ]
+        "lib": [ "es7", "dom" ],
+        "typeRoots": ["./node_modules/@types/"]
     },
     "exclude": [
         "node_modules",

@@ -90,7 +90,7 @@ describe('UserAuthController', () => {
     to: 'test@example.com',
     from: 'don\'t care',
     subject: 'Change Password',
-    text: 'Change your password by going here: http://' + mockConfig.app.host + '/changePassword;token=' + token
+    text: 'Change your password by going here: http://' + mockConfig.app.host + '/reset-password;token=' + token
   };
 
   before(() => {
@@ -230,13 +230,35 @@ describe('UserAuthController', () => {
     it('should handle 11000 duplicate index', () => {
       saveStub.rejects({
         name: 'MongoError',
-        toJSON: () => { return {}; },
+        toJSON: () => {
+          return {
+            code: 11000,
+            errmsg: 'Duplicate index: username_1'
+          };
+        },
         code: 11000,
-        errmsg: 'Duplicate'
       });
 
       return userController.register(req, res, next).then((data) => {
-        statusStub.calledWith(500).should.equal(true);
+        statusStub.args.should.deep.equal([[ 400 ]]);
+        sendStub.calledWith({ error: 'Username is taken' });
+      });
+    });
+
+    it('should send a 500 if the duplicate key is not username', () => {
+      saveStub.rejects({
+        name: 'MongoError',
+        toJSON: () => {
+          return {
+            code: 11000,
+            errmsg: 'Duplicate index: email_1'
+          };
+        },
+        code: 11000,
+      });
+
+      return userController.register(req, res, next).then((data) => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
         // response should be generic
         sendStub.calledWith('Internal Server Error');
       });
@@ -275,6 +297,34 @@ describe('UserAuthController', () => {
         statusStub.args.should.deep.equal([[ 201 ]]);
         sendStub.args.should.deep.equal([[ { user: mockUser, message: 'Verification email not sent' }]]);
       });
+    });
+    
+    it('should not allow registration if registration is disabled', async () => {
+      setupAllResolve();
+
+      mockConfig.app.allowRegistration = false;
+
+      await userController.register(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 500 ]]);
+      sendStub.called.should.equal(true);
+
+      mockConfig.app.allowRegistration = true;
+    });
+
+    it('should not try to send an email if email sending is disabled', async () => {
+      setupAllResolve();
+
+      mockConfig.app.requireEmailVerification = false;
+
+      await userController.register(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 201 ]]);
+      sendStub.args.should.deep.equal([[ { user: mockUser } ]]);
+
+      sendMailStub.args.should.deep.equal([]);
+
+      mockConfig.app.requireEmailVerification = true;
     });
   });
 

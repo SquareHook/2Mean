@@ -11,6 +11,8 @@ const multer = require('multer');
 const multerS3 = require('multer-s3');
 const aws = require('aws-sdk');
 const proxyquire = require('proxyquire');
+const fs = require('fs');
+const path = require('path');
 
 let mockLogger = require('./testbench/mock-logger');
 
@@ -21,10 +23,9 @@ describe('UploaderController', () => {
   let uploaderController;
   let req, res;
   let mockConfig;
-  let multerMock;
   let multerStub;
-  let singleSpy;
-  let s3Stub;
+  let multerS3Stub;
+  let config;
 
   beforeEach(() => {
     req = {};
@@ -36,18 +37,12 @@ describe('UploaderController', () => {
     };
 
     multerStub = sinon.stub();
-    multerMock = sinon.mock(multer);
-    singleSpy = sinon.spy();
-    s3Stub = sinon.stub(aws, 'S3');
+    multerS3Stub = sinon.stub();
 
     uploaderController = proxyquire('../controllers/uploader.controller', {
-      multer: multerStub
+      multer: multerStub,
+      'multer-s3': multerS3Stub
     })(mockLogger);
-  });
-
-  afterEach(() => {
-    //multerStub.restore();
-    s3Stub.restore();
   });
 
   describe('upload', () => {
@@ -70,8 +65,22 @@ describe('UploaderController', () => {
     });
 
     it('should return a promise', () => {
+      mockConfig.strategy = 'local';
+
       uploaderController.upload(mockConfig)
         .constructor.name.should.equal('Promise');
+    });
+
+    it('should reject if the strategy is not known', async () => {
+      mockConfig.strategy = 'unknown';
+
+      try {
+        await uploaderController.upload(mockConfig);
+      } catch (error) {
+        error.message.should.equal('Configuration error: unknown upload strategy');
+        return;
+      }
+      throw new Error('Should have thrown');
     });
 
     it('should call s3 if config.strategy is "s3"', () => {
@@ -108,38 +117,56 @@ describe('UploaderController', () => {
         v1Stub.called.should.equal(false);
       });
     });
+
+    it('should set an oldFilename if an oldFileUrl is set', () => {
+      mockConfig.oldFileUrl = 'abc.xyz/blah.jpg';
+      mockConfig.strategy = 'local';
+
+      return uploaderController.upload(mockConfig).then((data) => {
+        uploadLocalStub.args[0][0].oldFileName.should.equal('blah.jpg');
+      });
+    });
   });
 
   describe('uploadLocal', () => {
-    let localConfig;
-    let uploadStub;
-    let diskStorageStub;
-    
+    const newUrl = 'api/newfile';
+
+    let diskStorage,
+      singleStub,
+      uploadStub,
+      unlinkStub;
+
     beforeEach(() => {
+      diskStorageStub = sinon.stub();
+      singleStub = sinon.stub();
       uploadStub = sinon.stub();
-      diskStorageStub = sinon.stub(multer, 'diskStorage');
+      unlinkStub = sinon.stub(fs, 'unlink');
 
-      localConfig = {
-        dest: './somewhere/',
-        limits: {
-          fileSize: 1024
-        }
+      mockConfig = {
+        local: {
+          limits: {
+            fileSize: 1024
+          },
+          dest: './somewhere/',
+          apiPrefix: 'api/'
+        },
+        newFileName: 'newfile',
+        fileFilter: 'fileFilter',
+        strategy: 'local'
       };
-
-      mockConfig.strategy = 'local';
-      mockConfig.local = localConfig;
     });
 
     afterEach(() => {
-      diskStorageStub.restore();
+      unlinkStub.restore();
     });
 
     function setupAllResolve() {
-      multerStub.returns(multerMock);
-      multerMock.expects('single')
-        .returns(uploadStub);
-      uploadStub.callsArgWith(2, null);
+      multerStub.returns({ single: singleStub });
+      multerStub.diskStorage = diskStorageStub;
       diskStorageStub.returns('disk storage');
+      singleStub.returns(uploadStub);
+      uploadStub.callsArgWith(2, null);
+      unlinkStub.callsArgWith(1, null);
     }
 
     it('should return a promise', () => {
@@ -149,123 +176,232 @@ describe('UploaderController', () => {
         .constructor.name.should.equal('Promise');
     });
 
-    it('should use the multer contructor and single method', () => {
+    it('should use the multer contructor and single method', async () => {
       setupAllResolve();
 
-      return uploaderController.uploadLocal(mockConfig).then(() => {
-        let arg;
-        multerStub.called.should.equal(true);
-        arg.storage.should.equal('disk storage');
+      await uploaderController.uploadLocal(mockConfig);
 
-        multerMock.verify(); 
+      let arg = multerStub.args[0][0];
+
+      arg.storage.should.equal('disk storage');
+      arg.fileFilter.should.equal(mockConfig.fileFilter);
+      arg.limits.should.deep.equal(mockConfig.local.limits);
+
+      arg = diskStorageStub.args[0][0];
+
+      // should call the cb with the dest
+      arg.destination(undefined, undefined, (error, dest) => {
+        should.not.exist(error);
+        dest.should.equal(mockConfig.local.dest);
       });
+
+      // should call the cb with the filename
+      arg.filename(undefined, undefined, (error, filename) => {
+        should.not.exist(error);
+        filename.should.equal(mockConfig.newFileName);
+      });
+
+      singleStub.args.should.deep.equal([[ 'file' ]]);
     });
 
-    it('should use the multer.diskStorage method', () => {
+    it('should use the fs.unlink method if config.oldFileName exists', async () => {
       setupAllResolve();
 
-      return uploaderController.uploadLocal(mockConfig).then(() => {
-        let arg;
+      mockConfig.oldFileName = 'old file name';
 
-        diskStorageStub.args.length.should.equal(1);
-        diskStorageStub.args[0].length.should.equal(1);
-        arg = diskStorageStub[0][0];
+      await uploaderController.uploadLocal(mockConfig);
 
-        arg.destination.constructor.name.should.equal('Function');
-        arg.filename.constructor.name.should.equal('Function');
-      });
-    });
-
-    it('should pass the fileFilter and limits', () => {
-      setupAllResolve();
-      return uploaderController.uploadLocal(mockConfig).then(() => {
-        let arg;
-
-        multerStub.args.length.should.equal(1);
-        multerStub.args[0].length.should.equal(1);
-        arg = multerStub.args[0][0];
-
-        arg.fileFilter.should.equal(mockConfig.fileFilter);
-        arg.limits.should.equal(mockConfig.local.limits);
-      });
-    });
-
-    it('should use the fs.unlink method if config.oldFileName exists', () => {
-
+      let args = unlinkStub.args[0];
+      args[0].should.equal(path.resolve(mockConfig.local.dest, mockConfig.oldFileName));
+      args[1].constructor.name.should.equal('Function');
     });
     
-    it('should not use the fs.unlink method if config.oldFileName doesnt exists', () => {
+    it('should not use the fs.unlink method if config.oldFileName doesnt exists', async () => {
+      setupAllResolve();
 
+      await uploaderController.uploadLocal(mockConfig);
+
+      unlinkStub.args.should.deep.equal([]);
     });
 
-    it('should resolve with the url if successful', () => {
+    it('should resolve with the url if successful', async () => {
+      setupAllResolve();
 
+      let result = await uploaderController.uploadLocal(mockConfig);
+
+      result.should.equal(newUrl);
     });
 
-    it('should reject if the upload fails', () => {
+    it('should reject if the upload fails', async () => {
+      let uploadFailedError = new Error('upload failed');
+      setupAllResolve();
+      uploadStub.reset();
+      uploadStub.callsArgWith(2, uploadFailedError);
 
+      try {
+        await uploaderController.uploadLocal(mockConfig);
+      } catch (error) {
+        error.should.deep.equal(uploadFailedError);
+        return;
+      }
+
+      throw new Error('Should have thrown an error');
     });
 
-    it('should reject if the unlink fails', () => {
+    it('should not reject if the unlink fails', async () => {
+      setupAllResolve();
+      unlinkStub.reset();
+      unlinkStub.callsArgWith(1, new Error('failed'));
 
+      mockConfig.oldFileName = 'old file name';
+
+      await uploaderController.uploadLocal(mockConfig);
     });
   });
 
   describe('uploadS3', () => {
-    let s3Config;
-    
-    beforeEach(() => {
-      s3Config = {
-        bucket: 'bucketname',
-        acl: 'public',
-        limits: {
-          fileSize: 1024
-        }
-      };
+    const newUrl = './somewhere/newfile';
 
-      mockConfig.strategy = 's3';
-      mockConfig.s3 = s3Config;
+    let s3Stub,
+      singleStub,
+      uploadStub,
+      deleteObjectStub;
+
+    beforeEach(() => {
+      singleStub = sinon.stub();
+      uploadStub = sinon.stub();
+      s3Stub = sinon.stub(aws, 'S3');
+      deleteObjectStub = sinon.stub(aws.S3.prototype, 'deleteObject');
+      s3Stub.returns({
+        deleteObject: deleteObjectStub
+      });
+
+      mockConfig = {
+        s3: {
+          bucket: 'bucket',
+          acl: 'acl',
+          limits: {
+            fileSize: 1024
+          },
+          dest: './somewhere/'
+        },
+        newFileName: 'newfile',
+        fileFilter: 'fileFilter',
+        strategy: 's3'
+      };
     });
 
     afterEach(() => {
-
+      s3Stub.restore();
     });
 
+    function setupAllResolve() {
+      multerStub.returns({ single: singleStub });
+      multerS3Stub.returns('multerS3');
+      singleStub.returns(uploadStub);
+      uploadStub.callsArgWith(2, null);
+      deleteObjectStub.callsArgWith(1, null, null);
+    }
+
     it('should return a promise', () => {
-      uploaderController.uploadLocal(mockConfig)
+      setupAllResolve();
+
+      uploaderController.uploadS3(mockConfig)
         .constructor.name.should.equal('Promise');
     });
 
-    it('should use the multer contructor and single method', () => {
+    it('should use the multer contructor and single method', async () => {
+      setupAllResolve();
 
+      await uploaderController.uploadS3(mockConfig);
+
+      let arg = multerStub.args[0][0];
+
+      arg.storage.should.equal('multerS3');
+      arg.fileFilter.should.equal(mockConfig.fileFilter);
+      arg.limits.should.deep.equal(mockConfig.s3.limits);
+
+      arg = multerS3Stub.args[0][0];
+
+      arg.bucket.should.equal('bucket');
+      arg.acl.should.equal('acl');
+
+      // should call the cb with the metadata
+      arg.metadata(undefined, { fieldname: 'fieldname' }, (error, meta) => {
+        should.not.exist(error);
+        meta.should.deep.equal({ fieldName: 'fieldname' });
+      });
+
+      // should call the cb with the filename
+      arg.key(undefined, undefined, (error, filename) => {
+        should.not.exist(error);
+        filename.should.equal(mockConfig.newFileName);
+      });
+
+      singleStub.args.should.deep.equal([[ 'file' ]]);
     });
 
-    it('should use the multer.multerS3 method', () => {
+    it('should use the s3.deleteObject method if config.oldFileName exists', async () => {
+      setupAllResolve();
 
-    });
+      mockConfig.oldFileName = 'old file name';
 
-    it('should pass the fileFilter and limits', () => {
+      await uploaderController.uploadS3(mockConfig);
 
-    });
-
-    it('should use the s3.deleteObject method if config.oldFileName exists', () => {
-
+      deleteObjectStub.args[0][0].should.deep.equal({
+        Bucket: 'bucket',
+        Key: mockConfig.oldFileName
+      });
     });
     
-    it('should not use the s3.deleteObject method if config.oldFileName doesnt exists', () => {
+    it('should not use the s3.deleteObject method if config.oldFileName doesnt exists', async () => {
+      setupAllResolve();
 
+      await uploaderController.uploadS3(mockConfig);
+
+      deleteObjectStub.args.should.deep.equal([]);
     });
 
-    it('should resolve with the url if successful', () => {
+    it('should resolve with the url if successful', async () => {
+      setupAllResolve();
 
+      let result = await uploaderController.uploadS3(mockConfig);
+
+      result.should.equal(newUrl);
     });
 
-    it('should reject if the upload fails', () => {
+    it('should reject if the upload fails', async () => {
+      let uploadFailedError = new Error('upload failed');
+      setupAllResolve();
+      uploadStub.reset();
+      uploadStub.callsArgWith(2, uploadFailedError);
 
+      try {
+        await uploaderController.uploadS3(mockConfig);
+      } catch (error) {
+        error.should.deep.equal(uploadFailedError);
+        return;
+      }
+
+      throw new Error('Should have thrown an error');
     });
 
-    it('should reject if the deleteObject fails', () => {
+    it('should reject if the delete object fails', async () => {
+      const deleteFailedError = new Error('deleteObjectFailed');
+      setupAllResolve();
+      deleteObjectStub.reset();
+      deleteObjectStub.callsArgWith(1, deleteFailedError);
 
+      mockConfig.oldFileName = 'old file name';
+
+      try {
+        await uploaderController.uploadS3(mockConfig);
+      } catch (error) {
+        error.should.deep.equal(deleteFailedError);
+        return;
+      }
+
+      throw new Error('should have thrown');
     });
   });
 });

@@ -30,4 +30,8 @@ var ArticleSchema = new Schema({
   userId: Schema.ObjectId
 });
 
-mongoose.model('Article', ArticleSchema);
+try {
+  mongoose.model('Article');
+} catch (error) {
+  mongoose.model('Article', ArticleSchema);
+}

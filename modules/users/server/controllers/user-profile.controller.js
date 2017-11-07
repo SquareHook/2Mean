@@ -8,16 +8,6 @@ var mongoose = require('mongoose');
  */
 var Users = mongoose.model('User');
 
-/**
- * Q promise library.
- */
-var q = require('q');
-
-/*
- * Underscore/Lodash functionality.
- */
-var _ = require('lodash');
-
 /*
  * Multer multipart form data  (for files)
  */
@@ -51,9 +41,7 @@ var fs = require('fs');
 /*
  * application config
  */
-var config = require(path.resolve('config/config'));
-
-var md5 = require('md5');
+const config = require('../../../../config/config');
 
 /**
  * Main business logic for handling requests.
@@ -71,7 +59,7 @@ function userProfileController(logger, shared) {
    *
    * @return {void}
    */
-  function changeProfilePicture(req, res, next) {
+  async function changeProfilePicture(req, res, next) {
     // get user from request
     var user = req.user;
     let uploadConfig = {
@@ -81,49 +69,47 @@ function userProfileController(logger, shared) {
       res: res
     };
 
-    return new Promise((resolve, reject) => {
-      if (isAuthorized(user, 'update')) { 
-        if (uploadConfig.strategy === 's3') {
-          uploadConfig.s3 = config.uploads.profilePicture.s3;
-        } else if (uploadConfig.strategy === 'local') {
-          uploadConfig.local = config.uploads.profilePicture.local;
-          uploadConfig.local.apiPrefix = '/api/users/' + user._id + '/picture/';
-        } else {
-          throw new Error('unknown strategy');
-        }
+    // the request should only (at the moment) ever change the current user's
+    // profile picture so there is no need to check if the user is authorized
+    
+    if (uploadConfig.strategy === 's3') {
+      uploadConfig.s3 = config.uploads.profilePicture.s3;
+    } else if (uploadConfig.strategy === 'local') {
+      uploadConfig.local = config.uploads.profilePicture.local;
+      uploadConfig.local.apiPrefix = '/api/users/' + user._id + '/picture/';
+    } else {
+      return res.status(500).send();
+    }
 
-        return Users.findById(user._id).exec().then((foundUser) => {
-          if (foundUser) {
-            resolve(shared.uploader.upload(uploadConfig).then((url) => {
-              foundUser.profileImageURL = url;
-              return foundUser.save();
-            }));
-          } else {
-            throw new Error('not found');
-          }
-        });
-      } else {
-        throw new Error('forbidden');
+    try {
+      foundUser = await Users.findById(user._id).exec();
+    } catch (error) {
+      return res.status(500).send();
+    } 
+
+    if (foundUser) {
+      try {
+        url = await shared.uploader.upload(uploadConfig);
+      } catch (error) {
+        return res.status(500).send();
       }
-    })
-    .then((savedUser) => {
-      res.status(200).send(savedUser);
-    })
-    .catch((error) => {
-      if (error.message === 'unknown strategy') {
-        logger.error(error.message + ' for profile picture upload');
-        res.status(500).send();
-      } else if (error.message === 'forbidden') {
-        res.status(403).send();
-      } else if (error.message === 'not found') {
-        res.status(404).send();
-      } else if (error.name === 'ValidationError') {
-        res.status(400).send(error.message);
+    } else {
+      return res.status(404).send();
+    }
+    
+    foundUser.profileImageURL = url;
+
+    try {
+      savedUser = await foundUser.save();
+    } catch (error) {
+      if (error.name === 'ValidationError') {
+        return res.status(400).send(error.message);
       } else {
-        logger.error(error);
-        res.status(500).send();
+        return res.status(500).send();
       }
-    });
+    }
+
+    return res.status(200).send(savedUser);
   }
     
   /**
@@ -135,65 +121,27 @@ function userProfileController(logger, shared) {
    *
    * @returns {void}
    */
-  function getProfilePicture(req, res, next) {
+  async function getProfilePicture(req, res, next) {
     // local strategy stores image on filesystem
     // s3 strategy serves direct urls
     if (config.uploads.profilePicture.use !== 'local') {
-      res.status(400).send('Local strategy not in use');
+      return res.status(400).send('Local strategy not in use');
     }
 
     var userId = req.params.userId;
     var fileName = req.params.fileName;
 
-    Users.findOne({_id: userId})
-      .then((user) => {
-        var url = user.profileImageURL;
-        var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
-
-        // if filename exists
-        if (serveUrl.length !== 0) {
-          res.status(201).sendFile(serveUrl);
-        } else {
-          logger.error('Filename does not exist');
-          res.status(400).send('Error retrieving file');
-        }
-      }, (error) => {
-        res.status(500).send('Error retrieving user information');
-      });
-  }
-  // --------------------------- Private Function Definitions ----------------------------
-
-  /*
-   * Verfies the user is authorized to make changes.
-   *
-   * TODO: This could probably be more robust.
-   */
-  function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
-      return true;
+    let user;
+    try {
+      user = await Users.findOne({_id: userId});
+    } catch (error) {
+      return res.status(500).send('Error retrieving user information');
     }
+        
+    var url = user.profileImageURL;
+    var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
 
-    return false;
-  }
-
-  /*
-   * checks the file is valid
-   *  fileSize is handled by multer using limits property of config
-   *  object.
-   *  type is handled here
-   */
-  function profilePictureFileFilter (req, file, cb) {
-    // get config
-    var allowedTypes = config.uploads.profilePicture.allowedTypes;
-    var fileType = file.mimetype;
-
-    if (!allowedTypes.includes(fileType)) {
-      logger.debug('file uploaded is invalid');
-      cb(null, false);
-    } else {
-      logger.debug('file uploaded is valid');
-      cb(null, true);
-    }
+    return res.status(200).sendFile(serveUrl);
   }
   
   // --------------------------- Revealing Module Section ----------------------------

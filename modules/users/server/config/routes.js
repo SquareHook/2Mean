@@ -72,7 +72,7 @@ module.exports = [
   {
     name: 'Updates a User.',
     description: 'Updates a users information.',
-    route: '/users',
+    route: '/users/:userId',
     type: 'PUT',
     method: 'crud.update',
     secure: true
