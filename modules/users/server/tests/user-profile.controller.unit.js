@@ -316,6 +316,15 @@ describe('UserProfileController', () => {
       statusStub.args.should.deep.equal([[ 400 ]]);
       sendStub.args.should.deep.equal([[ saveValidationFailed.message ]]);
     });
+
+    it('should send a 200 on success', async () => {
+      setupAllResolve();
+
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 200 ]]);
+      sendStub.args.should.deep.equal([[ mockUser ]]);
+    });
   });
 
   describe('#getProfilePicture', () => {

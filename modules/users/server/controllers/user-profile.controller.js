@@ -105,9 +105,11 @@ function userProfileController(logger, shared) {
       if (error.name === 'ValidationError') {
         return res.status(400).send(error.message);
       } else {
-        res.status(500).send();
+        return res.status(500).send();
       }
     }
+
+    return res.status(200).send(savedUser);
   }
     
   /**
