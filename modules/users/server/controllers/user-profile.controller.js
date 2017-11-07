@@ -8,16 +8,6 @@ var mongoose = require('mongoose');
  */
 var Users = mongoose.model('User');
 
-/**
- * Q promise library.
- */
-var q = require('q');
-
-/*
- * Underscore/Lodash functionality.
- */
-var _ = require('lodash');
-
 /*
  * Multer multipart form data  (for files)
  */
@@ -53,8 +43,6 @@ var fs = require('fs');
  */
 const config = require('../../../../config/config');
 
-var md5 = require('md5');
-
 /**
  * Main business logic for handling requests.
  */
@@ -81,9 +69,8 @@ function userProfileController(logger, shared) {
       res: res
     };
 
-    if (!isAuthorized(user, 'update')) { 
-      return res.status(403).send();
-    }
+    // the request should only (at the moment) ever change the current user's
+    // profile picture so there is no need to check if the user is authorized
     
     if (uploadConfig.strategy === 's3') {
       uploadConfig.s3 = config.uploads.profilePicture.s3;
@@ -95,7 +82,7 @@ function userProfileController(logger, shared) {
     }
 
     try {
-      foundUser = Users.findById(user._id).exec();
+      foundUser = await Users.findById(user._id).exec();
     } catch (error) {
       return res.status(500).send();
     } 
@@ -104,7 +91,7 @@ function userProfileController(logger, shared) {
       try {
         url = await shared.uploader.upload(uploadConfig);
       } catch (error) {
-
+        return res.status(500).send();
       }
     } else {
       return res.status(404).send();
@@ -119,6 +106,7 @@ function userProfileController(logger, shared) {
         return res.status(400).send(error.message);
       } else {
         res.status(500).send();
+      }
     }
   }
     
@@ -151,44 +139,7 @@ function userProfileController(logger, shared) {
     var url = user.profileImageURL;
     var serveUrl = path.resolve('uploads/users/img/profilePicture/' + fileName);
 
-    // if filename exists
-    if (serveUrl.length !== 0) {
-      return res.status(200).sendFile(serveUrl);
-    }
-  }
-  // --------------------------- Private Function Definitions ----------------------------
-
-  /*
-   * Verfies the user is authorized to make changes.
-   *
-   * TODO: This could probably be more robust.
-   */
-  function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
-      return true;
-    }
-
-    return false;
-  }
-
-  /*
-   * checks the file is valid
-   *  fileSize is handled by multer using limits property of config
-   *  object.
-   *  type is handled here
-   */
-  function profilePictureFileFilter (req, file, cb) {
-    // get config
-    var allowedTypes = config.uploads.profilePicture.allowedTypes;
-    var fileType = file.mimetype;
-
-    if (!allowedTypes.includes(fileType)) {
-      logger.debug('file uploaded is invalid');
-      cb(null, false);
-    } else {
-      logger.debug('file uploaded is valid');
-      cb(null, true);
-    }
+    return res.status(200).sendFile(serveUrl);
   }
   
   // --------------------------- Revealing Module Section ----------------------------

@@ -22,6 +22,13 @@ module.exports = function(logger) {
 
         }
       }
+    })(logger),
+    uploader: (function(logger) {
+      return {
+        upload: function upload() {
+
+        }
+      }
     })(logger)
   }
 };

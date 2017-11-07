@@ -18,7 +18,21 @@ const proxyquire = require('proxyquire');
 const mockConfig = {
   uploads: {
     profilePicture: {
-      use: 'local'
+      use: 'local',
+      local: {
+        dest: 'dest',
+        limits: {
+          fileSize: 1024 * 1024
+        }
+      },
+      s3: {
+        dest: 's3://url/bucket',
+        bucket: 'bucket',
+        acl: 'public-read',
+        limits: {
+          fileSize: 1024 * 1024
+        }
+      }
     }
   }
 };
@@ -123,40 +137,184 @@ describe('UserProfileController', () => {
   });
 
   describe('#changeProfilePicture', () => {
-    it('should return a promise', () => {
+    const newUrl = 'newurl';
 
+    let uploadStub;
+
+    beforeEach(() => {
+      uploadStub = sinon.stub(mockSharedModule.uploader, 'upload');
     });
 
-    it('shoud send a 403 if the user is not authorized', async () => {
+    afterEach(() => {
+      uploadStub.restore();
+    });
 
+    function setupAllResolve () {
+      setupFindByIdResolves();
+      setupUploadResolves();
+      setupSaveResolves();
+    }
+
+    function setupFindByIdResolves () {
+      usersMock.expects('findById')
+        .withExactArgs(mockUser._id)
+        .chain('exec')
+        .resolves(mockUser);
+    }
+
+    function setupUploadResolves () {
+      uploadStub.resolves(newUrl);
+    }
+
+    function setupSaveResolves () {
+      saveStub.resolves(mockUser);
+    }
+
+    it('should return a promise', () => {
+      setupAllResolve();
+
+      userController.changeProfilePicture(req, res, next)
+        .constructor.name.should.equal('Promise');
     });
 
     it('should use findById', async () => {
+      setupAllResolve();
 
+      await userController.changeProfilePicture(req, res, next);
+
+      usersMock.verify();
     });
 
-    it('should use upload', async () => {
+    it('should use upload with local config if strategy is local', async () => {
+      mockConfig.uploads.profilePicture.use = 'local';
 
+      setupAllResolve();
+
+      await userController.changeProfilePicture(req, res, next);
+
+      uploadStub.args.should.deep.equal([[ {
+        strategy: 'local',
+        oldFileUrl: mockUser.profileImageURL,
+        req: req,
+        res: res,
+        local: {
+          apiPrefix: '/api/users/' + mockUser._id + '/picture/',
+          dest: 'dest',
+          limits: {
+            fileSize: 1024 * 1024
+          }
+        }
+      } ]]);
+    });
+
+    it('should use upload with s3 config if strategy is s3', async () => {
+      mockConfig.uploads.profilePicture.use = 's3';
+
+      setupAllResolve();
+
+      await userController.changeProfilePicture(req, res, next);
+
+      uploadStub.args.should.deep.equal([[ {
+        strategy: 's3',
+        oldFileUrl: mockUser.profileImageURL,
+        req: req,
+        res: res,
+        s3: {
+          dest: 's3://url/bucket',
+          bucket: 'bucket',
+          acl: 'public-read',
+          limits: {
+            fileSize: 1024 * 1024
+          }
+        }
+      } ]]);
+
+      mockConfig.uploads.profilePicture.use = 'local';
     });
 
     it('should use save', async () => {
+      setupAllResolve();
 
+      await userController.changeProfilePicture(req, res, next);
+
+      saveStub.called.should.equal(true);
     });
 
     it('should send 500 if the strategy is unknown', async () => {
+      mockConfig.uploads.profilePicture.use = 'unknown';
 
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 500 ]]);
+      sendStub.called.should.equal(true);
+
+      mockConfig.uploads.profilePicture.use = 'local';
     });
 
     it('should send 500 if the findById fails', async () => {
+      const findByIdError = new Error('findById failed');
 
+      usersMock.expects('findById').chain('exec').rejects(findByIdError);
+
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 500 ]]);
+      sendStub.called.should.equal(true);
     });
 
     it('should send 404 if user isnt found', async () => {
+      usersMock.expects('findById').chain('exec').resolves(null);
 
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 404 ]]);
+      sendStub.called.should.equal(true);
     });
 
     it('should send 500 if the upload fails', async () => {
+      const uploadError = new Error('upload failed');
 
+      setupFindByIdResolves();
+      uploadStub.rejects(uploadError);
+
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 500 ]]);
+      sendStub.called.should.equal(true);
+    });
+
+    it('should send a 500 if the save fails', async () => {
+      const saveFailed = new Error('save failed');
+
+      setupAllResolve();
+      saveStub.reset();
+
+      saveStub.rejects(saveFailed);
+
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 500 ]]);
+      sendStub.called.should.equal(true);
+    });
+
+    it('should send a 400 if the save fails with a validation error', async () => {
+      const saveValidationFailed = {
+        name: 'ValidationError',
+        message: 'index: blah invalid or whatever',
+        errors: {
+          blah: new Error('blah is invalid')
+        }
+      };
+
+      setupAllResolve();
+      saveStub.reset();
+
+      saveStub.rejects(saveValidationFailed);
+
+      await userController.changeProfilePicture(req, res, next);
+
+      statusStub.args.should.deep.equal([[ 400 ]]);
+      sendStub.args.should.deep.equal([[ saveValidationFailed.message ]]);
     });
   });
 
