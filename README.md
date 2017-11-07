@@ -4,28 +4,42 @@
 An angular2 MEAN stack. Using webpack
 
 ## Install
-Make sure you are using node ~7 to install.
+Make sure you are using node ~8 to install.
 
 To install clone the repo and npm install it. 
 
 ```bash
 $ git clone <repo addr>
+# using npm
 $ npm install
+# or using docker-compose (this is the recommended way
+$ docker-compose build
 ```
 
-The first time installed, the package will generate a self signed
-cert for TLS. If you want to generate a new one you can use
-```bash npm run gen-cert```
-
 ## Running
-To run use npm start. Wow that too is simple.
+To run use docker-compose:
 
 ```bash
-$ npm start
+$ docker-compose up -d
 ```
 
 This command will run webpack and the server concurrently. Webpack will
 watch for changes and compile typescript when a change is detected.
+
+To attach to container logs:
+```bash
+$ docker-compose logs -f web
+```
+
+## Testing
+```bash
+# all tests
+$ docker-compose exec web npm run test
+# server unit tests with coverage
+$ docker-compose exec web npm run test:server:cover
+# server unit tests (run when any server file changes)
+$ docker-compose exec web npm run test:server:watch
+```
 
 ## Configure
 
