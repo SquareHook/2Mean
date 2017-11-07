@@ -134,9 +134,9 @@
       "dev": true
     },
     "@types/node": {
-      "version": "7.0.46",
-      "resolved": "https://registry.npmjs.org/@types/node/-/node-7.0.46.tgz",
-      "integrity": "sha512-u+JAi1KtmaUoU/EHJkxoiuvzyo91FCE41Z9TZWWcOUU3P8oUdlDLdrGzCGWySPgbRMD17B0B+1aaJLYI9egQ6A=="
+      "version": "8.0.49",
+      "resolved": "https://registry.npmjs.org/@types/node/-/node-8.0.49.tgz",
+      "integrity": "sha512-Oq3cV/mrMKy6Tv42llfS8YIH30ooDdhbJ40h1zoWl+goOJw8Kjy8j8RfjGZtZIUDO0gLwCfcbYM7+LModnbeMw=="
     },
     "@types/sinon": {
       "version": "2.3.7",
@@ -7942,7 +7942,7 @@
       "resolved": "https://registry.npmjs.org/parse5/-/parse5-3.0.3.tgz",
       "integrity": "sha512-rgO9Zg5LLLkfJF9E6CCmXlSE4UVceloys8JrFqCcHloC3usd/kJCyPDwH2SOlzix2j3xaP9sUX3e8+kvkuleAA==",
       "requires": {
-        "@types/node": "7.0.46"
+        "@types/node": "8.0.49"
       }
     },
     "parsejson": {
@@ -10499,9 +10499,9 @@
       "integrity": "sha1-hnrHTjhkGHsdPUfZlqeOxciDB3c="
     },
     "typescript": {
-      "version": "2.6.1",
-      "resolved": "https://registry.npmjs.org/typescript/-/typescript-2.6.1.tgz",
-      "integrity": "sha1-7znN6ierrAtQAkLWcmq5DgyEZjE=",
+      "version": "2.3.4",
+      "resolved": "https://registry.npmjs.org/typescript/-/typescript-2.3.4.tgz",
+      "integrity": "sha1-PTgyGCgjHkNPKHUUlZw3qCtin0I=",
       "dev": true
     },
     "typings": {
@@ -10625,7 +10625,7 @@
         "thenify": "3.2.1",
         "throat": "3.0.0",
         "touch": "1.0.0",
-        "typescript": "2.6.1",
+        "typescript": "2.3.4",
         "xtend": "4.0.1",
         "zip-object": "0.1.0"
       },

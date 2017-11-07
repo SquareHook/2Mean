@@ -1,5 +1,12 @@
 <nav class="navbar navbar-toggleable-md navbar-dark navbar-full bg-primary navbar-fixed-top">
-  <a class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#desktopHeaderNav" aria-controls="desktop-header-nav" [attr.aria-expanded]="!isCollapsed" aria-label="Toggle navigation" (click)="isCollapsed = !isCollapsed">
+  <a class="navbar-toggler navbar-toggler-right btn btn-outline-primary"
+     type="button"
+     data-toggle="collapse"
+     data-target="#desktopHeaderNav"
+     aria-controls="desktop-header-nav"
+     [attr.aria-expanded]="!isCollapsed"
+     aria-label="Toggle navigation"
+     (click)="isCollapsed = !isCollapsed">
     <i class="fa fa-2x fa-bars"></i>
   </a>
   <a class="navbar-brand" routerLink="/" routerLinkActive="active">
@@ -11,31 +18,35 @@
         <a *ngIf="!item.dropdown" class="nav-link" [routerLink]="item.state" [innerHTML]="item.template"></a>
         <div *ngIf="item.dropdown" ngbDropdown routerLinkActive="active">
           <button class="btn btn-outline-primary" ngbDropdownToggle [innerHTML]="item.template"></button>
-          <div class="dropdown-menu">
+          <div class="dropdown-menu" ngbDropdownMenu>
             <span *ngFor="let subitem of item.subitems">
-              <button *ngIf="!subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" [routerLink]="subitem.state"> 
-              
+              <button *ngIf="!subitem.outlet"
+                      class="dropdown-item"
+                      [innerHTML]="subitem.template"
+                      [routerLink]="subitem.state"> 
               </button>
-              <button *ngIf="subitem.outlet" class="dropdown-item" [innerHTML]="subitem.template" (click)="navByUrl(subitem.state)">
-
+              <button *ngIf="subitem.outlet"
+                      class="dropdown-item"
+                      [innerHTML]="subitem.template"
+                      (click)="navByUrl(subitem.state)">
               </button>
             </span>
           </div>
         </div>
       </li>
     </ul>
-    <ul *ngIf="!loggedIn" class="nav navbar-nav auth float-xs-right my-2 my-lg-0">
+    <ul *ngIf="!loggedIn" class="nav navbar-nav auth float-right my-2 my-lg-0">
       <a routerLink="/signin" routerLinkActive="active">Signin</a>
       <a routerLink="/signup" routerLinkActive="active">SignUp</a>
     </ul>
-    <ul *ngIf="loggedIn" class="nav navbar-nav auth float-xs-right">
+    <ul *ngIf="loggedIn" class="nav navbar-nav auth float-right">
       <li class="nav-item">
-        <div ngbDropdown routerLinkActive="active">
+        <div ngbDropdown placement="bottom-right" routerLinkActive="active">
           <button class="btn btn-outline-primary" ngbDropdownToggle>
           <!--TODO height/width inherit from navbar-->
-          <img height="23.5px" width="23.5px" alt="profile" class="rounded-circle" [src]="user.profileImageURL">
+            <img height="23.5px" width="23.5px" alt="profile" class="rounded-circle" [src]="user.profileImageURL">
           </button>
-          <div class="dropdown-menu">
+          <div class="dropdown-menu" ngbDropdownMenu>
             <button class="dropdown-item" 
                     [routerLink]="[ '/profile', { outlets: { 'profile': ['edit'] }} ]">
               Edit

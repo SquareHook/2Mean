@@ -477,7 +477,9 @@ nav.bg-primary {
     color: @inactiveLinkColor;
 }
 
-
+.navbar-collapse {
+  flex-basis: 0
+}
 
 .navbar-brand {
     padding: 0;
@@ -576,6 +578,12 @@ nav.bg-primary {
    .navbar-toggleable-md .navbar-collapse {
         width: auto;
         flex-grow: 1;
+        display: flex;
+        justify-content: space-between;
+   }
+
+   .navbar-nav {
+     flex-direction: row
    }
 }
 
