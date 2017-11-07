@@ -117,4 +117,8 @@ UserSchema.pre('update', function(next) {
   next();
 });
 
-mongoose.model('User', UserSchema);
+try {
+  mongoose.model('User');
+} catch (error) {
+  mongoose.model('User', UserSchema);
+}

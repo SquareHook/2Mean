@@ -9,6 +9,7 @@ require('sinon-mongoose');
 var argon2 = require('argon2');
 var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
+
 var ObjectID = require('mongodb').ObjectID;
 
 var Keys = require('./../../../auth/server/models/Keys');

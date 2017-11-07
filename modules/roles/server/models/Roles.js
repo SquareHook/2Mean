@@ -24,4 +24,8 @@ var RolesSchema = new Schema({
   ]
 });
 
-mongoose.model('Roles', RolesSchema);
+try {
+  mongoose.model('Roles');
+} catch (error) {
+  mongoose.model('Roles', RolesSchema);
+}

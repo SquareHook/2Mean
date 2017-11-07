@@ -6,6 +6,7 @@ const sinon = require('sinon');
 require('sinon-mongoose');
 
 const mongoose = require('mongoose');
+
 const ObjectID = require('mongodb').ObjectID;
 
 require('../models/Roles');

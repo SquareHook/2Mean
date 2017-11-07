@@ -13,6 +13,7 @@
     "test:server": "npm run test:server:unit; npm run test:server:cover",
     "test:server:unit": "mocha --recursive --reporter mocha-junit-reporter --reporter-options mochaFile=./build/reports/server/test-results.xml modules/*/server/tests/",
     "test:server:cover": "nyc --reporter=text --reporter=cobertura _mocha modules/*/server/tests/*.unit.js",
+    "test:server:watch": "mocha --reporter nyan -w modules/*/server/tests/*.unit.js",
     "build": "webpack --config ./config/webpack/webpack.common.js --watch",
     "server": "if [ \"$NODE_ENV\" = \"debug\" ]; then npm run server:debug; else npm run server:dev; fi",
     "server:dev": "node-dev ./server.js",

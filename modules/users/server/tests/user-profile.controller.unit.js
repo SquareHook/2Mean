@@ -8,6 +8,7 @@ require('sinon-mongoose');
 
 var mongoose = require('mongoose');
 mongoose.Promise = require('q').Promise;
+
 var ObjectID = require('mongodb').ObjectID;
 
 var User = require('./../models/Users');
