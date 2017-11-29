@@ -2,6 +2,8 @@
  * Database handle.
  */
 var mongoose = require('mongoose');
+//tell mongoose to use q promise library promises
+mongoose.Promise = require('q').Promise;
 
 /**
  * User model.
@@ -17,15 +19,20 @@ var q = require('q');
  * Underscore/Lodash functionality.
  */
 var _ = require('lodash');
-
 var md5 = require('md5');
-
+const roleConfig = require('../../../roles/server/config/config');
 /**
  * Main business logic for handling requests.
  */
-function userCrudController(logger) {
+function userCrudController(logger, shared) {
   // --------------------------- Public Function Definitions ----------------------------
   const pageLimit = 25;
+  const ADMIN_ROLE_NAME = 'admin';
+  const DEFAULT_ROLE_NAME = 'user';
+
+  let authHelpers = shared.authHelpers;
+  let self = this;
+ 
   /**
    * Reads a user from the database if the permissions are adequate.
    *
@@ -33,30 +40,43 @@ function userCrudController(logger) {
    * @param {Response} res  The Express response object.
    * @param {Next} next     The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
   function read(req, res, next) {
     var user = req.user;
 
     var id = req.params.userId || null; 
 
-    if (!id) {
-      return res.status(400).send('Malformed request');
-    }
-
-    if (isSelf(user, id) || isAuthorized(user, 'read')) {
-      // Read from User database
-      Users.findOne({_id: id})
-        .then((user) => {
-          res.status(201).send(user);
-        }, (error) => {
-
-          logger.error('User Module Error: Reading User from Database', error);
-          res.status(500).send('Error retrieving user information');
-        });
-    } else {
-      return res.status(401).send('Unauthorized');
-    }
+    return new Promise((resolve, reject) => {
+      if (!id) {
+        // missing id
+        reject(new Error('Malformed request'));
+      } else if (isSelf(user, id) || isAuthorized(user, 'read')) {
+        // check if allowed
+        resolve(Users.findOne({ _id: id }).exec());
+      } else {
+        // not allowed
+        reject(new Error('Forbidden'));
+      }
+    }).then((foundUser) => {
+      if (foundUser) {
+        res.status(200).send(sanitizeUser(user));
+      } else {
+        throw new Error('Not found');
+      }
+    }).catch((error) => {
+      // handle errors. message sent depends on error message
+      if (error.message === 'Malformed request') {
+        res.status(400).send({ error: error.message });
+      } else if(error.message === 'Forbidden') {
+        res.status(403).send();
+      } else if (error.message === 'Not found') {
+        res.status(404).send();
+      } else {
+        logger.error('Error user.crud#read', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -65,58 +85,40 @@ function userCrudController(logger) {
   *
   * @param {Request} req   The Express request object.
   * @param {Response} res  The Express response object.
-  * @param {Next} next     The Express next (middleware) function.
+  * @param {Function} next     The Express next (middleware) function.
   *
-  * @return {void}
+  * @return {Promise}
   */
-  function list(req, res)
-  {
-    let page = req.params.page || 1;
-    let search = req.params.search || "";
+  function list(req, res, next) {
+    let page = req.query.page || 1;
+    let search = req.query.search || "";
     let skip = (page - 1) * pageLimit;
     let queryObj;
+
     if (search === "") {
       queryObj = {};
-    }
-    else {
+    } else {
       queryObj = {
-        'username': new RegExp(search, 'i')
+        'username': new RegExp('[a-z]*'+search +'+?', 'i')
       };
     }
 
-    var deferred = q.defer();
- 
-    Users.find(queryObj, (err, users) => {
-      if (err) {
-        logger.error(err);
-        deferred.reject({
-          code: 500,
-          error: 'Internal Server Error'
-        });
-      }
-      else {
-        let sanitized = [];
-        for(let i in users)
-        {
-          sanitized.push(sanitizeUser(users[i]));
-        }
-        deferred.resolve({
-          code: 200,
-          data: sanitized
-        })
-      }
-    })
+    return Users.find(queryObj)
       .sort('username')
       .skip(skip)
-      .limit(pageLimit);
+      .limit(pageLimit)
+      .exec()
+      .then((foundUsers) => {
+        let sanitized = [];
 
+        for (let i in foundUsers) {
+          sanitized.push(sanitizeUser(foundUsers[i]));
+        }
 
-    return deferred.promise
-      .then((data) => {
-        
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
+        res.status(200).send(sanitized);
+      }).catch((error) => {
+        logger.error('Error user.crud#list', error);
+        res.status(500).send();
       });
   }
 
@@ -127,49 +129,35 @@ function userCrudController(logger) {
    * @param {Response} res  The Express response object.
    * @param {Next} next     The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
   function create(req, res, next) {
     var user = req.user;
 
     var body = req.body;
 
-    var deferred = q.defer();
+    return new Promise((resolve, reject) => {
+      if (isAuthorized(user, 'create')) {
+        let newUser = mapUser(body);
+        newUser.profileImageURL = generateProfileImageURL(newUser.email);
 
-    if (isAuthorized(user, 'create')) {
-      let newUser = mapUser(body);
-      newUser.profileImageURL = generateProfileImageURL(newUser.email);
-
-      newUser.save((err, data) => {
-        if (err) {
-          // TODO: Need to get more granular with errors, some reflect duplicate emails, etc.
-          logger.error('Creating User Error', err);
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        } else {
-          logger.info('User created: ' + newUser.username);
-          deferred.resolve({
-            code: 201,
-            data: data
-          });
-        }
-
-      });
-    } else {
-      deferred.reject({
-        code: 401,
-        error: 'Unauthorized'
-      });
-    }
-
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+        resolve(newUser.save());
+      } else {
+        reject(new Error('Forbidden'));
+      }
+    }).then((savedUser) => {
+      logger.info('User created', { username: savedUser.username });
+      res.status(201).send(sanitizeUser(savedUser));
+    }).catch((error) => {
+      if (error.errors) {
+        res.status(400).send({ error: error.errors });
+      } else if (error.message === 'Forbidden') {
+        res.status(403).send();
+      } else {
+        logger.error('Error user.crud#create', error);
+        res.status(500).send();
+      }
+    });
   }
 
   /**
@@ -179,77 +167,48 @@ function userCrudController(logger) {
    * @param {Response} res  The Express response object.
    * @param {Next}     next The Express next (middleware) function.
    *
-   * @return {void}
+   * @return {Promise}
    */
-  function update(req, res, next) {
+  async function update(req, res, next) {
+    let foundUser, savedUser;
     var user = req.user;
 
-    var existingUser = mapUser(req.body);
+    var updates = req.body;
 
-    var deferred = q.defer();
-
-    // validate the body.
-    if (!existingUser.email) {
-      deferred.reject({
-        code: 400,
-        error: 'Malformed request.  Email needed.'
-      });
+    if (updates._id) {
+      try {
+        foundUser = await Users.findOne({ _id: updates._id }).exec();
+      } catch (error) {
+        logger.error('Error in user.crud#update findOne', error);
+        return res.status(500).send();
+      }
     } else {
-      Users.findById(existingUser._id)
-        .then((modifiedUser) => {
-          // findOne will resolve to null (no error) if no document found
-          if (modifiedUser) {
-            var keys = Object.keys(Users.schema.obj);
-
-            for (var i in keys) {
-              if (existingUser[keys[i]]) {
-                // save to existing user's id
-                if (keys[i] !== '_id') {
-                  modifiedUser[keys[i]] = existingUser[keys[i]];
-                }
-              }
-            }
-            modifiedUser.updated = new Date();
-
-            modifiedUser.save((err, data) => {
-              if (err) {
-                logger.error('Error updating user', err);
-
-                deferred.reject({
-                  code: 500,
-                  error: 'Internal Server Error'
-                });
-              } else {
-                deferred.resolve({
-                  code: 200,
-                  data: data
-                });
-              }
-            });
-          } else {
-            logger.error('Error updating user, user does not exist');
-            // trying to change a non existent user
-            deferred.reject({
-              code: 500,
-              error: { message: 'Internal Server Error' }
-            });
-          }
-        }, (err) => {
-          logger.error('Error looking up user in User collection: ', err);
-
-          deferred.reject({
-            code: 500,
-            error: 'Internal Server Error'
-          });
-        });
+      return res.status(400).send({ error: 'Missing user._id' });
+    }
+    
+    if (!foundUser) {
+      return res.status(404).send();
     }
 
-    return deferred.promise
-      .then((data) => {
-        res.status(data.code).send(data.data);
-      }, (error) => {
-        res.status(error.code).send(error.error);
-      });
+    // update the found user
+    mapOverUser(updates, foundUser);
+      
+    foundUser.updated = new Date();
+    
+    try {
+      savedUser = await foundUser.save();
+    } catch(error) {
+      if (error.errors) {
+        return res.status(400).send({ error: error.errors });
+      } else if (error.message === 'Not found') {
+        return res.status(404).send();
+      } else {
+        logger.error('Error user.crud#update', error);
+        return res.status(500).send();
+      }
+    }
+      
+    return res.status(200).send(sanitizeUser(savedUser));
   }
 
   /**
@@ -265,12 +224,18 @@ function userCrudController(logger) {
   function readList(req, res) {
     var userList = req.params.userList.split(',');
 
-    getListOfUsers(userList)
-      .then((data) => {
-        res.status(200).send(data);
-      },
-      (error) => {
-        res.status(500).send('Internal Server Error');
+    return Users.find({ _id: { $in: userList } })
+      .select(this.SANITIZED_SELECTION)
+      .exec()
+      .then((foundUsers) => {
+        for (let i = 0; i < foundUsers.length; i++) {
+          foundUsers[i] = sanitizeUser(foundUsers[i]);
+        }
+
+        res.status(200).send(foundUsers);
+      }).catch((error) => {
+        logger.error('Error user.crud#readList', error);
+        res.status(500).send();
       });
   }
 
@@ -285,22 +250,66 @@ function userCrudController(logger) {
    */
   function deleteUser(req, res, next) {
     var userId = req.params.userId;
+    
+    return new Promise((resolve, reject) => {
+      if (isAuthorized(req.user, 'delete')) {
+        resolve(Users.findOne({ _id: userId }).remove());
+      } else {
+        reject(new Error('Forbidden'));
+      }
+    }).then((result) => {
+      res.status(204).send();
+    }).catch((error) => {
+      if (error.message === 'Forbidden') {
+        res.status(403).send();
+      } else {
+        logger.error('Error user.crud#deleteUser', error);
+        res.status(500).send();
+      }
+    });
+  }
 
-    if (isAuthorized(user, 'delete')) {
-      Users.findOne({_id: userId}).remove((err, data) => {
-        if (err) {
-          logger.error('Error removing user', err);
 
-          res.status(500).send('Internal Server Error');
-        } else {
-          res.status(200).send('User Deleted');
-        }
-      });
+  /**
+   * Handles user updates sent by an admin user
+   * @param {Request} req   The Express request object
+   * @param {Response} res  The Express response object
+   */
+  async function adminUpdate(req, res) {
+    if(req.user.role != roleConfig.ADMIN_ROLE_NAME){
+      return res.status(403).send();
     }
+
+    let user = req.body;
+    //update role if necessary
+    if (user.role) {
+      user.subroles = await self.roleModule.determineSubroles(user.role);
+    }
+    
+    if (user.password) {
+      try {
+        user.password = await authHelpers.hashPassword(user.password);
+      } catch (error) {
+        logger.error('Error in user.crud#adminUpdate hash password', error);
+        return res.status(500).send();
+      }
+    }
+
+    let updateDef = { $set: user };
+    //send update to mongo
+    let results;
+    try {
+      results = await Users.findOneAndUpdate({ _id: req.body._id}, updateDef).exec();
+    } catch (error) {
+      logger.error('Error in user.crud#adminUpdate findOneAndUpdate', error);
+      return res.status(500).send();
+    }
+    
+    return res.status(204).send();
   }
 
   /*
-   * sets a users subroles 
+   * Updates all subroles for a given role 
    */
    function flushSubroles(parentRole, subroles)
    {
@@ -324,12 +333,36 @@ function userCrudController(logger) {
         {
           if(err)
           {
-            console.log("removeSubroles failed");
+            logger.error(err);
           }
         });
       }
      
    }
+
+   /**
+    * Updates a users roles
+    * @param {userId} the id of the user to update
+    * @param {targetRole} the role to place the user in
+    * @param {subroles} a list of corres
+    * @returns {Promise} an update promise
+    */
+   function updateUserRoles(userId, targetRole, subroles) {
+     let query = {_id: userId};
+     let update = {$set: {role: targetRole, subroles: subroles}};
+     return Users.update(query, update);
+     
+   }
+   
+  /**
+   * method for getting own user (provided by req.user)
+   */
+  function readSelf(req, res, next) {
+    let user = req.user;
+
+    res.status(200).send(sanitizeUser(user));
+  }
+
 
   // --------------------------- Private Function Definitions ----------------------------
 
@@ -341,16 +374,6 @@ function userCrudController(logger) {
    * @return {Array<Users>}
    */
   function getListOfUsers(userIdList) {
-    return new Promise((resolve, reject) => {
-      Users.find({ '_id': { '$in': userIdList } })
-        .select(this.SANITIZED_SELECTION)
-        .then((data) => {
-          resolve(data);
-        },
-        (error) => {
-          reject(error);
-        });
-    });
   }
   
   /*
@@ -369,7 +392,7 @@ function userCrudController(logger) {
    * TODO: This could probably be more robust.
    */
   function isAuthorized(user, action) {
-    if (_.indexOf(user.role, 'admin')) {
+    if (user.subroles.includes(ADMIN_ROLE_NAME)) {
       return true;
     }
 
@@ -377,18 +400,19 @@ function userCrudController(logger) {
   }
 
   function sanitizeUser(user) {
-    return {
-      _id: user._id,
-      created: user.created,
-      displayName: user.displayName,
-      email: user.email,
-      firstName: user.firstName,
-      lastName: user.lastName,
-      profileImageURL: user.profileImageURL,
-      role: user.role,
-      subroles: user.subroles,
-      username: user.username
+    // cheat a deep copy with JSON
+    let sanitized = JSON.parse(JSON.stringify(user));
+    sanitized.password = undefined;
+    // remove the token. The user has to look at their email. no cheating
+    if (sanitized.verification) {
+      sanitized.verification.token = undefined;
     }
+    // remove password rest token
+    if (sanitized.resetPassword) {
+      sanitized.resetPassword.token = undefined;
+    }
+
+    return sanitized;
   }
   /*
    * Maps the post request representation of a user to a mongoose User model.
@@ -409,10 +433,6 @@ function userCrudController(logger) {
       }
     }
 
-    if (body._id) {
-      user._id = body._id;
-    }
-
     user.updated = new Date();
     user.created = new Date();
 
@@ -424,6 +444,29 @@ function userCrudController(logger) {
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
   }
 
+  /**
+   * Called by the role module to avoid a circular dependency
+   * @param { Object } roleModule 
+   */
+  function setRoleModule(roleModule) {
+    self.roleModule = roleModule;
+  }
+    
+  /**
+   * @param {Object} updates 
+   * @param {Object} user
+   */
+  function mapOverUser(updates, user) {
+    let schemaFields = Users.schema.obj;
+
+    for (let index in Object.keys(schemaFields)) {
+      let realIndex = Object.keys(schemaFields)[index];
+      if (updates[realIndex] !== undefined) {
+        user[realIndex] = updates[realIndex];
+      }
+    }
+  }
+
   // --------------------------- Revealing Module Section ----------------------------
 
   return {
@@ -431,10 +474,14 @@ function userCrudController(logger) {
     create                : create,
     update                : update,
     deleteUser            : deleteUser,
+    adminUpdate           : adminUpdate,
+    updateUserRoles       : updateUserRoles,
+    setRoleModule         : setRoleModule,
     flushSubroles         : flushSubroles,
     removeSubroles        : removeSubroles,
     readList              : readList,
-    list                  : list
+    list                  : list,
+    readSelf              : readSelf
   };
 }
 

@@ -3,11 +3,12 @@ import { Component, AfterViewChecked, ViewChild, Inject }        from '@angular/
 import { BrowserModule }    from '@angular/platform-browser';
 import { Router }           from '@angular/router';
 import { NgForm }          from '@angular/forms';
+import { NotificationsService } from 'angular2-notifications';
 
 import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }             from '../models/user.model.client';
+import { User }             from '../models/user.model';
 
 /* Angular2 Services */
 import { UserService }      from '../services/user.service';
@@ -20,10 +21,12 @@ export class SignupComponent implements AfterViewChecked {
   errorMessage: string = null;
   strongPasswordRe: RegExp;
   validEmailRe: RegExp;
+  allowRegistration: any;
 
   constructor(
     private userService: UserService, 
     private router: Router,
+    private notificationsService: NotificationsService,
     @Inject(USERS_CONFIG) config: UsersConfig
   ) { 
     // At least one Upper, lower, digit, symbol
@@ -32,6 +35,8 @@ export class SignupComponent implements AfterViewChecked {
 
     // an @
     this.validEmailRe = config.emailValidatorRe;
+
+    this.allowRegistration = config.allowRegistration;
   }
 
   signup () {
@@ -44,17 +49,28 @@ export class SignupComponent implements AfterViewChecked {
     this.userService.register(newUser)
       .subscribe(
         user => {
+          if (user.message === 'Verification email not sent') {
+            this.notificationsService.warn('Warning', 'Account created but verification link not sent. Try again later');
+          } else {
+            this.notificationsService.success('Info', 'Verification email sent. Follow the link in it to verify your email');
+          }
+
           this.router.navigate(['/signin']);
         },
         error => {
+          console.log(error);
           // TODO the server won't send this response until login by email
           // and email registration is enabled
           // this is to prevent username enumeration being used to
           // try to compromise accounts
           if (error._body === 'Username is taken') {
-            
+            this.notificationsService.error('Error',  error._body);
+          } else if (error.status === 500) {
+            // generic erro
+            this.notificationsService.error('Error', 'Internal Server Error');
+          } else if (error.status === 400) {
+            this.notificationsService.error('Error', error._body);
           }
-          this.errorMessage = error._body;
         });
   }
 
@@ -113,7 +129,7 @@ export class SignupComponent implements AfterViewChecked {
     },
     'password': {
       'required': 'Password is required',
-      'strongPassword': 'Password must contain upper, lower case letter, digit, and symbol'
+      'strongPassword': 'Password must contain upper, lower case letter, digit, and symbol. It must be 8 characters long.'
     }
   };
 

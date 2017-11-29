@@ -12,8 +12,8 @@ var AuthModule = require('./controllers/auth');
 /**
  * Top level function that wraps all of the module together to return to the application.
  */
-function Auth([logger]) {
-  var AuthController = new AuthModule(logger);
+function Auth([logger, shared]) {
+  var AuthController = new AuthModule(logger, shared);
 
   return AuthController;
 };

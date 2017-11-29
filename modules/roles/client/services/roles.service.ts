@@ -28,11 +28,16 @@ export class RoleService{
   getRoles(): Observable<any>
   {
     return this.http
-      .get('api/roles/subroles')
+      .get('api/roles')
       .map((r: Response) => r.json());
   }
 
-  
+  getSubroles(parentRole: String): Observable<Array<any>>
+  {
+    return this.http
+      .get('api/roles/subroles/' + parentRole)
+      .map((r:Response) => r.json());
+  }
   getTree(): Observable<any>
   {
     return this.http
@@ -52,6 +57,24 @@ export class RoleService{
       });
   }
 
+  getEndpoints() : Observable<any> {
+    return this.http.get('api/roles/permissions').map((res: Response) => {
+      return res.json();
+    });
+  }
+
+  updateSingleRole(role: Role) : Observable<any> {
+    return this.http.put('api/roles/' + role._id, role).map((res: Response) => {
+      return res.json();
+    });
+  }
+
+ updateUserRole(data: any): Observable<any>
+ {
+   return this.http
+    .put('api/roles/updateUserRole', data)
+    .map((r: Response) => r.json());
+ }
   removeRole(id: string): Observable<Role> {
     return this.http.delete('api/roles/' + id)
         .map((r: Response) => {

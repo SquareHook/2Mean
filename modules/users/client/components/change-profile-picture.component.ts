@@ -3,7 +3,7 @@ import {
   Component,
   Inject,
   Input,
-  OnInit 
+  OnInit
 } from '@angular/core';
 import { BrowserModule }          from '@angular/platform-browser';
 import { Router, NavigationExtras }                 from '@angular/router';
@@ -22,10 +22,10 @@ import {
 } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }                   from '../models/user.model.client';
+import { User }                   from '../models/user.model';
 
 /* Angular2 Services */
-import { AuthService }            from '../../../auth/client/auth.service.client';
+import { AuthService }            from '../../../auth/client/services/auth.service';
 import { UserService }            from '../services/user.service';
 
 /* Angular2 Directives */
@@ -39,6 +39,7 @@ export class ChangeProfilePictureComponent {
   @Input() user: User;
   userForm: FormGroup;  
   formValid: boolean;
+  endpoint: string;
 
   private formErrors: any;
   private validationMessages: any;
@@ -60,6 +61,7 @@ export class ChangeProfilePictureComponent {
     this.formValid = false;
 
     // get config for validation
+    this.endpoint = config.uploads.profilePicture.url;
     this.allowedTypes = config.uploads.profilePicture.allowedTypes;
     this.maxSize = config.uploads.profilePicture.maxSize;
   }
@@ -227,5 +229,14 @@ export class ChangeProfilePictureComponent {
    */
   getImageUrl() {
     return this.user.profileImageURL;
+  }
+
+  /**
+   * called when a new uri is emitted by profile picture component
+   */
+  uriChange(newUri: string) {
+    let user = this.authService.getUser();
+    user.profileImageURL = newUri;
+    this.authService.setUser(user);
   }
 }

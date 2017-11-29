@@ -1,0 +1,5 @@
+<div *ngFor="let role of roles">
+  <div *ngIf="isChecked(role, endpoint)">
+    {{ role._id }}
+  </div>
+</div>

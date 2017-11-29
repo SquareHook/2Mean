@@ -1,0 +1,9 @@
+<div class="form-check" *ngFor="let role of roles">
+  <label class="form-check-label">
+    <input class="form-check-input" type="checkbox"
+      [checked]="isChecked(role, endpoint)"
+      [disabled]="role._id === 'admin'"
+      (change)="updateRole(role, endpoint)">
+    {{ role._id }}
+  </label>
+</div>

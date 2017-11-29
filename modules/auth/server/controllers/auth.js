@@ -24,10 +24,9 @@ var q = require('q');
 var path = require('path');
 
 /*
- * argon2 for password checking
- */
-var argon2 = require('argon2');
-
+* md5 for hashing 
+*/
+var md5 = require('md5');
 /**
  * config
  */
@@ -36,33 +35,37 @@ var config = require(path.resolve('config/config'));
 /**
  * Main business logic for handling requests.
  */
-function authenticationModule(logger) {
+function authenticationModule(logger, shared) {
   // Key, 8 hours TTL
   const keyTTL = 1000 * 60 * 60 * 8;
+  var authHelpers = shared.authHelpers;
+
   var defaultPassword = "12345";
 
   // Check if Database has been populated yet.  If not, inject default user.
   Users.count({}, (err, c) => {
     if (c < 1) {
-      argon2.generateSalt().then(salt => {
-        argon2.hash(defaultPassword, salt).then(hash => {
-          let newUser = new Users();
-          logger.info('Users collection is empty, adding default user...');
+      authHelpers.hashPassword(defaultPassword).then((hash) => {
+        let newUser = new Users();
+        logger.info('Users collection is empty, adding default user...');
 
-          newUser.firstName = 'Admin';
-          newUser.lastName = 'User';
-          newUser.displayName = 'Squarehook';
-          newUser.email = 'support@squarehook.com';
-          newUser.username = 'squarehook';
-          newUser.password = hash;
-          newUser.role ='admin';
-          newUser.subroles = ['user'];
-
-          newUser.save((err, data) => {
-            if (err) {
-              logger.error(err);
-            }
-          });
+        newUser.firstName = 'Admin';
+        newUser.lastName = 'User';
+        newUser.displayName = 'Squarehook';
+        newUser.email = 'support@squarehook.com';
+        newUser.username = 'squarehook';
+        newUser.password = hash;
+        newUser.role ='admin';
+        newUser.subroles = ['user'];
+        newUser.verified = true;
+        //generate profile image
+        let emailHash = md5(newUser.email.toLowerCase());
+        newUser.profileImageURL = 'https://gravatar.com/avatar/'+ emailHash + '?d=identicon';
+      
+        newUser.save((err, data) => {
+          if (err) {
+            logger.error(err);
+          }
         });
       });
     }
@@ -97,7 +100,11 @@ function authenticationModule(logger) {
             .then((user) => {
               // Store user for downstream logic.
               req.user = user;
-              return next();
+
+              // update the user updated header
+              res.append('User-Updated', Date.parse(user.updated));
+
+              return checkEmailVerified(req, res, next);
             }, (err) => {
               if (err) {
                 logger.error('Authenteication error looking up user referenced in key', err);
@@ -110,6 +117,24 @@ function authenticationModule(logger) {
         logger.error('Authentication error looking up a key', error);
         return res.status(401).send();
       });
+  }
+
+  /**
+   * if config requires email verification for secure endpoints, check the
+   * user is verified
+   */
+  function checkEmailVerified(req, res, next) {
+    if (config.app.requireEmailVerification && 
+        req.path !== '/api/users/verifyEmail' &&
+        req.path !== '/api/users/requestVerificationEmail') {
+      if (req.user.verified) {
+        return next();
+      } else {
+        return res.status(403).send({ error: 'Email not verified' });
+      }
+    } else {
+      return next()
+    }
   }
 
   /**
@@ -180,71 +205,81 @@ function authenticationModule(logger) {
       });
     } else {
       Users.findOne({username: creds.username})
+        .exec()
         .then((user) => {
-          // Create new key (even if valid one exists).
-          let key = new Keys();
+          if (user) {
+            // Create new key (even if valid one exists).
+            let key = new Keys();
 
-          let apikey = {
-            value: createKey(16),
-            created: new Date()
-          };
+            let apikey = {
+              value: createKey(16),
+              created: new Date()
+            };
 
-          argon2.verify(user.password, creds.password).then(match => {
-            if (!match) {
-              deferred.reject({
-                code: 401,
-                error: 'Incorrect Username/Password'
-              });
-            } else {
-              // Remove the old key from the Keys collection.
-              if (user.apikey && user.apikey.value) {
-                Keys.findOne({value: user.apikey.value})
-                  .then((data) => {
-                    data.remove();
-                  }, (err) => {
-                    logger.error('Error finding old key to remove', err.errmsg);
-                  });
+            authHelpers.verifyPassword(user.password, creds.password).then((match) => {
+              if (!match) {
+                deferred.reject({
+                  code: 400,
+                  error: 'Incorrect Username/Password'
+                });
+              } else {
+                // Remove the old key from the Keys collection.
+                if (user.apikey && user.apikey.value) {
+                  Keys.findOne({value: user.apikey.value})
+                    .then((data) => {
+                      data.remove();
+                    }, (err) => {
+                      logger.error('Error finding old key to remove', err.errmsg);
+                    });
+                }
+    
+                // Update users reference to the key.
+                user.apikey.value = apikey.value;
+                user.apikey.created = apikey.created;
+    
+                user.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                logger.info('User logged in.', user.username);
+    
+                // Save the new key.
+                key.value = apikey.value;
+                key.created = apikey.created;
+                key.user = user._id;
+                //determine its roles
+                let keyRoles = [];
+                keyRoles.push(user.role);
+                keyRoles = keyRoles.concat(user.subroles);
+                key.roles = keyRoles;
+    
+                key.save((err, data) => {
+                  if (err) {
+                    logger.error(err);
+                  }
+                });
+    
+                deferred.resolve({
+                  code: 200,
+                  data: {
+                    apikey: user.apikey.value,
+                    user: sanitizeUser(user)
+                  }
+                });
               }
-    
-              // Update users reference to the key.
-              user.apikey.value = apikey.value;
-              user.apikey.created = apikey.created;
-    
-              user.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              logger.info('User logged in.', user.username);
-    
-              // Save the new key.
-              key.value = apikey.value;
-              key.created = apikey.created;
-              key.user = user._id;
-              //determine its roles
-              let keyRoles = [];
-              keyRoles.push(user.role);
-              keyRoles = keyRoles.concat(user.subroles);
-              key.roles = keyRoles;
-    
-              key.save((err, data) => {
-                if (err) {
-                  logger.error(err);
-                }
-              });
-    
-              deferred.resolve({
-                code: 200,
-                data: {
-                  apikey: user.apikey.value,
-                  user: sanitizeUser(user)
-                }
-              });
-            }
-          }).catch(err => {
-            logger.error(err);
-          });
+            }).catch(err => {
+              logger.error(err);
+            });
+          } else {
+            logger.error('User not found');
+
+            deferred.reject({
+              code: 400,
+              error: 'Incorrect Username/Password'
+            });
+          }
         }, (error) => {
           logger.error('Auth Module error: Hit error querying for user.', error);
 
@@ -337,7 +372,8 @@ function authenticationModule(logger) {
       profileImageURL: user.profileImageURL,
       role: user.role,
       subroles: user.subroles,
-      username: user.username
+      username: user.username,
+      verified: user.verified
     }
   }
 

@@ -16,7 +16,16 @@ var RolesSchema = new Schema({
   lastUpdated: {
     type: Date,
     default: Date.now
-  }
+  },
+  permissions: [
+    {
+      asset: String
+    }
+  ]
 });
 
-mongoose.model('Roles', RolesSchema);
+try {
+  mongoose.model('Roles');
+} catch (error) {
+  mongoose.model('Roles', RolesSchema);
+}

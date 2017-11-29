@@ -6,11 +6,14 @@ services:
     ports:
       - "3080:3080"
       - "3443:3443"
+      - 9229:9229
     links:
       - mongo
     volumes:
       - ./modules:/usr/src/app/modules/
     environment:
       - TOOMEAN_MONGO_HOST=mongo
+    env_file:
+      - .env
   mongo:
     image: "mongo"

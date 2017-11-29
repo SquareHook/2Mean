@@ -6,7 +6,7 @@ import { Injectable, Inject } from '@angular/core';
 /**
  * Get the user class model.
  */
-import { User }               from '../models/user.model.client';
+import { User }               from '../models/user.model';
 
 /**
  * Pull in the necessary HTTP objects.
@@ -75,7 +75,7 @@ export class UserService {
   //list for searching and pagination
   list(page: number, search: string) : Observable<Array<User>>
   {
-    return this.http.get('api/users?page='+page)
+    return this.http.get('api/users?page='+page +'&search='+search)
     .map(this.extractData);
   }
   create(newUser: User) : Observable<User> {
@@ -84,16 +84,22 @@ export class UserService {
   }
 
   update(updatedUser: User) : Observable<User> {
-    return this.http.put('api/users', updatedUser)
+    return this.http.put('api/users/' + updatedUser._id, updatedUser)
       .map(this.extractData);
   }
+  
+  //used to update user fields by admin users
+  adminUpdate(updatedUser: User) :Observable<User>{
+    return this.http.put('api/users/adminUpdate', updatedUser)
+    .map(this.extractData);
+  }
 
-  delete(userId: string) : Observable<User> {
+  delete(userId: string) : Observable<any> {
     return this.http.delete('api/users/' + userId)
       .map(this.extractData);
   }
 
-  register(newUser: User) : Observable<User> {
+  register(newUser: User) : Observable<any> {
     return this.http.post('api/users/register', newUser)
       .map(this.extractData);
   }
@@ -172,6 +178,46 @@ export class UserService {
    */
   clearUploaderQueue() : void {
     this.uploader.clearQueue();
+  }
+
+  /**
+   * send a verification get request
+   */
+  verifyEmail(token: string) : Observable<any> {
+    return this.http.get('api/users/verifyEmail?token=' + token)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a new verification email be sent
+   */
+  requestVerificationEmail() : Observable<any> {
+    return this.http.get('api/users/requestVerificationEmail')
+      .map(this.extractData);
+  }
+
+  /**
+   * send the password and token to reset a password
+   * @param {string} password
+   * @param {string} token
+   */
+  resetPassword(password: string, token: string) : Observable<any> {
+    let body = {
+      password: password,
+      token: token
+    };
+
+    return this.http.post('api/users/resetPassword', body)
+      .map(this.extractData);
+  }
+
+  /**
+   * requests a password reset email to be sent
+   * @param {string} email - the email the user claims to have
+   */
+  requestResetPasswordEmail(email: string) : Observable<any> {
+    return this.http.get('api/users/requestChangePasswordEmail?email=' + email)
+      .map(this.extractData);
   }
 
   /**

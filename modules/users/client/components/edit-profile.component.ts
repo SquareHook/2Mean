@@ -1,9 +1,9 @@
-// TODO: move picture uploading into its own component and use that
 /* Vendor */
 import { 
-  Component, 
-  Inject, 
-  OnInit 
+  Component,
+  Inject,
+  OnInit,
+  ViewChild
 } from '@angular/core';
 import { BrowserModule }          from '@angular/platform-browser';
 import { Router }                 from '@angular/router';
@@ -21,16 +21,18 @@ import {
 } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }                   from '../models/user.model.client';
+import { User }                   from '../models/user.model';
 
 /* Angular2 Services */
-import { AuthService }            from '../../../auth/client/auth.service.client';
+import { AuthService }            from '../../../auth/client/services/auth.service';
 import { UserService }            from '../services/user.service';
 
 /* Angular2 Directives */
 import { maxSizeValidator }       from '../directives/max-size.directive';
 import { allowedTypesValidator }  from '../directives/allowed-types.directive';
 import { emailValidator }         from '../directives/valid-email.directive';
+
+import { ImageFileDropComponent } from '../../../shared/client/components/image-file-drop.component';
 
 @Component({
   templateUrl: './../views/edit-profile.view.html'
@@ -51,12 +53,17 @@ export class EditProfileComponent implements OnInit {
   // formValid is used to control the button disabled attribute
   formValid: boolean;
 
+  endpoint: string;
+
   private allowedTypes: Array<string>;
   private maxSize: number;
   private formErrors: any;
   private validationMessages: any;
   private emailRe: RegExp;
-  
+
+  @ViewChild(ImageFileDropComponent)
+  private imageFileDropComponent: ImageFileDropComponent;
+
   constructor (
     private authService: AuthService,
     private userService: UserService,
@@ -70,6 +77,8 @@ export class EditProfileComponent implements OnInit {
       this.allowedTypes = config.uploads.profilePicture.allowedTypes;
       this.maxSize = config.uploads.profilePicture.maxSize;
       this.emailRe = config.emailValidatorRe;
+
+      this.endpoint = config.uploads.profilePicture.url;
   }
 
   /**
@@ -117,55 +126,16 @@ export class EditProfileComponent implements OnInit {
    */
   submit () : void {
     this.loading = true;
-    this.userService.update(this.user)
-      .subscribe(
-        user => {
-          this.authService.setUser(user);
-          this.userService.uploadProfilePicture((item: any, response: any, status: number, headers: any) => {
-            if (status === 200) {
-              let userRes = JSON.parse(response);
-
-              // update the local data
-              this.authService.setUser(userRes);
-              this.user = userRes;
-
-              // clear the queue so next files will not accumulate
-              this.userService.clearUploaderQueue();
-            }
-          });
-        },
-        error => {
-          this.errorMessage = error._body;
-          this.loading = false;
-        });
+    
+    this.userService.update(this.user).subscribe((user) => {
+      this.authService.setUser(user);
+      this.imageFileDropComponent.uploadFile();
+    }, error => {
+      this.errorMessage = error._body;
+      this.loading = false;
+    });
   }
 
-  /**
-   * called when the file input changes
-   */
-  fileChange(fileInput: any) {
-    // only if there is a file selected
-    if (fileInput.target.files && fileInput.target.files[0]) {
-      let file = fileInput.target.files[0];
-      this.profilePicture = file;
-
-      this.fileType = file.type;
-      this.fileSize = file.size;
-
-      // get the form controls
-      let profilePictureSize = this.userForm.get('profilePictureSize');
-      let profilePictureType = this.userForm.get('profilePictureType');
-
-      // must be marked dirty to display validation messages
-      profilePictureSize.setValue(this.fileSize);
-      profilePictureType.setValue(this.fileType);
-
-      // set the value to trigger the validation
-      profilePictureSize.markAsDirty();
-      profilePictureType.markAsDirty();
-    }
-  }
-  
   /*
    * called in initialization process
    *  builds the form group and binds the inputs to component properties
@@ -236,6 +206,16 @@ export class EditProfileComponent implements OnInit {
         }
       }
     }
+  }
+
+  /**
+   * uriChange
+   * @param {string} uri - new uri sent by file input
+   */
+  uriChange(uri: string) {
+    let user = this.authService.getUser();
+    user.profileImageURL = uri;
+    this.authService.setUser(user);
   }
 }
 

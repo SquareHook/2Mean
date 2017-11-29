@@ -8,13 +8,14 @@ import { NgForm }           from '@angular/forms';
 import { USERS_CONFIG, USERS_DI_CONFIG, UsersConfig } from '../config/users-config';
 
 /* Angular2 Models */
-import { User }             from '../models/user.model.client';
+import { User }             from '../models/user.model';
 
 /* Angular2 Services */
-import { AuthService }      from '../../../auth/client/auth.service.client';
+import { AuthService }      from '../../../auth/client/services/auth.service';
 import { UserService }      from '../services/user.service';
 
 @Component({
+  selector: 'change-password',
   templateUrl: './../views/change-password.view.html'
 })
 export class ChangePasswordComponent {

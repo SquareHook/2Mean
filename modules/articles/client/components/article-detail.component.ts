@@ -19,7 +19,7 @@ import {
 
 import {
   AuthService
-} from '../../../auth/client/auth.service.client';
+} from '../../../auth/client/services/auth.service';
 
 import 'rxjs/add/operator/switchMap';
 

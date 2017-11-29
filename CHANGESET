@@ -1,3 +1,46 @@
+v1.2.1
+8/23/2017
+  - Changed the reset password controller to not require a verified email
+  - also will set the user to verified once password is reset
+
+v1.2.0
+6/21/2017
+  - Added Roles policy enforcement.
+  - Core modifications to support this functionality.
+  - Endpoint managment ui
+
+v1.1.1
+5/18/2017
+  - Updated deps
+  - Fixed uploader
+  - Added a feature to keep user up to date
+
+v1.1.0
+5/3/2017
+  - Email verification
+  - Forgot/Reset Password
+  - Email sender shared module
+
+v1.0.0
+4/27/2017
+  - shrinkwraped
+
+v0.9.3:
+4/27/2017
+  - fix client side logger fix
+  - upgraded to angular4 and webpack2
+  - admin reset password interface
+
+v0.9.2
+4/13/2017
+  - Refactored password hashing
+  - Added field in admin user form to change password
+
+v0.9.1:
+4/13/2017
+  - client side logger
+  - server side logger relay
+
 v0.2.1:
 1/4/2017
   - Express setup completed.

@@ -27,4 +27,8 @@ var KeysSchema = new Schema({
   ]
 });
 
-mongoose.model('Keys', KeysSchema);
+try {
+  mongoose.model('Keys');
+} catch (error) {
+  mongoose.model('Keys', KeysSchema);
+}

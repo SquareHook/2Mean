@@ -1,0 +1,6 @@
+<div *ngIf="src">
+  <img [src]="src" [alt]="alt" class="img-thumbnail img-fluid">
+</div>
+<div *ngIf="!src">
+  {{ alt }}
+</div>

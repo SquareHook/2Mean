@@ -7,10 +7,10 @@ var UserAuthController = require('./controllers/user-auth.controller');
 /**
  * Top level function that wraps all of the module together to return to the application.
  */
-function User([logger]) {
-  var userCrudController = new UserCrudController(logger);
-  var userProfileController = new UserProfileController(logger);
-  var userAuthController = new UserAuthController(logger);
+function User([logger, shared]) {
+  var userCrudController = new UserCrudController(logger, shared);
+  var userProfileController = new UserProfileController(logger, shared);
+  var userAuthController = new UserAuthController(logger, shared);
 
   return {
     crud: userCrudController,
