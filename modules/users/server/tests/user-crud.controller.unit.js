@@ -546,6 +546,22 @@ describe('UserCrudController', () => {
 
     });
 
+    it('should send a 500 if count fails', ()=>{
+      countStub.rejects({error: 'failure'});
+
+      return userController.update(req, res, next).then(data => {
+        statusStub.args.should.deep.equal([[ 500 ]]);
+  
+      });
+    });
+
+    it('should send a 500 if hashPassword fails', () => {
+      hashPasswordStub.rejects({error: 'error'});
+      
+      return userController.update(req, res, next).then(data => {
+        statusStub.args.should.deep.equal([[500]]);
+      });
+    });
 
     it('should use authHelpers.hashPassword if password is to be updated', () => {
       setupAllResolve();
@@ -554,6 +570,7 @@ describe('UserCrudController', () => {
         hashPasswordStub.args.should.deep.equal([[ 'hash' ]]);
       });
     });
+
 
 
    
