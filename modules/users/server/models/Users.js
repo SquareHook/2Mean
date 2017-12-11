@@ -45,9 +45,6 @@ var UserSchema = new Schema({
     type: String,
     default: ''
   },
-  salt: {
-    type: String
-  },
   apikey: {
     value: {
       type: String

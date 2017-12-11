@@ -170,44 +170,61 @@ function userCrudController(logger, shared) {
    * @return {Promise}
    */
   async function update(req, res, next) {
-    let foundUser, savedUser;
-    var user = req.user;
+    let user = req.user;
+    let savedUser;
+    let updates = req.body;
 
-    var updates = req.body;
+    if(!updates._id){
+ 
+     return res.status(400).send();
+    }
+    
+    try{
+   
+      let count = await Users.count({_id: updates._id}).exec();
 
-    if (updates._id) {
+      if(count !== 1){
+        return res.status(404).send();
+      }
+    } catch(error){
+      logger.error('Error in user.crud#update findOne', error);
+      return res.status(500).send();
+    }
+
+    if (updates.password) {
       try {
-        foundUser = await Users.findOne({ _id: updates._id }).exec();
+        updates.password = await authHelpers.hashPassword(user.password);
       } catch (error) {
-        logger.error('Error in user.crud#update findOne', error);
+        logger.error('Error in user.crud#adminUpdate hash password', error);
         return res.status(500).send();
       }
-    } else {
-      return res.status(400).send({ error: 'Missing user._id' });
-    }
-    
-    if (!foundUser) {
-      return res.status(404).send();
     }
 
-    // update the found user
-    mapOverUser(updates, foundUser);
-      
-    foundUser.updated = new Date();
-    
+    // this request should not alter auth related fields
+    delete updates.role;
+    delete updates.subroles;
+    delete updates.verification;
+    delete updates.verified;
+    delete updates.apiKey;
+
+    let updateDef = {$set: updates};
+
     try {
-      savedUser = await foundUser.save();
-    } catch(error) {
+      savedUser = await Users.findOneAndUpdate(
+        { _id: updates._id }, 
+        updates,
+        { new: true })
+        .exec();
+       
+    } catch (error) {
       if (error.errors) {
         return res.status(400).send({ error: error.errors });
-      } else if (error.message === 'Not found') {
-        return res.status(404).send();
       } else {
+      
         logger.error('Error user.crud#update', error);
         return res.status(500).send();
       }
     }
-      
     return res.status(200).send(sanitizeUser(savedUser));
   }
 
@@ -438,7 +455,7 @@ function userCrudController(logger, shared) {
 
     return user;
   }
-  
+
   function generateProfileImageURL(email) {
     let hash = md5(email.toLowerCase());
     return 'https://gravatar.com/avatar/' + hash + '?d=identicon';
@@ -452,20 +469,7 @@ function userCrudController(logger, shared) {
     self.roleModule = roleModule;
   }
     
-  /**
-   * @param {Object} updates 
-   * @param {Object} user
-   */
-  function mapOverUser(updates, user) {
-    let schemaFields = Users.schema.obj;
 
-    for (let index in Object.keys(schemaFields)) {
-      let realIndex = Object.keys(schemaFields)[index];
-      if (updates[realIndex] !== undefined) {
-        user[realIndex] = updates[realIndex];
-      }
-    }
-  }
 
   // --------------------------- Revealing Module Section ----------------------------
 

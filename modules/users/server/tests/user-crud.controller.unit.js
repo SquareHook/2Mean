@@ -30,6 +30,8 @@ describe('UserCrudController', () => {
   var generateSaltStub;
   var hashStub;
   var saveStub;
+  let updateStub;
+
   var statusStub;
   var sendStub;
   let mockSharedModule;
@@ -101,6 +103,7 @@ describe('UserCrudController', () => {
       
     req.user = mockUser;
     saveStub = sinon.stub(Users.prototype, 'save');
+ 
     mockUser.save = saveStub;
   });
 
@@ -109,6 +112,7 @@ describe('UserCrudController', () => {
     // restored
     usersMock.restore();
     saveStub.restore();
+
   });
 
   describe('#read', () => {
@@ -422,10 +426,15 @@ describe('UserCrudController', () => {
     });
   });
 
+
+
   describe('#update', () => {
     const queryId = 'id';
-
+    let countStub;
+    let execStub;
     beforeEach(() => {
+      countStub = sinon.stub(Users, 'count');
+      execStub = sinon.stub();
       req.body = {
         _id: queryId,
         email: ''
@@ -433,22 +442,23 @@ describe('UserCrudController', () => {
     });
 
     afterEach(() => {
-
+      countStub.restore();
     });
 
     function setupAllResolve() {
-      setupFindOneResolves();
-      setupSaveResolves();
+      setupFindOneAndUpdateResolves();
+      setupCountResolves();
     }
 
-    function setupFindOneResolves() {
-      usersMock.expects('findOne')
+    function setupFindOneAndUpdateResolves() {
+      usersMock.expects('findOneAndUpdate')
         .chain('exec')
         .resolves(mockUser);
     }
 
-    function setupSaveResolves() {
-      saveStub.resolves(mockUser);
+    function setupCountResolves() {
+      countStub.returns({exec: execStub});
+      execStub.resolves(1);
     }
 
     it('should return a promise', () => {
@@ -457,26 +467,24 @@ describe('UserCrudController', () => {
       userController.update(req, res, next).constructor.name
         .should.equal('Promise');
     });
-
-    it('should use Users.findOne', () => {
-      usersMock.expects('findOne').withExactArgs({ _id: queryId })
-        .chain('exec')
-        .resolves(mockUser);
-      setupSaveResolves();
+   
+    it('should use Users.findOneAndUpdate', () => {
+     
+      setupAllResolve();
 
       return userController.update(req, res, next).then((data) => {
         usersMock.verify();
       });
     });
-
-    it('should use user.save', () => {
+    
+    it('should use Users.count', () => {
       setupAllResolve();
-
       return userController.update(req, res, next).then((data) => {
-        saveStub.called.should.equal(true);
+        countStub.called.should.equal(true);
       });
     });
 
+    
     it('should send a 200 and sanitized user on success', () => {
       setupAllResolve();
 
@@ -490,56 +498,54 @@ describe('UserCrudController', () => {
       });
     });
 
+   
     it('should send a 400 if validation fails', () => {
-      setupFindOneResolves();
-      saveStub.rejects({ errors: { email: 'Email required' } });
+      setupCountResolves();
+      usersMock.expects('findOneAndUpdate')
+      .chain('exec')
+      .rejects({errors: {email: 'Email required'}});
+      
 
       return userController.update(req, res, next).then((data) => {
-        statusStub.args.should.deep.equal([[ 400 ]]);
         sendStub.args.should.deep.equal([[ { error: { email: 'Email required' } } ]]);
+        statusStub.args.should.deep.equal([[ 400 ]]);
       });
     });
-
+    
     it('should send a 400 if id is missing', () => {
       req.body._id = undefined;
       
       return userController.update(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 400 ]]);
-        sendStub.args.should.deep.equal([[ { error: 'Missing user._id' } ]]);
       });
     });
 
-    it('should send a 404 if the user doesnt exist', () => {
-      usersMock.expects('findOne')
-        .chain('exec')
-        .resolves(null);
+    it ('should send a 404 if the user does not exist', () => {
+      countStub.returns({exec: execStub});
+      execStub.resolves(0);
 
-      return userController.update(req, res, next).then((data) => {
-        statusStub.args.should.deep.equal([[ 404 ]]);
+      return userController.update(req, res, next).then(data =>{
+        statusStub.args.should.deep.equal([[404]]);
         sendStub.args.should.deep.equal([[ ]]);
       });
     });
 
-    it('should send a 500 if findOne fails', () => {
-      usersMock.expects('findOne')
-        .chain('exec')
-        .rejects(new Error('findOne failed'));
+    it('should send a 500 if findOneAndUpdate fails', () => {
+      setupCountResolves();
+      usersMock.expects('findOneAndUpdate')
+      .chain('exec')
+      .rejects('database error');
 
-      return userController.update(req, res, next).then((data) => {
+      return userController.update(req, res, next).then(data => {
         statusStub.args.should.deep.equal([[ 500 ]]);
         sendStub.args.should.deep.equal([[ ]]);
       });
-    });
 
-    it('should send a 500 if save fails', () => {
-      setupFindOneResolves();
-      saveStub.rejects(new Error('Save failed'));
-      
-      return userController.update(req, res, next).then((data) => {
-        statusStub.args.should.deep.equal([[ 500 ]]);
-        sendStub.args.should.deep.equal([[ ]]);
-      });
     });
+    
+
+   
+    
   });
 
   describe('#readList', () => {

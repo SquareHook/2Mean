@@ -85,6 +85,11 @@ export class EditProfileComponent implements OnInit {
    * initialize component
    */
   ngOnInit() : void {
+    //pull user if auth changes
+    this.authService.authChanged$.subscribe(() =>{
+      this.user = this.authService.getUser();
+    });
+
     this.buildForm();
 
     //initialize error messages
@@ -129,6 +134,7 @@ export class EditProfileComponent implements OnInit {
     
     this.userService.update(this.user).subscribe((user) => {
       this.authService.setUser(user);
+ 
       this.imageFileDropComponent.uploadFile();
     }, error => {
       this.errorMessage = error._body;
