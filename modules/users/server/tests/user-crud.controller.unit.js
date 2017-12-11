@@ -432,9 +432,12 @@ describe('UserCrudController', () => {
     const queryId = 'id';
     let countStub;
     let execStub;
+    let hashPasswordStub;
     beforeEach(() => {
       countStub = sinon.stub(Users, 'count');
       execStub = sinon.stub();
+      hashPasswordStub = sinon.stub(mockSharedModule.authHelpers, 'hashPassword');
+
       req.body = {
         _id: queryId,
         email: ''
@@ -542,7 +545,16 @@ describe('UserCrudController', () => {
       });
 
     });
-    
+
+
+    it('should use authHelpers.hashPassword if password is to be updated', () => {
+      setupAllResolve();
+      req.body.password = "hash";
+      return userController.update(req, res, next).then((data) => {
+        hashPasswordStub.args.should.deep.equal([[ 'hash' ]]);
+      });
+    });
+
 
    
     
