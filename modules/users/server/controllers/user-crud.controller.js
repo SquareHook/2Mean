@@ -175,16 +175,15 @@ function userCrudController(logger, shared) {
     let updates = req.body;
 
     if(!updates._id){
- 
      return res.status(400).send();
     }
     
     try{
    
       let count = await Users.count({_id: updates._id}).exec();
-
       if(count !== 1){
         return res.status(404).send();
+        
       }
     } catch(error){
       logger.error('Error in user.crud#update findOne', error);
@@ -208,19 +207,16 @@ function userCrudController(logger, shared) {
     delete updates.apiKey;
 
     let updateDef = {$set: updates};
-
     try {
       savedUser = await Users.findOneAndUpdate(
         { _id: updates._id }, 
         updates,
         { new: true })
         .exec();
-       
     } catch (error) {
       if (error.errors) {
         return res.status(400).send({ error: error.errors });
       } else {
-      
         logger.error('Error user.crud#update', error);
         return res.status(500).send();
       }

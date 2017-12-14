@@ -472,9 +472,7 @@ describe('UserCrudController', () => {
     });
    
     it('should use Users.findOneAndUpdate', () => {
-     
       setupAllResolve();
-
       return userController.update(req, res, next).then((data) => {
         usersMock.verify();
       });
@@ -490,7 +488,6 @@ describe('UserCrudController', () => {
     
     it('should send a 200 and sanitized user on success', () => {
       setupAllResolve();
-
       return userController.update(req, res, next).then((data) => {
         statusStub.args.should.deep.equal([[ 200 ]]);
         sendStub.args.length.should.equal(1);
@@ -547,7 +544,8 @@ describe('UserCrudController', () => {
     });
 
     it('should send a 500 if count fails', ()=>{
-      countStub.rejects({error: 'failure'});
+      countStub.returns({exec: execStub});
+      execStub.rejects({error: 'failure'});
 
       return userController.update(req, res, next).then(data => {
         statusStub.args.should.deep.equal([[ 500 ]]);
@@ -556,8 +554,9 @@ describe('UserCrudController', () => {
     });
 
     it('should send a 500 if hashPassword fails', () => {
+      req.body.password = 'newpass';
       hashPasswordStub.rejects({error: 'error'});
-      
+      setupAllResolve();
       return userController.update(req, res, next).then(data => {
         statusStub.args.should.deep.equal([[500]]);
       });
@@ -571,10 +570,6 @@ describe('UserCrudController', () => {
       });
     });
 
-
-
-   
-    
   });
 
   describe('#readList', () => {
